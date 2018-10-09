@@ -99,13 +99,14 @@ class Footer extends React.Component {
           </View>
         );
       case 'qrscanner':
+      case 'camera':
         return (
           <View style={styles.flexView}>
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={currentQuestion.placeholder}
-              onPress={() => this.props.handleStateValue('openQRScanner', true)}
+              text={currentQuestion.placeholder || 'Click To Open Camera'}
+              onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>
         );

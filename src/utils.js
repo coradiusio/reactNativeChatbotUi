@@ -12,7 +12,7 @@ const stringsComparisionOperators = [
   '!=',
 ];
 
-function isEmptySrting(value) {
+function isEmptyString(value) {
   if (typeof value === 'string') {
     return value === '';
   }
@@ -44,7 +44,7 @@ export function stringCasing(value, casing) {
 }
 
 export function isElementByIdValueEmpty(id) {
-  return isEmptySrting(document.getElementById(id) && document.getElementById(id).value);
+  return isEmptyString(document.getElementById(id) && document.getElementById(id).value);
 }
 
 function numberComparisionValidator(comparision, firstValue, secondValue) {
@@ -116,7 +116,7 @@ export function validateInput(currentQuestion, answerInputModified, source = 'te
     return result;
   }
 
-  function validator(allValidations, i, outerRegexPattern) {
+  function validator(allValidations, i) {
     const typeLowerCase = allValidations[i].type && allValidations[i].type.trim().toLowerCase();
     const comparisionOperator = allValidations[i].comparisionOperator && allValidations[i].comparisionOperator.trim();
     const regexPattern = allValidations[i].regexPattern && new RegExp(allValidations[i].regexPattern.trim(), 'i');
@@ -135,7 +135,7 @@ export function validateInput(currentQuestion, answerInputModified, source = 'te
     foundError: false,
     errorMessage: '',
   };
-  if (widget === 'text' || widget === 'calendar' || widget === 'qrscanner') {
+  if (widget === 'text' || widget === 'calendar' || widget === 'qrscanner' || widget === 'camera') {
     if (answerInputModified !== '' && validateInput) {
       const outputType = validateInput.outputType;
       if (outputType === 'object') {

@@ -5,6 +5,7 @@ import {
   View,
   ScrollView,
   Text,
+  Image,
   TouchableOpacity
 } from 'react-native';
 
@@ -99,6 +100,8 @@ class Body extends React.Component {
 
     let leftOrRight = 'left', differentSender = false;
 
+    console.log('repliedMessages :- ', repliedMessages.reverse().slice(0,2));
+
     return (
       <View style={styles.flexView}>
         {
@@ -174,10 +177,9 @@ class Body extends React.Component {
                                       ['jpeg', 'jpg', 'png'].indexOf(repliedMessage.fileExtension.trim().toLowerCase()) > -1
                                       ?
                                         <View>
-                                          {/* <Image
-                                            src={repliedMessage.fileURL}
-                                            alt=""
-                                          /> */}
+                                          <Image
+                                            source={{uri: repliedMessage.fileURL}}
+                                          />
                                         </View>
                                       :
                                         null

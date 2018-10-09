@@ -15,9 +15,7 @@ import {
   QRCodeScan
 } from 'reactNativeBasicComponents';
 
-import {
-  colors
-} from './general';
+import Camera from './components/sub_components/Camera';
 
 import {
   massageText,
@@ -45,7 +43,7 @@ export default class FormBotApp extends React.Component {
       isBotTyping: false,
       isUserTyping: false,
       isUserAllowedToAnswer: false,
-      openQRScanner: false
+      openCameraView: false
     };
     this.submitInputValue = this.submitInputValue.bind(this);
     this.askNextQuestion = this.askNextQuestion.bind(this);
@@ -518,15 +516,22 @@ export default class FormBotApp extends React.Component {
       answerInputModified = answerInput.replace(/\s\s+/g, ' ').trim();
     }
 
+    if (source === 'camera') {
+      fileName = answerInput.split('/').slice(-1);
+      fileExtension = fileName[0].split('.').slice(-1);
+    }
+
     let inputValidatedObject;
-    if (source !== 'file') {
+    if (source !== 'file' && source !== 'camera') {
       inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result);
     } else {
       inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension);
     }
 
+    console.log('inputValidatedObject :- ', inputValidatedObject);
+
     if (inputValidatedObject.success) {
-      if (currentQuestion.widget !== 'file') {
+      if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
         repliedMessages.push({
           source,
           text: answerInput,
@@ -558,7 +563,7 @@ export default class FormBotApp extends React.Component {
 
     } else {
       if (inputValidatedObject.foundError) {
-        if (currentQuestion.widget !== 'file') {
+        if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
           repliedMessages.push({
             source,
             text: answerInput,
@@ -607,15 +612,31 @@ export default class FormBotApp extends React.Component {
     return (
       <View style={styles.flexView}>
         {
-          this.state.openQRScanner
+          this.state.openCameraView
           ?
             <View style={styles.flexView}>
-              <QRCodeScan
-                onScanSuccess={(data) => {
-                  this.handleStateValue('openQRScanner', false);
-                  this.submitInputValue(data);
-                }}
-              />
+              {
+                currentQuestion.widget === 'qrscanner'
+                ?
+                  <QRCodeScan
+                    onScanSuccess={(data) => {
+                      this.handleStateValue('openCameraView', false);
+                      this.submitInputValue(data);
+                    }}
+                  />
+                :
+                  <View style={styles.flexView}>
+                    {
+                      currentQuestion.widget === 'camera'
+                      ?
+                        <Camera
+                          handleStateValue={this.handleStateValue}
+                          onCapture={this.submitInputValue} />
+                      :
+                        null
+                    }
+                  </View>
+              }
             </View>
           :
             <View style={styles.flexView}>

@@ -60,6 +60,17 @@ export default class App extends React.Component {
         questions: [
           {
             node: 1,
+            question: ["please upload your pan card !"],
+            entity: "pancard",
+            entityPath: "formData",
+            fileExtensions: ['jpg', 'png', 'jpeg', 'pdf'],
+            widget: 'camera',
+            validateInput: {
+              outputType: 'string',
+            }
+          },
+          {
+            node: 1,
             question: ["what's your full name ?"],
             entity: "completeName",
             entityPath: "formData",
@@ -123,17 +134,6 @@ export default class App extends React.Component {
           },
           {
             node: 2,
-            question: ["Pls scan qr code"],
-            entity: "qrcode",
-            entityPath: "formData",
-            widget: 'qrscanner',
-            validateInput: {
-              outputType: 'string',
-            },
-            placeholder: 'Click To Scan',
-          },
-          {
-            node: 1,
             question: ["Now i want your's permanent address , so please enter your pincode"],
             entity: "csp",
             entityPath: "formData.permanentAddress",
@@ -150,70 +150,7 @@ export default class App extends React.Component {
             minCharactersToSearch: 3,
           },
           {
-            node: 2,
-            question: ["what's your full name ?"],
-            entity: "completeName",
-            entityPath: "formData",
-            widget: 'text',
-            placeholder: 'Enter your full name',
-            validateInput: {
-              outputType: 'object',
-              splitBy: ' ',
-              keys: [
-                {
-                  keyName: 'firstName',
-                  keyValueIndex: 0,
-                  casing: 'titleCase'
-                },
-                {
-                  keyName: 'middleName',
-                  keyValueIndex: {
-                    or: [
-                      {
-                        inputLength: 3,
-                        keyValueIndex: 1,
-                      }
-                    ],
-                  },
-                  casing: 'titleCase'
-                },
-                {
-                  keyName: 'lastName',
-                  keyValueIndex: {
-                    or: [
-                      {
-                        inputLength: 2,
-                        keyValueIndex: 1,
-                      },
-                      {
-                        inputLength: 3,
-                        keyValueIndex: 2,
-                      }
-                    ],
-                  },
-                  casing: 'titleCase'
-                }
-              ],
-              validations: [
-                {
-                  type: 'number',
-                  comparisionOperator: '>=',
-                  propertyName: 'inputLength',
-                  propertyValue: 2,
-                  errorMessage: 'Full name must contain atleast first and last name'
-                },
-                {
-                  type: 'number',
-                  comparisionOperator: '<=',
-                  propertyName: 'inputLength',
-                  propertyValue: 3,
-                  errorMessage: 'Full name can only contain first, middle and last name'
-                }
-              ]
-            }
-          },
-          {
-            node: 2,
+            node: 3,
             question: ["what's your date of birth ?"],
             entity: "dateOfBirth",
             entityPath: "formData",
@@ -224,7 +161,7 @@ export default class App extends React.Component {
             },
           },
           {
-            node: 3,
+            node: 4,
             question: ["what's your gender ?"],
             entity: "gender",
             entityPath: "formData",
@@ -239,109 +176,33 @@ export default class App extends React.Component {
             }
           },
           // {
-          //   node: 1,
-          //   question: ["what's your PAN number ?"],
-          //   entity: "panNumber",
+          //   node: 4,
+          //   question: ["what's your age ?"],
+          //   entity: "age",
           //   entityPath: "formData",
           //   widget: 'text',
-          //   placeholder: 'XXXXXXXXXX',
-          //   inputMask: [/[A-Za-z]/, /[A-Za-z]/, /[A-Za-z]/, /[A-Za-z]/, /[A-Za-z]/, /\d/, /\d/, /\d/, /\d/, /[A-Za-z]/],
+          //   placeholder: 'Enter your age',
           //   validateInput: {
-          //     outputType: 'string',
-          //     casing: 'uppercase',
+          //     outputType: 'number',
+          //     regexPattern: '^\\d{2}$',
+          //     validations: [
+          //       {
+          //         type: 'number',
+          //         propertyName: 'inputValue',
+          //         comparisionOperator: '>=',
+          //         propertyValue: 18,
+          //         errorMessage: 'Age must be greater than 18'
+          //       },
+          //       {
+          //         type: 'number',
+          //         propertyName: 'inputValue',
+          //         comparisionOperator: '<=',
+          //         propertyValue: 75,
+          //         errorMessage: 'Age must be less than 75'
+          //       }
+          //     ]
           //   }
           // },
-          {
-            node: 4,
-            question: ["what's your full name ?"],
-            entity: "completeName",
-            entityPath: "formData",
-            widget: 'text',
-            placeholder: 'Enter your full name',
-            validateInput: {
-              outputType: 'object',
-              splitBy: ' ',
-              keys: [
-                {
-                  keyName: 'firstName',
-                  keyValueIndex: 0,
-                  casing: 'titleCase'
-                },
-                {
-                  keyName: 'middleName',
-                  keyValueIndex: {
-                    or: [
-                      {
-                        inputLength: 3,
-                        keyValueIndex: 1,
-                      }
-                    ],
-                  },
-                  casing: 'titleCase'
-                },
-                {
-                  keyName: 'lastName',
-                  keyValueIndex: {
-                    or: [
-                      {
-                        inputLength: 2,
-                        keyValueIndex: 1,
-                      },
-                      {
-                        inputLength: 3,
-                        keyValueIndex: 2,
-                      }
-                    ],
-                  },
-                  casing: 'titleCase'
-                }
-              ],
-              validations: [
-                {
-                  type: 'number',
-                  comparisionOperator: '>=',
-                  propertyName: 'inputLength',
-                  propertyValue: 2,
-                  errorMessage: 'Full name must contain atleast first and last name'
-                },
-                {
-                  type: 'number',
-                  comparisionOperator: '<=',
-                  propertyName: 'inputLength',
-                  propertyValue: 3,
-                  errorMessage: 'Full name can only contain first, middle and last name'
-                }
-              ]
-            }
-          },
-          {
-            node: 4,
-            question: ["what's your age ?"],
-            entity: "age",
-            entityPath: "formData",
-            widget: 'text',
-            placeholder: 'Enter your age',
-            validateInput: {
-              outputType: 'number',
-              regexPattern: '^\\d{2}$',
-              validations: [
-                {
-                  type: 'number',
-                  propertyName: 'inputValue',
-                  comparisionOperator: '>=',
-                  propertyValue: 18,
-                  errorMessage: 'Age must be greater than 18'
-                },
-                {
-                  type: 'number',
-                  propertyName: 'inputValue',
-                  comparisionOperator: '<=',
-                  propertyValue: 75,
-                  errorMessage: 'Age must be less than 75'
-                }
-              ]
-            }
-          },
           {
             node: 5,
             question: ["what's your email ?"],
@@ -368,27 +229,23 @@ export default class App extends React.Component {
             widget: 'text',
             validateInput: {
               outputType: 'number',
-              validations: [
-                {
-                  type: 'string',
-                  propertyName: 'inputValue',
-                  regexPattern: '/^\\d{10}$/',
-                  errorMessage: 'Mobile number is invalid'
-                },
-              ]
+              // validations: [
+              //   {
+              //     type: 'string',
+              //     propertyName: 'inputValue',
+              //     regexPattern: '/^\\d{10}$/',
+              //     errorMessage: 'Mobile number is invalid'
+              //   },
+              // ]
             }
           },
           {
             node: 7,
-            question: ["what's your gender ?"],
-            entity: "gender",
+            question: ["Pls scan qr code"],
+            entity: "qrcode",
             entityPath: "formData",
-            widget: 'radio',
-            radioOptions: [
-              { value: 'male', label: 'Male' },
-              { value: 'female', label: 'Female' }
-            ],
-            onInputFillMessage: 'Hey , don\'t be oversmart , you have to choose one of below options',
+            widget: 'qrscanner',
+            placeholder: 'Click to scan',
             validateInput: {
               outputType: 'string',
             }
