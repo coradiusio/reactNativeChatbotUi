@@ -100,8 +100,7 @@ class Body extends React.Component {
 
     let leftOrRight = 'left', differentSender = false;
 
-    console.log('repliedMessages :- ', repliedMessages.reverse().slice(0,2));
-
+    //console.log('repliedMessages :- ', repliedMessages.reverse().slice(0,3));
     return (
       <View style={styles.flexView}>
         {
@@ -140,7 +139,7 @@ class Body extends React.Component {
                                   null
                               }
                               {
-                                repliedMessage.source !== 'file'
+                                repliedMessage.source !== 'file' && repliedMessage.source !== 'camera'
                                 ?
                                   <View style={styles.flexDirectionRow}>
                                     {
@@ -176,15 +175,23 @@ class Body extends React.Component {
                                     {
                                       ['jpeg', 'jpg', 'png'].indexOf(repliedMessage.fileExtension.trim().toLowerCase()) > -1
                                       ?
-                                        <View>
+                                        <View style={styles.imageContainer}>
                                           <Image
+                                            style={styles.image}
                                             source={{uri: repliedMessage.fileURL}}
                                           />
                                         </View>
                                       :
                                         null
                                     }
-                                    {`${repliedMessage.fileName}.${repliedMessage.fileExtension}`}
+                                    <Text
+                                      style={[
+                                        leftOrRight === 'left' ? styles.leftChatText : styles.rightChatText,
+                                        leftOrRight === 'right' ? styles.rightChatTextRightText : null
+                                      ]}
+                                    >
+                                      {`${repliedMessage.fileName}.${repliedMessage.fileExtension}`}
+                                    </Text>
                                   </View>
                               }
                               {
@@ -336,6 +343,15 @@ const styles = StyleSheet.create({
   fillContainer: {
     backgroundColor: colors.primary,
   },
+  imageContainer: {
+    width: 270,
+    height: 270
+  },
+  image: {
+    flex: 1,
+    width: null,
+    height: null
+  }
 });
 
 export default Body;

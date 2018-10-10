@@ -516,15 +516,21 @@ export default class FormBotApp extends React.Component {
       answerInputModified = answerInput.replace(/\s\s+/g, ' ').trim();
     }
 
+    let fullFileName = '';
     if (source === 'camera') {
-      fileName = answerInput.split('/').slice(-1);
-      fileExtension = fileName[0].split('.').slice(-1);
+      fullFileName = answerInput.split('/').slice(-1)[0];
+      fileName = fullFileName.split('.')[0];
+      fileExtension = fullFileName.split('.')[1];
     }
+
+    console.log('fileName :-', fileName);
+    console.log('fileExtension :-', fileExtension);
 
     let inputValidatedObject;
     if (source !== 'file' && source !== 'camera') {
       inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result);
     } else {
+      console.log(currentQuestion, answerInputModified, fileName, fileExtension);
       inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension);
     }
 

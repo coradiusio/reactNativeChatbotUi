@@ -78,6 +78,7 @@ function stringComparisionValidator(comparision, firstValue, secondValue) {
 export function validateInput(currentQuestion, answerInputModified, source = 'text', resultData) {
   const validateInput = currentQuestion.validateInput;
   const widget = currentQuestion.widget;
+
   function validateByComparisionOperator(typeLowerCase, propertyNameLowerCase, comparisionOperator, answerInputModified, propertyValue, result) {
     const answerInputModifiedLength = answerInputModified.length;
     if (typeLowerCase === 'number') {
@@ -135,6 +136,7 @@ export function validateInput(currentQuestion, answerInputModified, source = 'te
     foundError: false,
     errorMessage: '',
   };
+  
   if (widget === 'text' || widget === 'calendar' || widget === 'qrscanner' || widget === 'camera') {
     if (answerInputModified !== '' && validateInput) {
       const outputType = validateInput.outputType;
@@ -188,14 +190,12 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
     errorMessage: '',
   };
 
-  if ( fileName && fileExtension) {
-    if (answerInputModified.indexOf('base64') > -1) {
-      if (currentQuestion.fileExtensions && currentQuestion.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
-        result.success = true;
-      } else {
-        result.foundError = true;
-        result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type';
-      }
+  if (fileName && fileExtension) {
+    if (currentQuestion.fileExtensions && currentQuestion.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
+      result.success = true;
+    } else {
+      result.foundError = true;
+      result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type';
     }
   }
   result.answerInputModified = answerInputModified; 
@@ -235,6 +235,7 @@ export const getValue = (propertyPath, obj) => {
 };
 
 export function massageText(text, state) {
+  console.log(text, state);
   try {
     const regexPattern = /\{{(.*?)\}}/g;
     const matched = text.match(regexPattern);
