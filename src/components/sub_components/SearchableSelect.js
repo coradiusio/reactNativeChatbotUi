@@ -20,7 +20,7 @@ const ds = new ListView.DataSource({
   rowHasChanged: (r1, r2) => r1.id !== r2.id,
 });
 
-export default class SearchableSelect extends React.Component {
+export default class SearchableSelect extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {

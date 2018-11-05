@@ -18,7 +18,7 @@ import {
   colors
 } from '../../general';
 
-class Camera extends React.Component {
+class Camera extends React.PureComponent {
 
   takePicture = async function() {
     if (this.camera) {

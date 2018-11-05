@@ -29,7 +29,7 @@ import {
 let checkBoxDisplayValueList = [];
 let checkBoxActualValueList = [];
 
-class Body extends React.Component {
+class Body extends React.PureComponent {
 
   scrollToBottom () {
     if (this.scrollView) {

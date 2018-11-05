@@ -9,7 +9,7 @@ import {
 
 const uak_id = 7204;
 
-export default class App extends React.Component {
+export default class App extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {

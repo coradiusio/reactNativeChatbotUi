@@ -7,7 +7,7 @@ import {
 
 import TalkBubble from './TalkBubble';
 
-class ChatBubble extends React.Component {
+class ChatBubble extends React.PureComponent {
   render() {
     const { float = 'left' } = this.props;
     return (

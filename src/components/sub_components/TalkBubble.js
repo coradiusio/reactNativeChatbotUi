@@ -9,7 +9,7 @@ import {
   colors
 } from '../../general';
 
-class TalkBubble extends React.Component {
+class TalkBubble extends React.PureComponent {
   render() {
     const float = this.props.float;
     return (

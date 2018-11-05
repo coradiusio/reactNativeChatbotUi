@@ -15,7 +15,7 @@ import {
   colors
 } from '../general';
 
-class Header extends React.Component {
+class Header extends React.PureComponent {
   render() {
     const {
       title,

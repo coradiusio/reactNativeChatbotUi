@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import Search from '../modules/Search/Search';
 
-class SearchSelect extends React.Component {
+class SearchSelect extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {

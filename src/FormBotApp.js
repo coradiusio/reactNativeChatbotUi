@@ -31,7 +31,7 @@ import {
 const config = { timeout: 300000 };
 let timer;
 
-export default class FormBotApp extends React.Component {
+export default class FormBotApp extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = props.logicalData || {
