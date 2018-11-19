@@ -11,10 +11,8 @@
     "react-native": "0.55.2",
     "axios": "^0.18.0",
     "lodash": "^4.17.11",
+    "react-native-camera": "git+https://git@github.com/react-native-community/react-native-camera",
     "reactNativeBasicComponents": "git://github.com/coradiusio/reactNativeBasicComponents#feature/robin_primary"
-  },
-  "peerDependencies": {
-    "react-native-camera": "^1.4.1"
   },
   "devDependencies": {
     "babel-jest": "23.6.0",
