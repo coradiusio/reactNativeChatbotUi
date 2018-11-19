@@ -37,13 +37,13 @@ class Body extends React.PureComponent {
     }
   }
 
-  radioChoices = (repliedMessage, currentQuestion) => {
+  radioChoices = (repliedMessage, currentMessage) => {
     if (repliedMessage.radioOptions) {
       return (
         <RadioChoices
           choices={repliedMessage.radioOptions}
           onChange={(option) => {
-            if (repliedMessage.node === currentQuestion.node) {
+            if (repliedMessage.node === currentMessage.node) {
               this.props.submitInputValue(option.label, option.value, 'radio')
             }
           }}
@@ -95,7 +95,7 @@ class Body extends React.PureComponent {
     const {
       result,
       repliedMessages,
-      currentQuestion
+      currentMessage
     } = this.props;
 
     let leftOrRight = 'left', differentSender = false;
@@ -104,7 +104,7 @@ class Body extends React.PureComponent {
     return (
       <View style={styles.flexView}>
         {
-          this.props.noQuestionAvailable
+          this.props.noMessageAvailable
           ?
             <Loader />
           :
@@ -230,32 +230,10 @@ class Body extends React.PureComponent {
                               {
                                 repliedMessage.widget === 'radio'
                                 ?
-                                  this.radioChoices(repliedMessage, currentQuestion)
+                                  this.radioChoices(repliedMessage, currentMessage)
                                 :
                                   <View>
-                                    {/* {
-                                      repliedMessage.widget === 'checkbox'
-                                      ?
-                                        <View id={`question-${currentQuestion.node}-checkbox-choices`}>
-                                          {this.checkboxChoices(repliedMessage, currentQuestion)}
-                                          <Button
-                                            onClick={(e) => {
-                                              e.preventDefault();
-                                              e.target.classList.remove('selected');
-                                              e.target.classList.add('selected');
-                                              if (repliedMessage.node === currentQuestion.node) {
-                                                this.props.submitInputValue(checkBoxDisplayValueList.join(repliedMessage.joinWith || ','), checkBoxActualValueList.join(repliedMessage.joinWith || ','), 'checkbox');
-                                                checkBoxActualValueList = [];
-                                                checkBoxDisplayValueList = [];
-                                              } else return null;
-                                            }}
-                                          >
-                                            Done
-                                          </Button>
-                                        </View>
-                                      :
-                                        null
-                                    } */}
+                                    
                                   </View>
                               }
                             </View>

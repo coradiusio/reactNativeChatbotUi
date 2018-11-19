@@ -59,10 +59,10 @@ class Footer extends React.PureComponent {
 
   componentDecider() {
     const {
-      currentQuestion
+      currentMessage
     } = this.props;
 
-    switch(currentQuestion.widget) {
+    switch(currentMessage.widget) {
       case 'text':
         return (
           <ChatInput
@@ -88,7 +88,7 @@ class Footer extends React.PureComponent {
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={currentQuestion.placeholder || 'Click To Scan'}
+              text={currentMessage.placeholder || 'Click To Scan'}
               onPress={this._showDateTimePicker}
             />
             <DateTimePicker
@@ -105,7 +105,7 @@ class Footer extends React.PureComponent {
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={currentQuestion.placeholder || 'Click To Open Camera'}
+              text={currentMessage.placeholder || 'Click To Open Camera'}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>

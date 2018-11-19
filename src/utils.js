@@ -75,9 +75,9 @@ function stringComparisionValidator(comparision, firstValue, secondValue) {
   return false;
 }
 
-export function validateInput(currentQuestion, answerInputModified, source = 'text', resultData) {
-  const validateInput = currentQuestion.validateInput;
-  const widget = currentQuestion.widget;
+export function validateInput(currentMessage, answerInputModified, source = 'text', resultData) {
+  const validateInput = currentMessage.validateInput;
+  const widget = currentMessage.widget;
 
   function validateByComparisionOperator(typeLowerCase, propertyNameLowerCase, comparisionOperator, answerInputModified, propertyValue, result) {
     const answerInputModifiedLength = answerInputModified.length;
@@ -172,7 +172,7 @@ export function validateInput(currentQuestion, answerInputModified, source = 'te
     if (answerInputModified !== '' && source == 'text') {
       result.foundError = true;
       result.success = false;
-      result.errorMessage = currentQuestion.onInputFillMessage || 'Please select from below buttons';
+      result.errorMessage = currentMessage.onInputFillMessage || 'Please select from below buttons';
     } else {
       result.success = true;
     }
@@ -183,7 +183,7 @@ export function validateInput(currentQuestion, answerInputModified, source = 'te
   return result;
 }
 
-export function validateFile (currentQuestion, answerInputModified, fileName, fileExtension) {
+export function validateFile (currentMessage, answerInputModified, fileName, fileExtension) {
   const result = {
     success: false,
     foundError: false,
@@ -191,11 +191,11 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
   };
 
   if (fileName && fileExtension) {
-    if (currentQuestion.fileExtensions && currentQuestion.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
+    if (currentMessage.fileExtensions && currentMessage.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
       result.success = true;
     } else {
       result.foundError = true;
-      result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type';
+      result.errorMessage = currentMessage.onWrongFileUploadMessage || 'Please upload valid file type';
     }
   }
   result.answerInputModified = answerInputModified; 
@@ -361,4 +361,48 @@ export function resizeImage(img, extension, max_width, max_height, quality) {
   
   return canvas.toDataURL('image/'.concat(extension), quality); // get the data from canvas as 60% JPG (can be also PNG, etc.)
 
+}
+
+export function askConditionsCheck(currentMessage, result) {
+  let success = false,
+  entityValue = '',
+  entityPath = '';
+
+  for(let i = 0; i < currentMessage.askConditions.length; i++) {
+    // now first get entity value from propertyPath
+    entityValue = '';
+    entityPath = currentMessage.askConditions[i].entityPath;
+    entityValue = getValue(
+      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentMessage.askConditions[i].entity}`, result
+    );
+    if (entityValue === currentMessage.askConditions[i].value) {
+      success = true;
+    } else {
+      success = false;
+      break;
+    }
+  }
+  return success;
+}
+
+export function skipConditionsCheck(currentMessage, result) {
+  let success = false,
+  entityValue = '',
+  entityPath = '';
+
+  for(let i = 0; i < currentMessage.skipConditions.length; i++) {
+    // now first get entity value from propertyPath
+    entityValue = '';
+    entityPath = currentMessage.skipConditions[i].entityPath;
+    entityValue = getValue(
+      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentMessage.skipConditions[i].entity}`, result
+    );
+    if (entityValue === currentMessage.skipConditions[i].value) {
+      success = true;
+      break;
+    } else {
+      success = false;
+    }
+  }
+  return success;
 }

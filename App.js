@@ -40,8 +40,8 @@ export default class App extends React.PureComponent {
       logicalData: {
         result: this.props.result || {},
         currentNode: 0,
-        currentQuestionIndex: 0,
-        questions: this.props.questions || [],
+        currentMessageIndex: 0,
+        messages: this.props.messages || [],
         repliedMessages: [],
         isBotTyping: false,
         isUserTyping: false,
@@ -55,7 +55,7 @@ export default class App extends React.PureComponent {
       ...prevState,
       logicalData: {
         ...prevState.logicalData,
-        questions: nextProps.questions
+        messages: nextProps.messages
       }
     }));
   }

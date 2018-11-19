@@ -25,7 +25,9 @@ import {
   getValue,
   stringCases,
   stringCasing,
-  validateFile
+  validateFile,
+  askConditionsCheck,
+  skipConditionsCheck
 } from './utils';
 
 const config = { timeout: 300000 };
@@ -37,8 +39,8 @@ export default class FormBotApp extends React.PureComponent {
     this.state = props.logicalData || {
       result: {},
       currentNode: 0,
-      currentQuestionIndex: 0,
-      questions: [],
+      currentMessageIndex: 0,
+      messages: [],
       repliedMessages: [],
       isBotTyping: false,
       isUserTyping: false,
@@ -46,14 +48,14 @@ export default class FormBotApp extends React.PureComponent {
       openCameraView: false
     };
     this.submitInputValue = this.submitInputValue.bind(this);
-    this.askNextQuestion = this.askNextQuestion.bind(this);
+    this.handleNextMessage = this.handleNextMessage.bind(this);
     this.handleStateValue = this.handleStateValue.bind(this);
     this.modifyResult = this.modifyResult.bind(this);
     this.handleServerResponse = this.handleServerResponse.bind(this);
   }
 
   componentDidMount() {
-    this.askNextQuestion();
+    this.handleNextMessage();
   }
 
   componentWillUnmount() {
@@ -64,66 +66,22 @@ export default class FormBotApp extends React.PureComponent {
     this.setState({ [state]: value });
   }
 
-  askConditionsCheck(currentQuestion) {
-    let success = false,
-    entityValue = '',
-    entityPath = '';
-
-    for(let i = 0; i < currentQuestion.askConditions.length; i++) {
-      // now first get entity value from propertyPath
-      entityValue = '';
-      entityPath = currentQuestion.askConditions[i].entityPath;
-      entityValue = getValue(
-        `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentQuestion.askConditions[i].entity}`, this.state.result
-      );
-      if (entityValue === currentQuestion.askConditions[i].value) {
-        success = true;
-      } else {
-        success = false;
-        break;
-      }
-    }
-    return success;
-  }
-
-  skipConditionsCheck(currentQuestion) {
-    let success = false,
-    entityValue = '',
-    entityPath = '';
-
-    for(let i = 0; i < currentQuestion.skipConditions.length; i++) {
-      // now first get entity value from propertyPath
-      entityValue = '';
-      entityPath = currentQuestion.skipConditions[i].entityPath;
-      entityValue = getValue(
-        `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentQuestion.skipConditions[i].entity}`, this.state.result
-      );
-      if (entityValue === currentQuestion.skipConditions[i].value) {
-        success = true;
-        break;
-      } else {
-        success = false;
-      }
-    }
-    return success;
-  }
-
-  askNextQuestion() {
+  handleNextMessage() {
     console.log('currentNode :- ', this.state.currentNode);
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
-        const currentQuestion = this.state.questions.find(question => question.node === this.state.currentNode + 1);
-        if (currentQuestion) {
+        const currentMessage = this.state.messages.find(message => message.node === this.state.currentNode + 1);
+        if (currentMessage) {
           let toProceedAhead = true;
-          if (currentQuestion.skipConditions) {
-            if (this.skipConditionsCheck(currentQuestion)) {
+          if (currentMessage.skipConditions) {
+            if (skipConditionsCheck(currentMessage, this.state.result)) {
               let incrementCounter = 1;
-              let nextQuestion;
-              nextQuestion = this.state.questions.find(question => question.node === this.state.currentNode + incrementCounter);
-              while (nextQuestion && typeof nextQuestion === 'object' && 'skipConditions' in nextQuestion) {
-                if (nextQuestion.skipConditions && this.skipConditionsCheck(nextQuestion)) {
+              let nextMessage;
+              nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
+              while (nextMessage && typeof nextMessage === 'object' && 'skipConditions' in nextMessage) {
+                if (nextMessage.skipConditions && skipConditionsCheck(nextMessage, this.state.result)) {
                   incrementCounter += 1;
-                  nextQuestion = this.state.questions.find(question => question.node === this.state.currentNode + incrementCounter);
+                  nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
                 } else {
                   break;
                 }
@@ -132,22 +90,22 @@ export default class FormBotApp extends React.PureComponent {
               toProceedAhead = false;
               this.setState({
                 currentNode: this.state.currentNode + incrementCounter - 1,
-                currentQuestionIndex: 0,
+                currentMessageIndex: 0,
               }, () => {
-                this.askNextQuestion()
+                this.handleNextMessage()
               });
             }
           }
           
-          if (currentQuestion.askConditions) {
-            if (!this.askConditionsCheck(currentQuestion)) {
+          if (currentMessage.askConditions) {
+            if (!askConditionsCheck(currentMessage, this.state.result)) {
               let incrementCounter = 1;
-              let nextQuestion;
-              nextQuestion = this.state.questions.find(question => question.node === this.state.currentNode + incrementCounter);
-              while (nextQuestion && typeof nextQuestion === 'object' && 'askConditions' in nextQuestion) {
-                if (nextQuestion.askConditions && !this.askConditionsCheck(nextQuestion)) {
+              let nextMessage;
+              nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
+              while (nextMessage && typeof nextMessage === 'object' && 'askConditions' in nextMessage) {
+                if (nextMessage.askConditions && !askConditionsCheck(nextMessage, this.state.result)) {
                   incrementCounter += 1;
-                  nextQuestion = this.state.questions.find(question => question.node === this.state.currentNode + incrementCounter);
+                  nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
                 } else {
                   break;
                 }
@@ -156,41 +114,41 @@ export default class FormBotApp extends React.PureComponent {
               toProceedAhead = false;
               this.setState({
                 currentNode: this.state.currentNode + incrementCounter - 1,
-                currentQuestionIndex: 0,
+                currentMessageIndex: 0,
               }, () => {
-                this.askNextQuestion()
+                this.handleNextMessage()
               });
             }
           }
 
           if (toProceedAhead) {
-            const question = currentQuestion.question;
+            const message = currentMessage.message;
 
-            const { repliedMessages, currentQuestionIndex } = this.state;
+            const { repliedMessages, currentMessageIndex } = this.state;
 
-            if (question instanceof Array) {
-              if (currentQuestionIndex === question.length - 1) {
+            if (message instanceof Array) {
+              if (currentMessageIndex === message.length - 1) {
                 repliedMessages.push({
-                  text: question[currentQuestionIndex],
+                  text: message[currentMessageIndex],
                   sender: 'bot',
                   createdAt: formatAMPM(new Date()),
                   showTime: true
                 });
 
-                if (currentQuestion.widget === 'radio' && currentQuestion.radioOptions) {
+                if (currentMessage.widget === 'radio' && currentMessage.radioOptions) {
                   repliedMessages.push({
                     widget: 'radio',
-                    radioOptions: currentQuestion.radioOptions,
-                    node: currentQuestion.node,
+                    radioOptions: currentMessage.radioOptions,
+                    node: currentMessage.node,
                     isAnswer: true,
                     sender: 'bot'
                   });
-                } else if (currentQuestion.widget === 'checkbox' && currentQuestion.checkboxOptions) {
+                } else if (currentMessage.widget === 'checkbox' && currentMessage.checkboxOptions) {
                   repliedMessages.push({
                     widget: 'checkbox',
-                    checkboxOptions: currentQuestion.checkboxOptions,
-                    joinWith: currentQuestion.validateInput.joinWith || ',',
-                    node: currentQuestion.node,
+                    checkboxOptions: currentMessage.checkboxOptions,
+                    joinWith: currentMessage.validateInput.joinWith || ',',
+                    node: currentMessage.node,
                     isAnswer: true,
                     sender: 'bot'
                   });
@@ -198,49 +156,50 @@ export default class FormBotApp extends React.PureComponent {
 
                 this.setState({
                   currentNode: this.state.currentNode + 1,
-                  currentQuestionIndex: 0,
+                  currentMessageIndex: 0,
                   repliedMessages,
                   isBotTyping: false,
                   isUserAllowedToAnswer: true,
                 }, () => {
-                  if (currentQuestion.redirectURL) {
-                    setTimeout(() => {
-                      window.location = currentQuestion.redirectURL;
-                    }, currentQuestion.redirectDelay || 1000);
+                  if (currentMessage.redirectURL) {
+                    // need to implement this for native
+                    // setTimeout(() => {
+                    //   window.location = currentMessage.redirectURL;
+                    // }, currentMessage.redirectDelay || 1000);
                   }
                 });
               } else {
                 repliedMessages.push({
-                  text: question[currentQuestionIndex],
+                  text: message[currentMessageIndex],
                   sender: 'bot'
                 });
 
                 this.setState({
                   repliedMessages,
-                  currentQuestionIndex: currentQuestionIndex + 1
+                  currentMessageIndex: currentMessageIndex + 1
                 }, () => {
-                  this.askNextQuestion()
+                  this.handleNextMessage()
                 });
               }
-            } else if (typeof question === 'string') {
+            } else if (typeof message === 'string') {
               repliedMessages.push({
-                text: question,
+                text: message,
                 sender: 'bot',
                 createdAt: formatAMPM(new Date()),
                 showTime: true
               });
 
-              if (currentQuestion.widget === 'radio' && currentQuestion.radioOptions) {
+              if (currentMessage.widget === 'radio' && currentMessage.radioOptions) {
                 repliedMessages.push({
-                  text: <div>{this.answerChoices('radio', currentQuestion.radioOptions)}</div>,
+                  text: <div>{this.answerChoices('radio', currentMessage.radioOptions)}</div>,
                   sender: 'bot'
                 });
-              } else if (currentQuestion.widget === 'checkbox' && currentQuestion.checkboxOptions) {
+              } else if (currentMessage.widget === 'checkbox' && currentMessage.checkboxOptions) {
                 repliedMessages.push({
                   widget: 'checkbox',
-                  checkboxOptions: currentQuestion.checkboxOptions,
-                  joinWith: currentQuestion.validateInput.joinWith || ',',
-                  node: currentQuestion.node,
+                  checkboxOptions: currentMessage.checkboxOptions,
+                  joinWith: currentMessage.validateInput.joinWith || ',',
+                  node: currentMessage.node,
                   isAnswer: true,
                   sender: 'bot'
                 });
@@ -254,9 +213,9 @@ export default class FormBotApp extends React.PureComponent {
               });
             }
 
-            if (currentQuestion.serverImplementation) {
-              const request = currentQuestion.serverImplementation.request;
-              const response = currentQuestion.serverImplementation.response;
+            if (currentMessage.serverImplementation) {
+              const request = currentMessage.serverImplementation.request;
+              const response = currentMessage.serverImplementation.response;
               const success = response && response.success;
               const successShowMessage = success && success.showMessage;
               const mandatoryConditions = success && success.mandatoryConditions;
@@ -408,7 +367,7 @@ export default class FormBotApp extends React.PureComponent {
           });
         }
         this.setState({ result, repliedMessages, currentNode: this.state.currentNode + 1 }, () => {
-          this.askNextQuestion();
+          this.handleNextMessage();
         });
       }
       else if (successShowMessage) {
@@ -418,30 +377,30 @@ export default class FormBotApp extends React.PureComponent {
           sender: 'bot',
         });
         this.setState({ result, repliedMessages, currentNode: this.state.currentNode + 1 }, () => {
-          this.askNextQuestion();
+          this.handleNextMessage();
         });
       } else {
         this.setState({ result, currentNode: this.state.currentNode + 1 }, () => {
-          this.askNextQuestion();
+          this.handleNextMessage();
         });
       }
     }
   }
 
-  modifyResult(currentQuestion, answerInputModified) {
-    const questionEntity = currentQuestion.entity;
-    const questionPath = currentQuestion.entityPath;
+  modifyResult(currentMessage, answerInputModified) {
+    const messageEntity = currentMessage.entity;
+    const messagePath = currentMessage.entityPath;
 
-    if (questionEntity) {
+    if (messageEntity) {
       const { result } = this.state;
-      const validateInput = currentQuestion.validateInput;
+      const validateInput = currentMessage.validateInput;
       const outputType = validateInput && validateInput.outputType;
       if (outputType === 'string' || outputType === 'number') {
-        setValue(`${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}`, answerInputModified, result);
+        setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}`, answerInputModified, result);
         this.setState({ result });
       } else if (outputType === 'array') {
-        answerInputModified = answerInputModified.split(currentQuestion.validateInput.joinWith || ',');
-        setValue(`${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}`, answerInputModified, result);
+        answerInputModified = answerInputModified.split(currentMessage.validateInput.joinWith || ',');
+        setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}`, answerInputModified, result);
         this.setState({ result });
       } else if (outputType === 'object') {
         // here we need to handle this carefully
@@ -454,7 +413,7 @@ export default class FormBotApp extends React.PureComponent {
             keyValueIndex = keys[i].keyValueIndex;
             keyValueIndexType = typeof(keyValueIndex);
             if (keyValueIndexType === 'number') {
-              setValue(`${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}.${keys[i].keyName}`, answerInputModified[keyValueIndex], result);
+              setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[keyValueIndex], result);
             } else if (keyValueIndexType === 'object') {
               const orConditions = keys[i].keyValueIndex.or;
               const andConditions = keys[i].keyValueIndex.and;
@@ -463,7 +422,7 @@ export default class FormBotApp extends React.PureComponent {
               if (orConditions instanceof Array) {
                 for (let j = 0; j < orConditions.length; j++) {
                   if (orConditions[j].inputLength === answerInputModifiedLength) {
-                    setValue(`${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}.${keys[i].keyName}`, answerInputModified[orConditions[j].keyValueIndex], result);
+                    setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[orConditions[j].keyValueIndex], result);
                     break;
                   }
                 } 
@@ -472,14 +431,14 @@ export default class FormBotApp extends React.PureComponent {
               if (andConditions instanceof Array) {
                 for (let k = 0; k < andConditions.length; k++) {
                   if (andConditions[k].inputLength === answerInputModifiedLength) {
-                    setValue(`${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}.${keys[i].keyName}`, answerInputModified[andConditions[k].keyValueIndex], result);
+                    setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[andConditions[k].keyValueIndex], result);
                   }
                 }
               }
             }
 
             if (keys[i].casing && stringCases.indexOf(keys[i].casing.trim().toLowerCase() > -1)) {
-              const path = `${questionPath === undefined || questionPath === '' ? '' : '.'}${questionEntity}.${keys[i].keyName}`;
+              const path = `${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`;
               const tempValue = getValue(path, result);
               if (tempValue) {
                 setValue(
@@ -501,10 +460,10 @@ export default class FormBotApp extends React.PureComponent {
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim();
 
-    const currentQuestion = this.state.questions.find(question => question.node === this.state.currentNode);
+    const currentMessage = this.state.messages.find(message => message.node === this.state.currentNode);
 
-    if (currentQuestion.validateInput && currentQuestion.validateInput.casing) {
-      answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase());
+    if (currentMessage.validateInput && currentMessage.validateInput.casing) {
+      answerInput = stringCasing(answerInput, currentMessage.validateInput.casing.trim().toLowerCase());
     }
 
     const { repliedMessages } = this.state;
@@ -528,22 +487,22 @@ export default class FormBotApp extends React.PureComponent {
 
     let inputValidatedObject;
     if (source !== 'file' && source !== 'camera') {
-      inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result);
+      inputValidatedObject = validateInput(currentMessage, answerInputModified, source, this.state.result);
     } else {
-      console.log(currentQuestion, answerInputModified, fileName, fileExtension);
-      inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension);
+      console.log(currentMessage, answerInputModified, fileName, fileExtension);
+      inputValidatedObject = validateFile(currentMessage, answerInputModified, fileName, fileExtension);
     }
 
     console.log('inputValidatedObject :- ', inputValidatedObject);
 
     if (inputValidatedObject.success) {
-      if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
+      if (currentMessage.widget !== 'file' && currentMessage.widget !== 'camera') {
         repliedMessages.push({
           source,
           text: answerInput,
           sender: 'user',
           createdAt: formatAMPM(new Date()),
-          showTime: true // here setting it as true bcz user can only enter one message for a question , so need to show time for each user reply
+          showTime: true
         });
       } else {
         repliedMessages.push({
@@ -553,23 +512,23 @@ export default class FormBotApp extends React.PureComponent {
           fileExtension,
           sender: 'user',
           createdAt: formatAMPM(new Date()),
-          showTime: true // here setting it as true bcz user can only enter one message for a question , so need to show time for each user reply
+          showTime: true
         });
       }
 
-      this.modifyResult(currentQuestion, inputValidatedObject.answerInputModified);
+      this.modifyResult(currentMessage, inputValidatedObject.answerInputModified);
 
       this.setState({
         repliedMessages,
         isUserTyping: false,
         inputError: false
       }, () => {
-        this.askNextQuestion();
+        this.handleNextMessage();
       });
 
     } else {
       if (inputValidatedObject.foundError) {
-        if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
+        if (currentMessage.widget !== 'file' && currentMessage.widget !== 'camera') {
           repliedMessages.push({
             source,
             text: answerInput,
@@ -586,7 +545,7 @@ export default class FormBotApp extends React.PureComponent {
             fileExtension,
             sender: 'user',
             createdAt: formatAMPM(new Date()),
-            showTime: true // here setting it as true bcz user can only enter one message for a question , so need to show time for each user reply
+            showTime: true
           });
         }
         
@@ -596,8 +555,8 @@ export default class FormBotApp extends React.PureComponent {
           sender: 'bot',
           errorMessage: true
         });
-        if (currentQuestion.widget === 'radio' || currentQuestion.widget === 'checkbox') {
-          this.setState({ currentNode: this.state.currentNode - 1, repliedMessages }, () => this.askNextQuestion());
+        if (currentMessage.widget === 'radio' || currentMessage.widget === 'checkbox') {
+          this.setState({ currentNode: this.state.currentNode - 1, repliedMessages }, () => this.handleNextMessage());
         } else {
           this.setState({ repliedMessages });
         }
@@ -611,9 +570,9 @@ export default class FormBotApp extends React.PureComponent {
       uiData
     } = this.props;
 
-    const currentQuestion = this.state.currentNode === 0
+    const currentMessage = this.state.currentNode === 0
       ? {}
-      : this.state.questions.find(question => question.node === this.state.currentNode);
+      : this.state.messages.find(message => message.node === this.state.currentNode);
 
     return (
       <View style={styles.flexView}>
@@ -622,7 +581,7 @@ export default class FormBotApp extends React.PureComponent {
           ?
             <View style={styles.flexView}>
               {
-                currentQuestion.widget === 'qrscanner'
+                currentMessage.widget === 'qrscanner'
                 ?
                   <QRCodeScan
                     onScanSuccess={(data) => {
@@ -633,7 +592,7 @@ export default class FormBotApp extends React.PureComponent {
                 :
                   <View style={styles.flexView}>
                     {
-                      currentQuestion.widget === 'camera'
+                      currentMessage.widget === 'camera'
                       ?
                         <Camera
                           handleStateValue={this.handleStateValue}
@@ -659,10 +618,10 @@ export default class FormBotApp extends React.PureComponent {
                   repliedMessages={this.state.repliedMessages}
                   isUserTyping={this.state.isUserTyping}
                   isBotTyping={this.state.isBotTyping}
-                  currentQuestion={currentQuestion}
-                  askNextQuestion={this.askNextQuestion}
+                  currentMessage={currentMessage}
+                  handleNextMessage={this.handleNextMessage}
                   handleStateValue={this.handleStateValue}
-                  noQuestionAvailable={this.state.questions && this.state.questions.length === 0}
+                  noMessageAvailable={this.state.messages && this.state.messages.length === 0}
                 />
                 <Footer
                   icon={uiData.footer.icon}
@@ -670,7 +629,7 @@ export default class FormBotApp extends React.PureComponent {
                   isBotTyping={this.state.isBotTyping}
                   handleStateValue={this.handleStateValue}
                   isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
-                  currentQuestion={currentQuestion}
+                  currentMessage={currentMessage}
                 />
               </KeyboardAvoidingView>
             </View>
