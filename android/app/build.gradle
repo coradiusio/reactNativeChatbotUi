@@ -142,7 +142,7 @@ dependencies {
         exclude group: "com.google.android.gms"
         exclude group: "com.android.support"
     }
-    compile 'com.android.support:exifinterface:26.+'
+    compile 'com.android.support:exifinterface:27.1.0'
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:26.0.0-alpha1"
     compile "com.facebook.react:react-native:+"  // From node_modules
@@ -153,15 +153,4 @@ dependencies {
 task copyDownloadableDepsToLibs(type: Copy) {
     from configurations.compile
     into 'libs'
-}
-
-subprojects {
-    project.configurations.all {
-        resolutionStrategy.eachDependency { details ->
-            if (details.requested.group == 'com.android.support'
-                    && !details.requested.name.contains('multidex') ) {
-                details.useVersion "26.1.0"
-            }
-        }
-    }
 }
