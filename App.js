@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import FormBotApp from './src/FormBotApp';
 
@@ -44,11 +44,9 @@ export default class App extends React.PureComponent {
         }
       },
       logicalData: {
-        result: this.props.result || {},
         currentNode: 0,
         currentMessageIndex: 0,
         messages: this.props.messages || [],
-        repliedMessages: [],
         isBotTyping: false,
         isUserTyping: false,
         isUserAllowedToAnswer: false,
@@ -56,12 +54,18 @@ export default class App extends React.PureComponent {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
+  onMessageReceive(message) {
+    const {
+      messages
+    } = this.state.logicalData;
+
+    messages.push(message);
+
     this.setState(prevState => ({
       ...prevState,
       logicalData: {
         ...prevState.logicalData,
-        messages: nextProps.messages
+        messages
       }
     }));
   }
@@ -72,11 +76,12 @@ export default class App extends React.PureComponent {
       logicalData
     } = this.state;
 
-    console.log('logicalData :- ', logicalData);
-
     return (
       <View style={styles.container}>
-        <FormBotApp uiData={uiData} logicalData={logicalData} />
+        <FormBotApp
+          uiData={uiData}
+          logicalData={logicalData}
+        />
       </View>
     );
   }

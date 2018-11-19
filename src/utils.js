@@ -137,7 +137,7 @@ export function validateInput(currentMessage, answerInputModified, source = 'tex
     errorMessage: '',
   };
   
-  if (widget === 'text' || widget === 'calendar' || widget === 'qrscanner' || widget === 'camera') {
+  if (['text', 'calendar', 'qrscanner', 'camera'].indexOf(widget) > -1) {
     if (answerInputModified !== '' && validateInput) {
       const outputType = validateInput.outputType;
       if (outputType === 'object') {
@@ -406,3 +406,5 @@ export function skipConditionsCheck(currentMessage, result) {
   }
   return success;
 }
+
+export const axiosConfig = { timeout: 300000 };

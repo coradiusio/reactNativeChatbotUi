@@ -18,6 +18,8 @@ import {
 import Camera from './components/sub_components/Camera';
 
 import {
+  axiosConfig,
+
   massageText,
   formatAMPM,
   validateInput,
@@ -27,10 +29,9 @@ import {
   stringCasing,
   validateFile,
   askConditionsCheck,
-  skipConditionsCheck
+  skipConditionsCheck,
 } from './utils';
 
-const config = { timeout: 300000 };
 let timer;
 
 export default class FormBotApp extends React.PureComponent {
@@ -59,7 +60,9 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   componentWillUnmount() {
-    clearTimeout(timer);
+    if (timer) {
+      clearTimeout(timer);
+    }
   }
 
   handleStateValue(state, value) {
@@ -67,7 +70,6 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleNextMessage() {
-    console.log('currentNode :- ', this.state.currentNode);
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
         const currentMessage = this.state.messages.find(message => message.node === this.state.currentNode + 1);
@@ -248,7 +250,7 @@ export default class FormBotApp extends React.PureComponent {
                     this.setState({ repliedMessages });
                   }
 
-                  axios.get(absoluteURL, config)
+                  axios.get(absoluteURL, axiosConfig)
                   .then((serverResponse) => {
                     console.log('response :- ', serverResponse);
                     this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
@@ -276,7 +278,7 @@ export default class FormBotApp extends React.PureComponent {
                 } else if (requestType === 'post') {
                   let data = new FormData();
                   if (requestType.headers) {
-                    config.headers = requestType.headers;
+                    axiosConfig.headers = requestType.headers;
                   }
                   if (typeof request.data === 'object') {
                     for (let key in request.data) {
@@ -295,7 +297,7 @@ export default class FormBotApp extends React.PureComponent {
                     this.setState({ repliedMessages });
                   }
 
-                  axios.post(absoluteURL, data, config)
+                  axios.post(absoluteURL, data, axiosConfig)
                   .then((serverResponse) => {
                     console.log('response :- ', serverResponse);
                     this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
