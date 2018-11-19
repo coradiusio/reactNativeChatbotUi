@@ -28,6 +28,12 @@ export default class App extends React.PureComponent {
             size: 12
           },
         },
+        body: {
+          loader: {
+            color: colors.primary,
+            size: 'small'
+          },
+        },
         footer: {
           icon: {
             name: 'send',
@@ -65,6 +71,8 @@ export default class App extends React.PureComponent {
       uiData,
       logicalData
     } = this.state;
+
+    console.log('logicalData :- ', logicalData);
 
     return (
       <View style={styles.container}>

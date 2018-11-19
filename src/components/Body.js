@@ -95,7 +95,8 @@ class Body extends React.PureComponent {
     const {
       result,
       repliedMessages,
-      currentMessage
+      currentMessage,
+      loader
     } = this.props;
 
     let leftOrRight = 'left', differentSender = false;
@@ -106,7 +107,7 @@ class Body extends React.PureComponent {
         {
           this.props.noMessageAvailable
           ?
-            <Loader />
+            <Loader color={loader.color} size={loader.size} />
           :
             <ScrollView
               style={styles.flexView}

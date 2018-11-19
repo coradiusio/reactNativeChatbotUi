@@ -614,6 +614,7 @@ export default class FormBotApp extends React.PureComponent {
               <KeyboardAvoidingView style={styles.flexView} behavior='padding' keyboardVerticalOffset={-500}>
                 <Body
                   result={this.state.result}
+                  loader={uiData.body.loader}
                   submitInputValue={this.submitInputValue}
                   repliedMessages={this.state.repliedMessages}
                   isUserTyping={this.state.isUserTyping}
