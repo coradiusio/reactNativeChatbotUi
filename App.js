@@ -74,7 +74,7 @@ export default class App extends React.PureComponent {
     const messages = app.service('messages');
 
     messages.on('created', message => {
-      onMessageReceive(message);
+      this.onMessageReceive(message);
     });
     
     // Create a new message and then get a list of all messages
