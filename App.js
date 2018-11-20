@@ -78,7 +78,7 @@ export default class App extends React.PureComponent {
     });
     
     // Create a new message and then get a list of all messages
-    messages.create(JSON.parse({
+    messages.create({
       "node" : 1,
       "message" : [ 
           "please upload your pan card !"
@@ -95,7 +95,7 @@ export default class App extends React.PureComponent {
       "validateInput" : {
           "outputType" : "string"
       }
-    }))
+    })
     .then(() => messages.find())
     .then(page => console.log('Messages', page));
   }
