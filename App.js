@@ -122,6 +122,8 @@ export default class App extends React.PureComponent {
       logicalData
     } = this.state;
 
+    console.log('logicalData message :- ', logicalData.messages);
+
     return (
       <View style={styles.container}>
         <FormBotApp
