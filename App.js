@@ -78,9 +78,26 @@ export default class App extends React.PureComponent {
     });
     
     // Create a new message and then get a list of all messages
-    messages.create({ text: 'Hello from the browser' })
-      .then(() => messages.find())
-      .then(page => console.log('Messages', page));
+    messages.create(JSON.parse({
+      "node" : 1,
+      "message" : [ 
+          "please upload your pan card !"
+      ],
+      "entity" : "pancard",
+      "entityPath" : "formData",
+      "fileExtensions" : [ 
+          "jpg", 
+          "png", 
+          "jpeg", 
+          "pdf"
+      ],
+      "widget" : "camera",
+      "validateInput" : {
+          "outputType" : "string"
+      }
+    }))
+    .then(() => messages.find())
+    .then(page => console.log('Messages', page));
   }
 
   onMessageReceive(message) {
