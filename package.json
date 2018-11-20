@@ -12,7 +12,7 @@
     "axios": "^0.18.0",
     "lodash": "^4.17.11",
     "react": "16.3.1",
-    "react-native": "0.55.2",
+    "react-native": "0.55.3",
     "react-native-camera": "git+https://git@github.com/react-native-community/react-native-camera",
     "reactNativeBasicComponents": "git://github.com/coradiusio/reactNativeBasicComponents#feature/robin_primary",
     "socket.io-client": "^2.1.1"

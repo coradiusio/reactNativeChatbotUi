@@ -71,12 +71,10 @@ export default class App extends React.PureComponent {
   }
 
   componentDidMount() {
-    console.log('app :- ', app);
     const messages = app.service('messages');
-    console.log('messages :- ', messages);
 
     messages.on('created', message => {
-      console.log('Someone created a messages', message);
+      onMessageReceive(message);
     });
     
     // Create a new message and then get a list of all messages
