@@ -48,6 +48,7 @@ export default class FormBotApp extends React.PureComponent {
       isUserAllowedToAnswer: false,
       openCameraView: false
     };
+
     this.submitInputValue = this.submitInputValue.bind(this);
     this.handleNextMessage = this.handleNextMessage.bind(this);
     this.handleStateValue = this.handleStateValue.bind(this);

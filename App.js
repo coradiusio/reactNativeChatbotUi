@@ -1,11 +1,17 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import io from 'socket.io-client';
+import feathers from '@feathersjs/feathers';
+import socketio from '@feathersjs/socketio-client';
+
 import FormBotApp from './src/FormBotApp';
 
 import {
   colors
 } from './src/general';
+
+const app = feathers();
 
 export default class App extends React.PureComponent {
   constructor(props) {
@@ -52,6 +58,31 @@ export default class App extends React.PureComponent {
         isUserAllowedToAnswer: false,
       }
     }
+
+    // setup socket connection
+    app.configure(
+      socketio(
+        io(
+          this.props.host || 'http://localhost:7664',
+          { transports: ['websocket'] }
+        )
+      )
+    );
+  }
+
+  componentDidMount() {
+    console.log('app :- ', app);
+    const messages = app.service('messages');
+    console.log('messages :- ', messages);
+
+    messages.on('created', message => {
+      console.log('Someone created a messages', message);
+    });
+    
+    // Create a new message and then get a list of all messages
+    messages.create({ text: 'Hello from the browser' })
+      .then(() => messages.find())
+      .then(page => console.log('Messages', page));
   }
 
   onMessageReceive(message) {
