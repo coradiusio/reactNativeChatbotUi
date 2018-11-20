@@ -11,8 +11,6 @@ import {
   colors
 } from './src/general';
 
-const app = feathers();
-
 export default class App extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -53,6 +51,7 @@ export default class App extends React.PureComponent {
         currentNode: 0,
         currentMessageIndex: 0,
         messages: this.props.messages || [],
+        repliedMessages: [],
         isBotTyping: false,
         isUserTyping: false,
         isUserAllowedToAnswer: false,
@@ -60,44 +59,26 @@ export default class App extends React.PureComponent {
     }
 
     // setup socket connection
-    app.configure(
-      socketio(
-        io(
-          this.props.host || 'http://localhost:7664',
-          { transports: ['websocket'] }
+    this.app = feathers()
+      .configure(
+        socketio(
+          io(
+            this.props.host || 'http://localhost:7664',
+            { 
+              transports: ['websocket'],
+            }
+          )
         )
-      )
-    );
+      );
   }
 
   componentDidMount() {
-    const messages = app.service('messages');
+    const messages = this.app.service('messages');
 
     messages.on('created', message => {
+      console.log('new message created :- ', message);
       this.onMessageReceive(message);
     });
-    
-    // Create a new message and then get a list of all messages
-    messages.create({
-      "node" : 1,
-      "message" : [ 
-          "please upload your pan card !"
-      ],
-      "entity" : "pancard",
-      "entityPath" : "formData",
-      "fileExtensions" : [ 
-          "jpg", 
-          "png", 
-          "jpeg", 
-          "pdf"
-      ],
-      "widget" : "camera",
-      "validateInput" : {
-          "outputType" : "string"
-      }
-    })
-    .then(() => messages.find())
-    .then(page => console.log('Messages', page));
   }
 
   onMessageReceive(message) {
@@ -122,8 +103,6 @@ export default class App extends React.PureComponent {
       logicalData
     } = this.state;
 
-    console.log('logicalData message :- ', logicalData.messages);
-
     return (
       <View style={styles.container}>
         <FormBotApp
@@ -141,5 +120,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
 });
+
 
 

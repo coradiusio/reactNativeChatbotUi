@@ -56,10 +56,6 @@ export default class FormBotApp extends React.PureComponent {
     this.handleServerResponse = this.handleServerResponse.bind(this);
   }
 
-  componentDidMount() {
-    this.handleNextMessage();
-  }
-
   componentWillUnmount() {
     if (timer) {
       clearTimeout(timer);
@@ -70,10 +66,19 @@ export default class FormBotApp extends React.PureComponent {
     this.setState({ [state]: value });
   }
 
+  componentWillReceiveProps(nextProps) {
+    console.log('nextProps.logicalData.messages.length  :- ', nextProps.logicalData.messages.length );
+    console.log('this.state.messages.length :- ', this.state.messages.length);
+    if (nextProps.logicalData.messages.length > this.state.messages.length) {
+      this.handleNextMessage();
+    }
+  }
+
   handleNextMessage() {
+    console.log('in handle next message');
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
-        const currentMessage = this.state.messages.find(message => message.node === this.state.currentNode + 1);
+        const currentMessage = this.state.messages[this.state.messages.length - 1];
         if (currentMessage) {
           let toProceedAhead = true;
           if (currentMessage.skipConditions) {
@@ -217,119 +222,123 @@ export default class FormBotApp extends React.PureComponent {
             }
 
             if (currentMessage.serverImplementation) {
-              const request = currentMessage.serverImplementation.request;
-              const response = currentMessage.serverImplementation.response;
-              const success = response && response.success;
-              const successShowMessage = success && success.showMessage;
-              const mandatoryConditions = success && success.mandatoryConditions;
-              const error = response && response.error;
-              const errorShowMessage = error && error.showMessage;
-
-              let absoluteURL = `${request.baseURL}${request.endpoint}`;
-              let requestType = request.type;
-
-              if (requestType) {
-                requestType = requestType.trim().toLowerCase();
-                if (requestType === 'get') {
-                  if (typeof request.data === 'object') {
-                    absoluteURL = absoluteURL + '?';
-                    for (let key in request.data) {
-                      absoluteURL = absoluteURL + `${key}=${request.data[key]}&`;
-                    }
-                  }
-                  if (absoluteURL.endsWith('&')) {
-                    absoluteURL = absoluteURL.slice(0, -1);
-                  }
-
-                  if (request.showMessage) {
-                    const { repliedMessages } = this.state;
-                    repliedMessages.push({
-                      source: 'text',
-                      text: request.showMessage,
-                      sender: 'bot',
-                    });
-                    this.setState({ repliedMessages });
-                  }
-
-                  axios.get(absoluteURL, axiosConfig)
-                  .then((serverResponse) => {
-                    console.log('response :- ', serverResponse);
-                    this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
-                  }).catch((error) => {
-                    console.log('error :- ', error);
-                    const { repliedMessages } = this.state;
-                    repliedMessages.push({
-                      source: 'text',
-                      text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
-                      sender: 'bot',
-                      errorMessage: true
-                    });
-
-                    if (response && response.error && response.error.showMessage) {
-                      repliedMessages.push({
-                        source: 'text',
-                        text: response && response.error && response.error.showMessage,
-                        sender: 'bot',
-                        errorMessage: true
-                      });
-                    }
-
-                    this.setState({ repliedMessages });
-                  });
-                } else if (requestType === 'post') {
-                  let data = new FormData();
-                  if (requestType.headers) {
-                    axiosConfig.headers = requestType.headers;
-                  }
-                  if (typeof request.data === 'object') {
-                    for (let key in request.data) {
-                      data.append(key, typeof request.data[key] === 'string' ? massageText(request.data[key], this.state.result) : request.data[key]);
-                    }
-                  }
-
-                  if (request.showMessage) {
-                    const { repliedMessages } = this.state;
-                    repliedMessages.push({
-                      source: 'text',
-                      text: request.showMessage,
-                      sender: 'bot',
-                    });
-
-                    this.setState({ repliedMessages });
-                  }
-
-                  axios.post(absoluteURL, data, axiosConfig)
-                  .then((serverResponse) => {
-                    console.log('response :- ', serverResponse);
-                    this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
-                  }).catch((error) => {
-                    console.log('error :- ', error);
-                    const { repliedMessages } = this.state;
-                    repliedMessages.push({
-                      source: 'text',
-                      text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
-                      sender: 'bot',
-                      errorMessage: true
-                    });
-
-                    if (response && response.error && response.error.showMessage) {
-                      repliedMessages.push({
-                        source: 'text',
-                        text: response && response.error && response.error.showMessage,
-                        sender: 'bot',
-                        errorMessage: true
-                      });
-                    }
-                    
-                    this.setState({ repliedMessages });
-                  });
-                }
-              }
+              this.handleServerRequest(currentMessage);
             }
           }
         }
       }, 1000);
     });
+  }
+
+  handleServerRequest(currentMessage) {
+    const request = currentMessage.serverImplementation.request;
+    const response = currentMessage.serverImplementation.response;
+    const success = response && response.success;
+    const successShowMessage = success && success.showMessage;
+    const mandatoryConditions = success && success.mandatoryConditions;
+    const error = response && response.error;
+    const errorShowMessage = error && error.showMessage;
+
+    let absoluteURL = `${request.baseURL}${request.endpoint}`;
+    let requestType = request.type;
+
+    if (requestType) {
+      requestType = requestType.trim().toLowerCase();
+      if (requestType === 'get') {
+        if (typeof request.data === 'object') {
+          absoluteURL = absoluteURL + '?';
+          for (let key in request.data) {
+            absoluteURL = absoluteURL + `${key}=${request.data[key]}&`;
+          }
+        }
+        if (absoluteURL.endsWith('&')) {
+          absoluteURL = absoluteURL.slice(0, -1);
+        }
+
+        if (request.showMessage) {
+          const { repliedMessages } = this.state;
+          repliedMessages.push({
+            source: 'text',
+            text: request.showMessage,
+            sender: 'bot',
+          });
+          this.setState({ repliedMessages });
+        }
+
+        axios.get(absoluteURL, axiosConfig)
+        .then((serverResponse) => {
+          console.log('response :- ', serverResponse);
+          this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
+        }).catch((error) => {
+          console.log('error :- ', error);
+          const { repliedMessages } = this.state;
+          repliedMessages.push({
+            source: 'text',
+            text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
+            sender: 'bot',
+            errorMessage: true
+          });
+
+          if (response && response.error && response.error.showMessage) {
+            repliedMessages.push({
+              source: 'text',
+              text: response && response.error && response.error.showMessage,
+              sender: 'bot',
+              errorMessage: true
+            });
+          }
+
+          this.setState({ repliedMessages });
+        });
+      } else if (requestType === 'post') {
+        let data = new FormData();
+        if (requestType.headers) {
+          axiosConfig.headers = requestType.headers;
+        }
+        if (typeof request.data === 'object') {
+          for (let key in request.data) {
+            data.append(key, typeof request.data[key] === 'string' ? massageText(request.data[key], this.state.result) : request.data[key]);
+          }
+        }
+
+        if (request.showMessage) {
+          const { repliedMessages } = this.state;
+          repliedMessages.push({
+            source: 'text',
+            text: request.showMessage,
+            sender: 'bot',
+          });
+
+          this.setState({ repliedMessages });
+        }
+
+        axios.post(absoluteURL, data, axiosConfig)
+        .then((serverResponse) => {
+          console.log('response :- ', serverResponse);
+          this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
+        }).catch((error) => {
+          console.log('error :- ', error);
+          const { repliedMessages } = this.state;
+          repliedMessages.push({
+            source: 'text',
+            text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
+            sender: 'bot',
+            errorMessage: true
+          });
+
+          if (response && response.error && response.error.showMessage) {
+            repliedMessages.push({
+              source: 'text',
+              text: response && response.error && response.error.showMessage,
+              sender: 'bot',
+              errorMessage: true
+            });
+          }
+          
+          this.setState({ repliedMessages });
+        });
+      }
+    }
   }
 
   handleServerResponse(response, successShowMessage, errorShowMessage, mandatoryConditions) {
@@ -573,6 +582,8 @@ export default class FormBotApp extends React.PureComponent {
       uiData
     } = this.props;
 
+    console.log('this.state.repliedMessages :- ', this.state.repliedMessages);
+
     const currentMessage = this.state.currentNode === 0
       ? {}
       : this.state.messages.find(message => message.node === this.state.currentNode);
@@ -648,3 +659,4 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
+
