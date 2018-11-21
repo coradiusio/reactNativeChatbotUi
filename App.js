@@ -60,25 +60,18 @@ export default class App extends React.PureComponent {
 
     // setup socket connection
     this.app = feathers()
-      .configure(
-        socketio(
-          io(
-            this.props.host || 'http://localhost:7664',
-            { 
-              transports: ['websocket'],
-            }
-          )
-        )
-      );
+      .configure(socketio(io(this.props.host || 'http://localhost:7664', { transports: ['websocket'] })));
   }
 
   componentDidMount() {
-    const messages = this.app.service('messages');
-
-    messages.on('created', message => {
+    this.app.service('messages').on('created', message => {
       console.log('new message created :- ', message);
       this.onMessageReceive(message);
     });
+  }
+
+  componentWillUnmount() {
+    this.app = null;
   }
 
   onMessageReceive(message) {
@@ -108,6 +101,7 @@ export default class App extends React.PureComponent {
         <FormBotApp
           uiData={uiData}
           logicalData={logicalData}
+          app={this.app}
         />
       </View>
     );
@@ -120,6 +114,5 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background
   },
 });
-
 
 

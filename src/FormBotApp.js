@@ -37,7 +37,7 @@ let timer;
 export default class FormBotApp extends React.PureComponent {
   constructor(props) {
     super(props);
-    this.state = props.logicalData || {
+    this.state = {
       result: {},
       currentNode: 0,
       currentMessageIndex: 0,
@@ -53,7 +53,6 @@ export default class FormBotApp extends React.PureComponent {
     this.handleNextMessage = this.handleNextMessage.bind(this);
     this.handleStateValue = this.handleStateValue.bind(this);
     this.modifyResult = this.modifyResult.bind(this);
-    this.handleServerResponse = this.handleServerResponse.bind(this);
   }
 
   componentWillUnmount() {
@@ -67,18 +66,21 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
-    console.log('nextProps.logicalData.messages.length  :- ', nextProps.logicalData.messages.length );
-    console.log('this.state.messages.length :- ', this.state.messages.length);
     if (nextProps.logicalData.messages.length > this.state.messages.length) {
-      this.handleNextMessage();
+      this.setState({ messages: nextProps.logicalData.messages }, () => this.handleNextMessage());
     }
   }
 
   handleNextMessage() {
+    const app = this.props.app;
+    const messagesService = app.service('messages');
+
     console.log('in handle next message');
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
         const currentMessage = this.state.messages[this.state.messages.length - 1];
+
+        console.log('currentMessage :- ', currentMessage);
         if (currentMessage) {
           let toProceedAhead = true;
           if (currentMessage.skipConditions) {
@@ -468,11 +470,9 @@ export default class FormBotApp extends React.PureComponent {
     } else return;
   }
 
-  submitInputValue(answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
+  submitInputValue(currentMessage, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim();
-
-    const currentMessage = this.state.messages.find(message => message.node === this.state.currentNode);
 
     if (currentMessage.validateInput && currentMessage.validateInput.casing) {
       answerInput = stringCasing(answerInput, currentMessage.validateInput.casing.trim().toLowerCase());
@@ -582,11 +582,7 @@ export default class FormBotApp extends React.PureComponent {
       uiData
     } = this.props;
 
-    console.log('this.state.repliedMessages :- ', this.state.repliedMessages);
-
-    const currentMessage = this.state.currentNode === 0
-      ? {}
-      : this.state.messages.find(message => message.node === this.state.currentNode);
+    const [ currentMessage = {} ] = this.state.messages.slice(-1);
 
     return (
       <View style={styles.flexView}>
@@ -659,4 +655,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

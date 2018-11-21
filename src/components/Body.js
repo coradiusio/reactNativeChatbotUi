@@ -44,7 +44,7 @@ class Body extends React.PureComponent {
           choices={repliedMessage.radioOptions}
           onChange={(option) => {
             if (repliedMessage.node === currentMessage.node) {
-              this.props.submitInputValue(option.label, option.value, 'radio')
+              this.props.submitInputValue(currentMessage, option.label, option.value, 'radio');
             }
           }}
           buttonsContainerStyle={styles.buttonsContainer}

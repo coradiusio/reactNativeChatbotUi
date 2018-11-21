@@ -41,11 +41,11 @@ class Footer extends React.PureComponent {
   }
 
   handleSubmit() {
-    this.props.submitInputValue(this.state.inputText.trim());
+    this.props.submitInputValue(this.props.currentMessage, this.state.inputText.trim());
   }
 
   handleSelect(value) {
-    this.props.submitInputValue(value);
+    this.props.submitInputValue(this.props.currentMessage, value);
   }
 
   _showDateTimePicker = () => this.setState({ isDatePickerVisible: true });
@@ -53,7 +53,7 @@ class Footer extends React.PureComponent {
   _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false });
 
   _handleDatePicked = (date) => {
-    this.props.submitInputValue(formatDate(date));
+    this.props.submitInputValue(this.props.currentMessage, formatDate(date));
     this._hideDateTimePicker();
   };
 
