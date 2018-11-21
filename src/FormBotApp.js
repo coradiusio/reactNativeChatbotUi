@@ -21,7 +21,6 @@ import {
   axiosConfig,
 
   massageText,
-  formatAMPM,
   validateInput,
   setValue,
   getValue,
@@ -141,7 +140,6 @@ export default class FormBotApp extends React.PureComponent {
                 repliedMessages.push({
                   text: message[currentMessageIndex],
                   sender: 'bot',
-                  createdAt: formatAMPM(new Date()),
                   showTime: true
                 });
 
@@ -195,7 +193,6 @@ export default class FormBotApp extends React.PureComponent {
               repliedMessages.push({
                 text: message,
                 sender: 'bot',
-                createdAt: formatAMPM(new Date()),
                 showTime: true
               });
 
@@ -513,7 +510,6 @@ export default class FormBotApp extends React.PureComponent {
           source,
           text: answerInput,
           sender: 'user',
-          createdAt: formatAMPM(new Date()),
           showTime: true
         });
       } else {
@@ -523,7 +519,6 @@ export default class FormBotApp extends React.PureComponent {
           fileName,
           fileExtension,
           sender: 'user',
-          createdAt: formatAMPM(new Date()),
           showTime: true
         });
       }
@@ -545,7 +540,6 @@ export default class FormBotApp extends React.PureComponent {
             source,
             text: answerInput,
             sender: 'user',
-            createdAt: formatAMPM(new Date()),
             showTime: true,
             isError: true,
           });
@@ -556,7 +550,6 @@ export default class FormBotApp extends React.PureComponent {
             fileName,
             fileExtension,
             sender: 'user',
-            createdAt: formatAMPM(new Date()),
             showTime: true
           });
         }

@@ -61,13 +61,37 @@ export default class App extends React.PureComponent {
     // setup socket connection
     this.app = feathers()
       .configure(socketio(io(this.props.host || 'http://localhost:7664', { transports: ['websocket'] })));
+
+    this.messagesService = this.app.service('messages');
   }
 
   componentDidMount() {
-    this.app.service('messages').on('created', message => {
+    this.messagesService.on('created', message => {
       console.log('new message created :- ', message);
       this.onMessageReceive(message);
     });
+
+    this.fetchAllMessages();
+  }
+
+  fetchAllMessages() {
+    this.messagesService.find()
+    .then(response => {
+      this.updateMessages(response.data);
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  }
+
+  updateMessages(messages) {
+    this.setState(prevState => ({
+      ...prevState,
+      logicalData: {
+        ...prevState.logicalData,
+        messages
+      }
+    }));
   }
 
   componentWillUnmount() {
@@ -81,13 +105,7 @@ export default class App extends React.PureComponent {
 
     messages.push(message);
 
-    this.setState(prevState => ({
-      ...prevState,
-      logicalData: {
-        ...prevState.logicalData,
-        messages
-      }
-    }));
+    this.updateMessages(messages);
   }
 
   render() {
@@ -101,7 +119,7 @@ export default class App extends React.PureComponent {
         <FormBotApp
           uiData={uiData}
           logicalData={logicalData}
-          app={this.app}
+          messagesService={this.messagesService}
         />
       </View>
     );

@@ -19,7 +19,8 @@ import ChatBubble from './sub_components/ChatBubble';
 import TypingIndicator from './sub_components/TypingIndicator';
 
 import {
-  massageText
+  massageText,
+  formatAMPM
 } from '../utils';
 
 import {
@@ -101,7 +102,6 @@ class Body extends React.PureComponent {
 
     let leftOrRight = 'left', differentSender = false;
 
-    //console.log('repliedMessages :- ', repliedMessages.reverse().slice(0,3));
     return (
       <View style={styles.flexView}>
         {
@@ -205,7 +205,7 @@ class Body extends React.PureComponent {
                                         styles.timeString
                                       ]}
                                     >
-                                      {repliedMessage.createdAt}
+                                      {formatAMPM(repliedMessage.createdAt)}
                                     </Text>
                                     {
                                       leftOrRight === 'right' && !repliedMessage.isError
