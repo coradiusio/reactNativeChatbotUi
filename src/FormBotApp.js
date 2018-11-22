@@ -6,14 +6,13 @@ import {
 } from 'react-native';
 
 import axios from 'axios';
+import io from 'socket.io-client';
+import feathers from '@feathersjs/feathers';
+import socketio from '@feathersjs/socketio-client';
 
 import Header from './components/Header';
 import Body from './components/Body';
 import Footer from './components/Footer';
-
-import {
-  QRCodeScan
-} from 'reactNativeBasicComponents';
 
 import Camera from './components/sub_components/Camera';
 
@@ -27,8 +26,6 @@ import {
   stringCases,
   stringCasing,
   validateFile,
-  askConditionsCheck,
-  skipConditionsCheck,
 } from './utils';
 
 let timer;
@@ -37,8 +34,36 @@ export default class FormBotApp extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {
+      uiData: {
+        header: {
+          title: 'Chatbot Assistant',
+          subtitle: 'online',
+          icon: {
+            name: 'robot',
+            type: 'material-community',
+            color: colors.white,
+            size: 40
+          },
+          subtitleIcon: {
+            name: 'circle',
+            type: 'material-community',
+            color: colors.green,
+            size: 12
+          },
+        },
+        loader: {
+          color: colors.primary,
+        },
+        footer: {
+          icon: {
+            name: 'send',
+            type: 'material-community',
+            color: colors.primary,
+            size: 32
+          }
+        }
+      },
       result: {},
-      currentNode: 0,
       currentMessageIndex: 0,
       messages: [],
       repliedMessages: [],
@@ -48,180 +73,101 @@ export default class FormBotApp extends React.PureComponent {
       openCameraView: false
     };
 
+    // setup socket connection
+    this.app = feathers()
+      .configure(socketio(io(this.props.host || 'http://localhost:7664', { transports: ['websocket'] })));
+
+    this.messagesService = this.app.service('messages');
+
     this.submitInputValue = this.submitInputValue.bind(this);
     this.handleNextMessage = this.handleNextMessage.bind(this);
     this.handleStateValue = this.handleStateValue.bind(this);
     this.modifyResult = this.modifyResult.bind(this);
   }
 
+  componentDidMount() {
+    this.fetchMessagesHistory();
+  }
+
   componentWillUnmount() {
     if (timer) {
       clearTimeout(timer);
     }
+
+    this.app = null;
+  }
+
+  fetchMessagesHistory() {
+    this.messagesService.find()
+    .then(response => {
+      this.updateMessages(response.data);
+    })
+    .catch(err => {
+      console.log(err);
+    })
+  }
+
+  updateMessages(messages) {
+    this.setState(prevState => ({
+      ...prevState,
+      messages
+    }));
   }
 
   handleStateValue(state, value) {
     this.setState({ [state]: value });
   }
 
-  componentWillReceiveProps(nextProps) {
-    if (nextProps.logicalData.messages.length > this.state.messages.length) {
-      this.setState({ messages: nextProps.logicalData.messages }, () => this.handleNextMessage());
-    }
+  fetchNextQuestion() {
+
   }
 
   handleNextMessage() {
-    const app = this.props.app;
-    const messagesService = app.service('messages');
-
-    console.log('in handle next message');
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
         const currentMessage = this.state.messages[this.state.messages.length - 1];
 
-        console.log('currentMessage :- ', currentMessage);
         if (currentMessage) {
-          let toProceedAhead = true;
-          if (currentMessage.skipConditions) {
-            if (skipConditionsCheck(currentMessage, this.state.result)) {
-              let incrementCounter = 1;
-              let nextMessage;
-              nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
-              while (nextMessage && typeof nextMessage === 'object' && 'skipConditions' in nextMessage) {
-                if (nextMessage.skipConditions && skipConditionsCheck(nextMessage, this.state.result)) {
-                  incrementCounter += 1;
-                  nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
-                } else {
-                  break;
-                }
-              }
+          const message = currentMessage.message;
 
-              toProceedAhead = false;
-              this.setState({
-                currentNode: this.state.currentNode + incrementCounter - 1,
-                currentMessageIndex: 0,
-              }, () => {
-                this.handleNextMessage()
-              });
-            }
-          }
-          
-          if (currentMessage.askConditions) {
-            if (!askConditionsCheck(currentMessage, this.state.result)) {
-              let incrementCounter = 1;
-              let nextMessage;
-              nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
-              while (nextMessage && typeof nextMessage === 'object' && 'askConditions' in nextMessage) {
-                if (nextMessage.askConditions && !askConditionsCheck(nextMessage, this.state.result)) {
-                  incrementCounter += 1;
-                  nextMessage = this.state.messages.find(message => message.node === this.state.currentNode + incrementCounter);
-                } else {
-                  break;
-                }
-              }
+          const messageArray = message instanceof Array ? message : (typeof message === 'string' ? [message] : null);
 
-              toProceedAhead = false;
-              this.setState({
-                currentNode: this.state.currentNode + incrementCounter - 1,
-                currentMessageIndex: 0,
-              }, () => {
-                this.handleNextMessage()
-              });
-            }
-          }
+          const { repliedMessages, currentMessageIndex } = this.state;
 
-          if (toProceedAhead) {
-            const message = currentMessage.message;
-
-            const { repliedMessages, currentMessageIndex } = this.state;
-
-            if (message instanceof Array) {
-              if (currentMessageIndex === message.length - 1) {
-                repliedMessages.push({
-                  text: message[currentMessageIndex],
-                  sender: 'bot',
-                  showTime: true
-                });
-
-                if (currentMessage.widget === 'radio' && currentMessage.radioOptions) {
-                  repliedMessages.push({
-                    widget: 'radio',
-                    radioOptions: currentMessage.radioOptions,
-                    node: currentMessage.node,
-                    isAnswer: true,
-                    sender: 'bot'
-                  });
-                } else if (currentMessage.widget === 'checkbox' && currentMessage.checkboxOptions) {
-                  repliedMessages.push({
-                    widget: 'checkbox',
-                    checkboxOptions: currentMessage.checkboxOptions,
-                    joinWith: currentMessage.validateInput.joinWith || ',',
-                    node: currentMessage.node,
-                    isAnswer: true,
-                    sender: 'bot'
-                  });
-                }
-
-                this.setState({
-                  currentNode: this.state.currentNode + 1,
-                  currentMessageIndex: 0,
-                  repliedMessages,
-                  isBotTyping: false,
-                  isUserAllowedToAnswer: true,
-                }, () => {
-                  if (currentMessage.redirectURL) {
-                    // need to implement this for native
-                    // setTimeout(() => {
-                    //   window.location = currentMessage.redirectURL;
-                    // }, currentMessage.redirectDelay || 1000);
-                  }
-                });
-              } else {
-                repliedMessages.push({
-                  text: message[currentMessageIndex],
-                  sender: 'bot'
-                });
-
-                this.setState({
-                  repliedMessages,
-                  currentMessageIndex: currentMessageIndex + 1
-                }, () => {
-                  this.handleNextMessage()
-                });
-              }
-            } else if (typeof message === 'string') {
+          if (messageArray) {
+            if (currentMessageIndex === messageArray.length - 1) {
               repliedMessages.push({
-                text: message,
+                text: messageArray[currentMessageIndex],
                 sender: 'bot',
+                createdAt: currentMessage.createdAt,
                 showTime: true
               });
 
               if (currentMessage.widget === 'radio' && currentMessage.radioOptions) {
-                repliedMessages.push({
-                  text: <div>{this.answerChoices('radio', currentMessage.radioOptions)}</div>,
-                  sender: 'bot'
-                });
+                this.handleRadioOptions(currentMessage, repliedMessages);
               } else if (currentMessage.widget === 'checkbox' && currentMessage.checkboxOptions) {
-                repliedMessages.push({
-                  widget: 'checkbox',
-                  checkboxOptions: currentMessage.checkboxOptions,
-                  joinWith: currentMessage.validateInput.joinWith || ',',
-                  node: currentMessage.node,
-                  isAnswer: true,
-                  sender: 'bot'
-                });
+                this.handleCheckboxOptions(currentMessage, repliedMessages);
               }
 
               this.setState({
-                currentNode: this.state.currentNode + 1,
+                currentMessageIndex: 0,
                 repliedMessages,
                 isBotTyping: false,
                 isUserAllowedToAnswer: true,
               });
-            }
+            } else {
+              repliedMessages.push({
+                text: messageArray[currentMessageIndex],
+                sender: 'bot'
+              });
 
-            if (currentMessage.serverImplementation) {
-              this.handleServerRequest(currentMessage);
+              this.setState({
+                repliedMessages,
+                isBotTyping: false,
+                currentMessageIndex: currentMessageIndex + 1
+              }, () => {
+                this.handleNextMessage()
+              });
             }
           }
         }
@@ -229,6 +175,28 @@ export default class FormBotApp extends React.PureComponent {
     });
   }
 
+  handleRadioOptions(currentMessage, repliedMessages) {
+    repliedMessages.push({
+      widget: 'radio',
+      radioOptions: currentMessage.radioOptions,
+      node: currentMessage.node,
+      isAnswer: true,
+      sender: 'bot'
+    });
+  }
+
+  handleCheckboxOptions(currentMessage, repliedMessages) {
+    repliedMessages.push({
+      widget: 'checkbox',
+      checkboxOptions: currentMessage.checkboxOptions,
+      joinWith: currentMessage.validateInput.joinWith || ',',
+      node: currentMessage.node,
+      isAnswer: true,
+      sender: 'bot'
+    });
+  }
+
+  // not using for now
   handleServerRequest(currentMessage) {
     const request = currentMessage.serverImplementation.request;
     const response = currentMessage.serverImplementation.response;
@@ -340,6 +308,7 @@ export default class FormBotApp extends React.PureComponent {
     }
   }
 
+  // not using for now
   handleServerResponse(response, successShowMessage, errorShowMessage, mandatoryConditions) {
     if (response.data && typeof response.data === 'object') {
       const { result, repliedMessages } = this.state;
@@ -377,27 +346,27 @@ export default class FormBotApp extends React.PureComponent {
             errorMessage: true
           });
         }
-        this.setState({ result, repliedMessages, currentNode: this.state.currentNode + 1 }, () => {
+        this.setState({ result, repliedMessages }, () => {
           this.handleNextMessage();
         });
-      }
-      else if (successShowMessage) {
+      } else if (successShowMessage) {
         repliedMessages.push({
           source: 'text',
           text: successShowMessage,
           sender: 'bot',
         });
-        this.setState({ result, repliedMessages, currentNode: this.state.currentNode + 1 }, () => {
+        this.setState({ result, repliedMessages }, () => {
           this.handleNextMessage();
         });
       } else {
-        this.setState({ result, currentNode: this.state.currentNode + 1 }, () => {
+        this.setState({ result }, () => {
           this.handleNextMessage();
         });
       }
     }
   }
 
+  // not using for now
   modifyResult(currentMessage, answerInputModified) {
     const messageEntity = currentMessage.entity;
     const messagePath = currentMessage.entityPath;
@@ -523,8 +492,6 @@ export default class FormBotApp extends React.PureComponent {
         });
       }
 
-      this.modifyResult(currentMessage, inputValidatedObject.answerInputModified);
-
       this.setState({
         repliedMessages,
         isUserTyping: false,
@@ -561,7 +528,7 @@ export default class FormBotApp extends React.PureComponent {
           errorMessage: true
         });
         if (currentMessage.widget === 'radio' || currentMessage.widget === 'checkbox') {
-          this.setState({ currentNode: this.state.currentNode - 1, repliedMessages }, () => this.handleNextMessage());
+          this.setState({ repliedMessages }, () => this.handleNextMessage());
         } else {
           this.setState({ repliedMessages });
         }
@@ -573,7 +540,9 @@ export default class FormBotApp extends React.PureComponent {
   render() {
     const {
       uiData
-    } = this.props;
+    } = this.state;
+
+    console.log('repliedMessages :- ', this.state.repliedMessages);
 
     const [ currentMessage = {} ] = this.state.messages.slice(-1);
 
@@ -586,12 +555,7 @@ export default class FormBotApp extends React.PureComponent {
               {
                 currentMessage.widget === 'qrscanner'
                 ?
-                  <QRCodeScan
-                    onScanSuccess={(data) => {
-                      this.handleStateValue('openCameraView', false);
-                      this.submitInputValue(data);
-                    }}
-                  />
+                  null
                 :
                   <View style={styles.flexView}>
                     {
@@ -617,7 +581,7 @@ export default class FormBotApp extends React.PureComponent {
               <KeyboardAvoidingView style={styles.flexView} behavior='padding' keyboardVerticalOffset={-500}>
                 <Body
                   result={this.state.result}
-                  loader={uiData.body.loader}
+                  loader={uiData.loader}
                   submitInputValue={this.submitInputValue}
                   repliedMessages={this.state.repliedMessages}
                   isUserTyping={this.state.isUserTyping}
@@ -627,14 +591,20 @@ export default class FormBotApp extends React.PureComponent {
                   handleStateValue={this.handleStateValue}
                   noMessageAvailable={this.state.messages && this.state.messages.length === 0}
                 />
-                <Footer
-                  icon={uiData.footer.icon}
-                  submitInputValue={this.submitInputValue}
-                  isBotTyping={this.state.isBotTyping}
-                  handleStateValue={this.handleStateValue}
-                  isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
-                  currentMessage={currentMessage}
-                />
+                {
+                  this.state.isUserAllowedToAnswer
+                  ?
+                    <Footer
+                      icon={uiData.footer.icon}
+                      submitInputValue={this.submitInputValue}
+                      isBotTyping={this.state.isBotTyping}
+                      handleStateValue={this.handleStateValue}
+                      isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
+                      currentMessage={currentMessage}
+                    />
+                  :
+                    null
+                }
               </KeyboardAvoidingView>
             </View>
         }

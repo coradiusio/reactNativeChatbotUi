@@ -268,6 +268,9 @@ export function massageText(text, state) {
 }
 
 export function formatAMPM(date) {
+  if (typeof date === 'string') {
+    date = new Date(date);
+  }
   var hours = date.getHours();
   var minutes = date.getMinutes();
   var ampm = hours >= 12 ? 'PM' : 'AM';

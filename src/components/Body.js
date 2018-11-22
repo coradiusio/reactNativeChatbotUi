@@ -107,7 +107,7 @@ class Body extends React.PureComponent {
         {
           this.props.noMessageAvailable
           ?
-            <Loader color={loader.color} size={loader.size} />
+            <Loader color={loader.color} size={'large'} />
           :
             <ScrollView
               style={styles.flexView}

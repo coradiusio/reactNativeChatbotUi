@@ -3,10 +3,11 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  TouchableOpacity,
   Keyboard,
   Text,
 } from 'react-native';
+
+import * as Animatable from 'react-native-animatable';
 
 import {
   Icon,
@@ -184,11 +185,16 @@ class Footer extends React.PureComponent {
 
   render() {
     return (
-      <View
-        style={styles.container}
+      <Animatable.View
+        animation='slideInUp'
+        useNativeDriver
       >
-        {this.componentDecider()}
-      </View>
+        <View
+          style={styles.container}
+        >
+          {this.componentDecider()}
+        </View>
+      </Animatable.View>
     );
   }
 }
