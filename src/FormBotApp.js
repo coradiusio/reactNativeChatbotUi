@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView
 } from 'react-native';
 
-import axios from 'axios';
 import io from 'socket.io-client';
 import feathers from '@feathersjs/feathers';
 import socketio from '@feathersjs/socketio-client';
@@ -17,18 +16,17 @@ import Footer from './components/Footer';
 import Camera from './components/sub_components/Camera';
 
 import {
-  axiosConfig,
+  colors
+} from './general';
 
-  massageText,
+import {
   validateInput,
-  setValue,
-  getValue,
-  stringCases,
   stringCasing,
   validateFile,
 } from './utils';
 
 let timer;
+let questions = [];
 
 export default class FormBotApp extends React.PureComponent {
   constructor(props) {
@@ -64,29 +62,40 @@ export default class FormBotApp extends React.PureComponent {
         }
       },
       result: {},
-      currentMessageIndex: 0,
+      currentQuestionIndex: 0,
       messages: [],
-      repliedMessages: [],
       isBotTyping: false,
       isUserTyping: false,
       isUserAllowedToAnswer: false,
-      openCameraView: false
+      openCameraView: false,
+      mode: 'question'
     };
 
     // setup socket connection
     this.app = feathers()
-      .configure(socketio(io(this.props.host || 'http://localhost:7664', { transports: ['websocket'] })));
+      .configure(socketio(io(this.props.host || 'http://192.168.42.170:7664', 
+        {
+          transports: ['websocket'],
+        }
+      )));
 
     this.messagesService = this.app.service('messages');
+    this.questionsService = this.app.service('questions');
 
     this.submitInputValue = this.submitInputValue.bind(this);
-    this.handleNextMessage = this.handleNextMessage.bind(this);
+    this.handleNextQuestion = this.handleNextQuestion.bind(this);
     this.handleStateValue = this.handleStateValue.bind(this);
-    this.modifyResult = this.modifyResult.bind(this);
   }
 
   componentDidMount() {
     this.fetchMessagesHistory();
+
+    this.messagesService.on('created', message => {
+      console.log('new message created :- ', message);
+      this.setState(prevState => ({
+        messages: [ ...prevState.messages, message ]
+      }));
+    });
   }
 
   componentWillUnmount() {
@@ -99,75 +108,124 @@ export default class FormBotApp extends React.PureComponent {
 
   fetchMessagesHistory() {
     this.messagesService.find()
-    .then(response => {
-      this.updateMessages(response.data);
-    })
-    .catch(err => {
-      console.log(err);
-    })
-  }
-
-  updateMessages(messages) {
-    this.setState(prevState => ({
-      ...prevState,
-      messages
-    }));
+      .then(response => {
+        if (response.data.length > 0) {
+          // this.setState({
+          //   messages: response.data
+          // });
+        }
+        if (this.state.mode.trim().toLowerCase() === 'question') {
+          this.fetchNextQuestion();
+        }
+      })
+      .catch(err => {
+        console.log('err in fetching messages history :- ', err);
+      });
   }
 
   handleStateValue(state, value) {
     this.setState({ [state]: value });
   }
 
-  fetchNextQuestion() {
-
+  getLastQuestionNode() {
+    return null;
   }
 
-  handleNextMessage() {
+  fetchNextQuestion() {
+    this.questionsService.find(
+      { 
+        query: {
+          $limit: 1,
+        }
+      }
+    )
+      .then(response => {
+        console.log('next question :- ', response.data);
+        if (response.data.length > 0) {
+          questions.push(response.data[0])
+          this.handleNextQuestion();
+        }
+      })
+      .catch(err => {
+        console.log('err in fetching next question :- ', err);
+      });
+  }
+
+  sendNewMessage(message) {
+    console.log('sending message :- ', message);
+    return this.messagesService.create(message);
+  }
+
+  handleNextQuestion() {
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
-        const currentMessage = this.state.messages[this.state.messages.length - 1];
+        const currentQuestion = questions[questions.length - 1];
 
-        if (currentMessage) {
-          const message = currentMessage.message;
+        if (currentQuestion) {
+          let question = currentQuestion.question;
 
-          const messageArray = message instanceof Array ? message : (typeof message === 'string' ? [message] : null);
+          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : null);
 
-          const { repliedMessages, currentMessageIndex } = this.state;
+          const { currentQuestionIndex } = this.state;
 
-          if (messageArray) {
-            if (currentMessageIndex === messageArray.length - 1) {
-              repliedMessages.push({
-                text: messageArray[currentMessageIndex],
+          if (questionArray) {
+            let newMessages = [];
+            if (currentQuestionIndex === questionArray.length - 1) {
+              newMessages.push({
+                text: questionArray[currentQuestionIndex],
                 sender: 'bot',
-                createdAt: currentMessage.createdAt,
                 showTime: true
               });
 
-              if (currentMessage.widget === 'radio' && currentMessage.radioOptions) {
-                this.handleRadioOptions(currentMessage, repliedMessages);
-              } else if (currentMessage.widget === 'checkbox' && currentMessage.checkboxOptions) {
-                this.handleCheckboxOptions(currentMessage, repliedMessages);
+              if (currentQuestion.widget === 'radio' && currentQuestion.radioOptions) {
+                newMessages.push({
+                  widget: 'radio',
+                  radioOptions: currentQuestion.radioOptions,
+                  node: currentQuestion.node,
+                  isAnswer: true,
+                  sender: 'bot'
+                });
+              } else if (currentQuestion.widget === 'checkbox' && currentQuestion.checkboxOptions) {
+                newMessages.push({
+                  widget: 'checkbox',
+                  checkboxOptions: currentQuestion.checkboxOptions,
+                  joinWith: currentQuestion.validateInput.joinWith || ',',
+                  node: currentQuestion.node,
+                  isAnswer: true,
+                  sender: 'bot'
+                });
               }
 
-              this.setState({
-                currentMessageIndex: 0,
-                repliedMessages,
-                isBotTyping: false,
-                isUserAllowedToAnswer: true,
-              });
+              this.sendNewMessage(newMessages)
+                .then(() => {
+                  this.setState({
+                    currentQuestionIndex: 0,
+                    isBotTyping: false,
+                    isUserAllowedToAnswer: true,
+                  });
+                })
+                .catch(err => {
+                  console.log('msg not sent :- ', err);
+                });
+              
             } else {
-              repliedMessages.push({
-                text: messageArray[currentMessageIndex],
+              newMessages.push({
+                text: questionArray[currentQuestionIndex],
                 sender: 'bot'
               });
 
-              this.setState({
-                repliedMessages,
-                isBotTyping: false,
-                currentMessageIndex: currentMessageIndex + 1
-              }, () => {
-                this.handleNextMessage()
-              });
+              this.sendNewMessage(newMessages)
+                .then(() => {
+                  this.setState({
+                    isBotTyping: false,
+                    currentQuestionIndex: currentQuestionIndex + 1
+                  }, () => {
+                    this.handleNextQuestion()
+                  });
+                })
+                .catch(err => {
+                  console.log('msg not sent :- ', err);
+                });
             }
           }
         }
@@ -175,276 +233,15 @@ export default class FormBotApp extends React.PureComponent {
     });
   }
 
-  handleRadioOptions(currentMessage, repliedMessages) {
-    repliedMessages.push({
-      widget: 'radio',
-      radioOptions: currentMessage.radioOptions,
-      node: currentMessage.node,
-      isAnswer: true,
-      sender: 'bot'
-    });
-  }
-
-  handleCheckboxOptions(currentMessage, repliedMessages) {
-    repliedMessages.push({
-      widget: 'checkbox',
-      checkboxOptions: currentMessage.checkboxOptions,
-      joinWith: currentMessage.validateInput.joinWith || ',',
-      node: currentMessage.node,
-      isAnswer: true,
-      sender: 'bot'
-    });
-  }
-
-  // not using for now
-  handleServerRequest(currentMessage) {
-    const request = currentMessage.serverImplementation.request;
-    const response = currentMessage.serverImplementation.response;
-    const success = response && response.success;
-    const successShowMessage = success && success.showMessage;
-    const mandatoryConditions = success && success.mandatoryConditions;
-    const error = response && response.error;
-    const errorShowMessage = error && error.showMessage;
-
-    let absoluteURL = `${request.baseURL}${request.endpoint}`;
-    let requestType = request.type;
-
-    if (requestType) {
-      requestType = requestType.trim().toLowerCase();
-      if (requestType === 'get') {
-        if (typeof request.data === 'object') {
-          absoluteURL = absoluteURL + '?';
-          for (let key in request.data) {
-            absoluteURL = absoluteURL + `${key}=${request.data[key]}&`;
-          }
-        }
-        if (absoluteURL.endsWith('&')) {
-          absoluteURL = absoluteURL.slice(0, -1);
-        }
-
-        if (request.showMessage) {
-          const { repliedMessages } = this.state;
-          repliedMessages.push({
-            source: 'text',
-            text: request.showMessage,
-            sender: 'bot',
-          });
-          this.setState({ repliedMessages });
-        }
-
-        axios.get(absoluteURL, axiosConfig)
-        .then((serverResponse) => {
-          console.log('response :- ', serverResponse);
-          this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
-        }).catch((error) => {
-          console.log('error :- ', error);
-          const { repliedMessages } = this.state;
-          repliedMessages.push({
-            source: 'text',
-            text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
-            sender: 'bot',
-            errorMessage: true
-          });
-
-          if (response && response.error && response.error.showMessage) {
-            repliedMessages.push({
-              source: 'text',
-              text: response && response.error && response.error.showMessage,
-              sender: 'bot',
-              errorMessage: true
-            });
-          }
-
-          this.setState({ repliedMessages });
-        });
-      } else if (requestType === 'post') {
-        let data = new FormData();
-        if (requestType.headers) {
-          axiosConfig.headers = requestType.headers;
-        }
-        if (typeof request.data === 'object') {
-          for (let key in request.data) {
-            data.append(key, typeof request.data[key] === 'string' ? massageText(request.data[key], this.state.result) : request.data[key]);
-          }
-        }
-
-        if (request.showMessage) {
-          const { repliedMessages } = this.state;
-          repliedMessages.push({
-            source: 'text',
-            text: request.showMessage,
-            sender: 'bot',
-          });
-
-          this.setState({ repliedMessages });
-        }
-
-        axios.post(absoluteURL, data, axiosConfig)
-        .then((serverResponse) => {
-          console.log('response :- ', serverResponse);
-          this.handleServerResponse(serverResponse, successShowMessage, errorShowMessage, mandatoryConditions);
-        }).catch((error) => {
-          console.log('error :- ', error);
-          const { repliedMessages } = this.state;
-          repliedMessages.push({
-            source: 'text',
-            text: `${requestType.toUpperCase()} - ${absoluteURL} - error - ${error.message}`,
-            sender: 'bot',
-            errorMessage: true
-          });
-
-          if (response && response.error && response.error.showMessage) {
-            repliedMessages.push({
-              source: 'text',
-              text: response && response.error && response.error.showMessage,
-              sender: 'bot',
-              errorMessage: true
-            });
-          }
-          
-          this.setState({ repliedMessages });
-        });
-      }
-    }
-  }
-
-  // not using for now
-  handleServerResponse(response, successShowMessage, errorShowMessage, mandatoryConditions) {
-    if (response.data && typeof response.data === 'object') {
-      const { result, repliedMessages } = this.state;
-      for (var key in response.data) {
-        if (key in result) {
-          result[key] = response.data[key];
-        }
-      }
-
-      let mandatoryConditionsCheckSuccess = false;
-      if (mandatoryConditions && typeof mandatoryConditions === 'object') {
-        for (let key in mandatoryConditions) {
-          if (key in response.data && response.data[key] === mandatoryConditions[key]) {
-            mandatoryConditionsCheckSuccess = true;
-          }
-          else {
-            mandatoryConditionsCheckSuccess = false;
-            break;
-          }
-        }
-      }
-
-      if (mandatoryConditions) {
-        if (mandatoryConditionsCheckSuccess) {
-          repliedMessages.push({
-            source: 'text',
-            text: successShowMessage,
-            sender: 'bot',
-          });
-        } else {
-          repliedMessages.push({
-            source: 'text',
-            text: errorShowMessage,
-            sender: 'bot',
-            errorMessage: true
-          });
-        }
-        this.setState({ result, repliedMessages }, () => {
-          this.handleNextMessage();
-        });
-      } else if (successShowMessage) {
-        repliedMessages.push({
-          source: 'text',
-          text: successShowMessage,
-          sender: 'bot',
-        });
-        this.setState({ result, repliedMessages }, () => {
-          this.handleNextMessage();
-        });
-      } else {
-        this.setState({ result }, () => {
-          this.handleNextMessage();
-        });
-      }
-    }
-  }
-
-  // not using for now
-  modifyResult(currentMessage, answerInputModified) {
-    const messageEntity = currentMessage.entity;
-    const messagePath = currentMessage.entityPath;
-
-    if (messageEntity) {
-      const { result } = this.state;
-      const validateInput = currentMessage.validateInput;
-      const outputType = validateInput && validateInput.outputType;
-      if (outputType === 'string' || outputType === 'number') {
-        setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}`, answerInputModified, result);
-        this.setState({ result });
-      } else if (outputType === 'array') {
-        answerInputModified = answerInputModified.split(currentMessage.validateInput.joinWith || ',');
-        setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}`, answerInputModified, result);
-        this.setState({ result });
-      } else if (outputType === 'object') {
-        // here we need to handle this carefully
-        if (answerInputModified instanceof Array) {
-          const answerInputModifiedLength = answerInputModified.length;
-          const keys = validateInput.keys;
-          let keyValueIndex;
-          let keyValueIndexType;
-          for (let i = 0; i < keys.length; i++) {
-            keyValueIndex = keys[i].keyValueIndex;
-            keyValueIndexType = typeof(keyValueIndex);
-            if (keyValueIndexType === 'number') {
-              setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[keyValueIndex], result);
-            } else if (keyValueIndexType === 'object') {
-              const orConditions = keys[i].keyValueIndex.or;
-              const andConditions = keys[i].keyValueIndex.and;
-
-              // first follow OR then AND
-              if (orConditions instanceof Array) {
-                for (let j = 0; j < orConditions.length; j++) {
-                  if (orConditions[j].inputLength === answerInputModifiedLength) {
-                    setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[orConditions[j].keyValueIndex], result);
-                    break;
-                  }
-                } 
-              }
-
-              if (andConditions instanceof Array) {
-                for (let k = 0; k < andConditions.length; k++) {
-                  if (andConditions[k].inputLength === answerInputModifiedLength) {
-                    setValue(`${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`, answerInputModified[andConditions[k].keyValueIndex], result);
-                  }
-                }
-              }
-            }
-
-            if (keys[i].casing && stringCases.indexOf(keys[i].casing.trim().toLowerCase() > -1)) {
-              const path = `${messagePath === undefined || messagePath === '' ? '' : '.'}${messageEntity}.${keys[i].keyName}`;
-              const tempValue = getValue(path, result);
-              if (tempValue) {
-                setValue(
-                  path,
-                  stringCasing(tempValue, keys[i].casing.trim().toLowerCase()),
-                  result
-                );
-              }
-            }
-          }
-        }
-
-        this.setState({ result });
-      } else return;
-    } else return;
-  }
-
-  submitInputValue(currentMessage, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
+  submitInputValue(currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim();
 
-    if (currentMessage.validateInput && currentMessage.validateInput.casing) {
-      answerInput = stringCasing(answerInput, currentMessage.validateInput.casing.trim().toLowerCase());
+    if (currentQuestion.validateInput && currentQuestion.validateInput.casing) {
+      answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase());
     }
 
-    const { repliedMessages } = this.state;
+    const { messages } = this.state;
 
     let answerInputModified;
     if (formValue !== '') {
@@ -465,24 +262,25 @@ export default class FormBotApp extends React.PureComponent {
 
     let inputValidatedObject;
     if (source !== 'file' && source !== 'camera') {
-      inputValidatedObject = validateInput(currentMessage, answerInputModified, source, this.state.result);
+      inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result);
     } else {
-      console.log(currentMessage, answerInputModified, fileName, fileExtension);
-      inputValidatedObject = validateFile(currentMessage, answerInputModified, fileName, fileExtension);
+      console.log(currentQuestion, answerInputModified, fileName, fileExtension);
+      inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension);
     }
 
     console.log('inputValidatedObject :- ', inputValidatedObject);
 
     if (inputValidatedObject.success) {
-      if (currentMessage.widget !== 'file' && currentMessage.widget !== 'camera') {
-        repliedMessages.push({
+      let newMessages = [];
+      if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
+        newMessages.push({
           source,
           text: answerInput,
           sender: 'user',
           showTime: true
         });
       } else {
-        repliedMessages.push({
+        newMessages.push({
           source,
           fileURL: answerInput,
           fileName,
@@ -492,18 +290,22 @@ export default class FormBotApp extends React.PureComponent {
         });
       }
 
-      this.setState({
-        repliedMessages,
-        isUserTyping: false,
-        inputError: false
-      }, () => {
-        this.handleNextMessage();
-      });
-
+      this.sendNewMessage(newMessages)
+        .then(() => {
+          this.setState({
+            isUserTyping: false,
+            inputError: false
+          }, () => {
+            this.fetchNextQuestion();
+          });
+        })
+        .catch(err => {
+          console.log('usr msg not sent :- ', err);
+        });
     } else {
       if (inputValidatedObject.foundError) {
-        if (currentMessage.widget !== 'file' && currentMessage.widget !== 'camera') {
-          repliedMessages.push({
+        if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
+          messages.push({
             source,
             text: answerInput,
             sender: 'user',
@@ -511,7 +313,7 @@ export default class FormBotApp extends React.PureComponent {
             isError: true,
           });
         } else {
-          repliedMessages.push({
+          messages.push({
             source: source,
             fileURL: answerInput,
             fileName,
@@ -521,17 +323,13 @@ export default class FormBotApp extends React.PureComponent {
           });
         }
         
-        repliedMessages.push({
+        messages.push({
           source: 'text',
           text: inputValidatedObject.errorMessage,
           sender: 'bot',
           errorMessage: true
         });
-        if (currentMessage.widget === 'radio' || currentMessage.widget === 'checkbox') {
-          this.setState({ repliedMessages }, () => this.handleNextMessage());
-        } else {
-          this.setState({ repliedMessages });
-        }
+        this.setState({ messages });
       }
       return;
     }
@@ -542,9 +340,9 @@ export default class FormBotApp extends React.PureComponent {
       uiData
     } = this.state;
 
-    console.log('repliedMessages :- ', this.state.repliedMessages);
+    console.log('this.state.messages :- ', this.state.messages);
 
-    const [ currentMessage = {} ] = this.state.messages.slice(-1);
+    const [ currentQuestion = {} ] = questions.slice(-1);
 
     return (
       <View style={styles.flexView}>
@@ -553,13 +351,13 @@ export default class FormBotApp extends React.PureComponent {
           ?
             <View style={styles.flexView}>
               {
-                currentMessage.widget === 'qrscanner'
+                currentQuestion.widget === 'qrscanner'
                 ?
                   null
                 :
                   <View style={styles.flexView}>
                     {
-                      currentMessage.widget === 'camera'
+                      currentQuestion.widget === 'camera'
                       ?
                         <Camera
                           handleStateValue={this.handleStateValue}
@@ -583,13 +381,13 @@ export default class FormBotApp extends React.PureComponent {
                   result={this.state.result}
                   loader={uiData.loader}
                   submitInputValue={this.submitInputValue}
-                  repliedMessages={this.state.repliedMessages}
+                  messages={this.state.messages}
                   isUserTyping={this.state.isUserTyping}
                   isBotTyping={this.state.isBotTyping}
-                  currentMessage={currentMessage}
-                  handleNextMessage={this.handleNextMessage}
+                  currentQuestion={currentQuestion}
+                  handleNextQuestion={this.handleNextQuestion}
                   handleStateValue={this.handleStateValue}
-                  noMessageAvailable={this.state.messages && this.state.messages.length === 0}
+                  noMessageAvailable={questions && questions.length === 0}
                 />
                 {
                   this.state.isUserAllowedToAnswer
@@ -600,7 +398,7 @@ export default class FormBotApp extends React.PureComponent {
                       isBotTyping={this.state.isBotTyping}
                       handleStateValue={this.handleStateValue}
                       isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
-                      currentMessage={currentMessage}
+                      currentQuestion={currentQuestion}
                     />
                   :
                     null

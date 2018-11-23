@@ -38,14 +38,14 @@ class Body extends React.PureComponent {
     }
   }
 
-  radioChoices = (repliedMessage, currentMessage) => {
+  radioChoices = (repliedMessage, currentQuestion) => {
     if (repliedMessage.radioOptions) {
       return (
         <RadioChoices
           choices={repliedMessage.radioOptions}
           onChange={(option) => {
-            if (repliedMessage.node === currentMessage.node) {
-              this.props.submitInputValue(currentMessage, option.label, option.value, 'radio');
+            if (repliedMessage.node === currentQuestion.node) {
+              this.props.submitInputValue(currentQuestion, option.label, option.value, 'radio');
             }
           }}
           buttonsContainerStyle={styles.buttonsContainer}
@@ -95,8 +95,8 @@ class Body extends React.PureComponent {
   render() {
     const {
       result,
-      repliedMessages,
-      currentMessage,
+      messages,
+      currentQuestion,
       loader
     } = this.props;
 
@@ -117,10 +117,10 @@ class Body extends React.PureComponent {
             >
               <View style={styles.container}>
                 {
-                  repliedMessages.map((repliedMessage, index) => {
+                  messages.map((repliedMessage, index) => {
                     leftOrRight = repliedMessage.sender === 'user' ? 'right' : 'left';
                     differentSender = (
-                      index === 0 || (repliedMessages[index -1].sender !== repliedMessages[index].sender)
+                      index === 0 || (messages[index -1].sender !== messages[index].sender)
                     );
                     return (
                       <View key={index}>
@@ -129,7 +129,7 @@ class Body extends React.PureComponent {
                           ?
                             <ChatBubble float={leftOrRight} widget={repliedMessage.widget}>
                               {
-                                repliedMessages[index].sender === 'bot' && differentSender
+                                messages[index].sender === 'bot' && differentSender
                                 ?
                                   <Text
                                     style={leftOrRight === 'left' ? styles.leftChatText : styles.rightChatText}
@@ -205,7 +205,7 @@ class Body extends React.PureComponent {
                                         styles.timeString
                                       ]}
                                     >
-                                      {formatAMPM(repliedMessage.createdAt)}
+                                      {/* {formatAMPM(repliedMessage.createdAt)} */}
                                     </Text>
                                     {
                                       leftOrRight === 'right' && !repliedMessage.isError
@@ -231,7 +231,7 @@ class Body extends React.PureComponent {
                               {
                                 repliedMessage.widget === 'radio'
                                 ?
-                                  this.radioChoices(repliedMessage, currentMessage)
+                                  this.radioChoices(repliedMessage, currentQuestion)
                                 :
                                   <View>
                                     

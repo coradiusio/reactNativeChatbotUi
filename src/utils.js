@@ -75,9 +75,9 @@ function stringComparisionValidator(comparision, firstValue, secondValue) {
   return false;
 }
 
-export function validateInput(currentMessage, answerInputModified, source = 'text', resultData) {
-  const validateInput = currentMessage.validateInput;
-  const widget = currentMessage.widget;
+export function validateInput(currentQuestion, answerInputModified, source = 'text', resultData) {
+  const validateInput = currentQuestion.validateInput;
+  const widget = currentQuestion.widget;
 
   function validateByComparisionOperator(typeLowerCase, propertyNameLowerCase, comparisionOperator, answerInputModified, propertyValue, result) {
     const answerInputModifiedLength = answerInputModified.length;
@@ -172,7 +172,7 @@ export function validateInput(currentMessage, answerInputModified, source = 'tex
     if (answerInputModified !== '' && source == 'text') {
       result.foundError = true;
       result.success = false;
-      result.errorMessage = currentMessage.onInputFillMessage || 'Please select from below buttons';
+      result.errorMessage = currentQuestion.onInputFillMessage || 'Please select from below buttons';
     } else {
       result.success = true;
     }
@@ -183,7 +183,7 @@ export function validateInput(currentMessage, answerInputModified, source = 'tex
   return result;
 }
 
-export function validateFile (currentMessage, answerInputModified, fileName, fileExtension) {
+export function validateFile (currentQuestion, answerInputModified, fileName, fileExtension) {
   const result = {
     success: false,
     foundError: false,
@@ -191,11 +191,11 @@ export function validateFile (currentMessage, answerInputModified, fileName, fil
   };
 
   if (fileName && fileExtension) {
-    if (currentMessage.fileExtensions && currentMessage.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
+    if (currentQuestion.fileExtensions && currentQuestion.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
       result.success = true;
     } else {
       result.foundError = true;
-      result.errorMessage = currentMessage.onWrongFileUploadMessage || 'Please upload valid file type';
+      result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type';
     }
   }
   result.answerInputModified = answerInputModified; 
@@ -235,7 +235,6 @@ export const getValue = (propertyPath, obj) => {
 };
 
 export function massageText(text, state) {
-  console.log(text, state);
   try {
     const regexPattern = /\{{(.*?)\}}/g;
     const matched = text.match(regexPattern);
@@ -366,19 +365,19 @@ export function resizeImage(img, extension, max_width, max_height, quality) {
 
 }
 
-export function askConditionsCheck(currentMessage, result) {
+export function askConditionsCheck(currentQuestion, result) {
   let success = false,
   entityValue = '',
   entityPath = '';
 
-  for(let i = 0; i < currentMessage.askConditions.length; i++) {
+  for(let i = 0; i < currentQuestion.askConditions.length; i++) {
     // now first get entity value from propertyPath
     entityValue = '';
-    entityPath = currentMessage.askConditions[i].entityPath;
+    entityPath = currentQuestion.askConditions[i].entityPath;
     entityValue = getValue(
-      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentMessage.askConditions[i].entity}`, result
+      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentQuestion.askConditions[i].entity}`, result
     );
-    if (entityValue === currentMessage.askConditions[i].value) {
+    if (entityValue === currentQuestion.askConditions[i].value) {
       success = true;
     } else {
       success = false;
@@ -388,19 +387,19 @@ export function askConditionsCheck(currentMessage, result) {
   return success;
 }
 
-export function skipConditionsCheck(currentMessage, result) {
+export function skipConditionsCheck(currentQuestion, result) {
   let success = false,
   entityValue = '',
   entityPath = '';
 
-  for(let i = 0; i < currentMessage.skipConditions.length; i++) {
+  for(let i = 0; i < currentQuestion.skipConditions.length; i++) {
     // now first get entity value from propertyPath
     entityValue = '';
-    entityPath = currentMessage.skipConditions[i].entityPath;
+    entityPath = currentQuestion.skipConditions[i].entityPath;
     entityValue = getValue(
-      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentMessage.skipConditions[i].entity}`, result
+      `${entityPath && entityPath !== '' ? `${entityPath}.` :''}${currentQuestion.skipConditions[i].entity}`, result
     );
-    if (entityValue === currentMessage.skipConditions[i].value) {
+    if (entityValue === currentQuestion.skipConditions[i].value) {
       success = true;
       break;
     } else {

@@ -42,11 +42,11 @@ class Footer extends React.PureComponent {
   }
 
   handleSubmit() {
-    this.props.submitInputValue(this.props.currentMessage, this.state.inputText.trim());
+    this.props.submitInputValue(this.props.currentQuestion, this.state.inputText.trim());
   }
 
   handleSelect(value) {
-    this.props.submitInputValue(this.props.currentMessage, value);
+    this.props.submitInputValue(this.props.currentQuestion, value);
   }
 
   _showDateTimePicker = () => this.setState({ isDatePickerVisible: true });
@@ -54,16 +54,21 @@ class Footer extends React.PureComponent {
   _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false });
 
   _handleDatePicked = (date) => {
-    this.props.submitInputValue(this.props.currentMessage, formatDate(date));
+    this.props.submitInputValue(this.props.currentQuestion, formatDate(date));
     this._hideDateTimePicker();
   };
 
   componentDecider() {
     const {
-      currentMessage
+      currentQuestion
     } = this.props;
 
-    switch(currentMessage.widget) {
+    const {
+      type,
+      placeholder
+    } = currentQuestion.widget || {};
+
+    switch(type) {
       case 'text':
         return (
           <ChatInput
@@ -89,7 +94,7 @@ class Footer extends React.PureComponent {
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={currentMessage.placeholder || 'Click To Scan'}
+              text={placeholder || 'Click To Scan'}
               onPress={this._showDateTimePicker}
             />
             <DateTimePicker
@@ -106,7 +111,7 @@ class Footer extends React.PureComponent {
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={currentMessage.placeholder || 'Click To Open Camera'}
+              text={placeholder || 'Click To Open Camera'}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>
@@ -187,6 +192,7 @@ class Footer extends React.PureComponent {
     return (
       <Animatable.View
         animation='slideInUp'
+        duration={500}
         useNativeDriver
       >
         <View

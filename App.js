@@ -11,7 +11,9 @@ export default class App extends React.PureComponent {
   render() {
     return (
       <View style={styles.container}>
-        <FormBotApp />
+        <FormBotApp
+          host={this.props.host}
+        />
       </View>
     );
   }

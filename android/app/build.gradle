@@ -137,7 +137,12 @@ android {
 }
 
 dependencies {
+    compile (project(':react-native-camera')) {
+        exclude group: "com.google.android.gms"
+        exclude group: "com.android.support"
+    }
     compile project(':react-native-vector-icons')
+    compile 'com.android.support:exifinterface:26.+'
     compile fileTree(dir: "libs", include: ["*.jar"])
     compile "com.android.support:appcompat-v7:27.1.0"
     compile "com.facebook.react:react-native:+"  // From node_modules
