@@ -49,7 +49,7 @@ class Footer extends React.PureComponent {
     this.props.submitInputValue(this.props.currentQuestion, value);
   }
 
-  _showDateTimePicker = () => this.setState({ isDatePickerVisible: true });
+  showDateTimePicker = () => this.setState({ isDatePickerVisible: true });
 
   _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false });
 

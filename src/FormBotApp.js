@@ -165,11 +165,11 @@ export default class FormBotApp extends React.PureComponent {
             question 
           } = currentQuestion;
 
-          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : null);
+          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : []);
 
           const { currentQuestionIndex } = this.state;
 
-          if (questionArray) {
+          if (questionArray.length > 0) {
             let newMessages = [];
             if (currentQuestionIndex === questionArray.length - 1) {
               newMessages.push({

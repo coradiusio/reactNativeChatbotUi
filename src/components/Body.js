@@ -205,7 +205,7 @@ class Body extends React.PureComponent {
                                         styles.timeString
                                       ]}
                                     >
-                                      {/* {formatAMPM(repliedMessage.createdAt)} */}
+                                      {formatAMPM(repliedMessage.createdAt)}
                                     </Text>
                                     {
                                       leftOrRight === 'right' && !repliedMessage.isError
