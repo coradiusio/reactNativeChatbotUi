@@ -13,6 +13,7 @@ export default class App extends React.PureComponent {
       <View style={styles.container}>
         <FormBotApp
           host={this.props.host}
+          role={this.props.role}
         />
       </View>
     )

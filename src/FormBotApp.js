@@ -68,12 +68,16 @@ export default class FormBotApp extends React.PureComponent {
       isUserTyping: false,
       isUserAllowedToAnswer: false,
       openCameraView: false,
-      mode: 'question'
+      mode: 'question',
+      role: this.props.role || {
+        type: 'user',
+        displayName: 'Robin'
+      }
     }
 
     // setup socket connection
     this.app = feathers()
-      .configure(socketio(io(this.props.host || 'http://192.168.42.170:7664',
+      .configure(socketio(io(this.props.host || 'http://192.168.42.63:7664',
         {
           transports: ['websocket']
         }
@@ -151,8 +155,13 @@ export default class FormBotApp extends React.PureComponent {
       })
   }
 
+  attachRole (message) {
+    // add role here
+    return message
+  }
+
   sendNewMessage (message) {
-    return this.messagesService.create(message)
+    return this.messagesService.create(this.attachRole(message))
   }
 
   handleNextQuestion () {
