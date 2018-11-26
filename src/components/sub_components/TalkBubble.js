@@ -1,28 +1,28 @@
-import React from 'react';
+import React from 'react'
 
 import {
   StyleSheet,
   View
-} from 'react-native';
+} from 'react-native'
 
 import {
   colors
-} from '../../general';
+} from '../../general'
 
 class TalkBubble extends React.PureComponent {
-  render() {
-    const float = this.props.float;
+  render () {
+    const float = this.props.float
     return (
       <View
         style={[
           styles.chatBubble,
           styles[`chatBubble${float}`],
-          float === 'right' ? styles.rightSpecialStyling : null,
+          float === 'right' ? styles.rightSpecialStyling : null
         ]}
       >
         {this.props.children}
       </View>
-    );
+    )
   }
 }
 
@@ -32,22 +32,22 @@ const styles = StyleSheet.create({
     padding: 8,
     position: 'relative',
     borderRadius: 4,
-    marginBottom: 4,
+    marginBottom: 4
   },
   chatBubbleleft: {
     backgroundColor: colors.leftChatBackground,
     borderTopLeftRadius: 0,
-    paddingRight: 16,
+    paddingRight: 16
   },
   chatBubbleright: {
     backgroundColor: colors.rightChatBackground,
     borderTopRightRadius: 0,
-    paddingLeft: 16,
+    paddingLeft: 16
   },
   rightSpecialStyling: {
     marginTop: 12,
     marginBottom: 16
-  },
-});
+  }
+})
 
-export default TalkBubble;
+export default TalkBubble

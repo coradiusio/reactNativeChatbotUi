@@ -1,30 +1,29 @@
-import React from 'react';
+import React from 'react'
 
 import {
   StyleSheet,
   View
-} from 'react-native';
+} from 'react-native'
 
 import {
   Icon,
   Title,
   SubTitle
-} from 'reactNativeBasicComponents';
+} from 'reactNativeBasicComponents'
 
 import {
   colors
-} from '../general';
+} from '../general'
 
 class Header extends React.PureComponent {
-  render() {
+  render () {
     const {
       title,
       subtitle,
       icon,
-      subtitleIcon,
-      theme
-    } = this.props;
-    
+      subtitleIcon
+    } = this.props
+
     return (
       <View
         style={styles.container}
@@ -32,8 +31,7 @@ class Header extends React.PureComponent {
       >
         {
           typeof icon === 'object'
-          ?
-            <View style={styles.leftIconWrapper}>
+            ? <View style={styles.leftIconWrapper}>
               <Icon
                 color={icon.color}
                 name={icon.name}
@@ -41,8 +39,7 @@ class Header extends React.PureComponent {
                 size={icon.size}
               />
             </View>
-          :
-            null
+            : null
         }
         <View style={styles.rightWrapper}>
           <Title
@@ -85,7 +82,7 @@ Header.defaultProps = {
     type: 'material-community',
     color: 'green',
     size: 12
-  },
+  }
 }
 
 const styles = StyleSheet.create({
@@ -98,10 +95,10 @@ const styles = StyleSheet.create({
   leftIconWrapper: {
     marginRight: 16,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
   rightWrapper: {
-    flex: 1,
+    flex: 1
   },
   title: {
     margin: 0,
@@ -113,13 +110,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   subtitleIconWrapper: {
-    marginRight: 8,
+    marginRight: 8
   },
   subtitle: {
     margin: 0,
     color: colors.headerSubTitleColor
-  },
-});
+  }
+})
 
-
-export default Header;
+export default Header

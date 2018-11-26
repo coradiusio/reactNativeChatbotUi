@@ -1,36 +1,36 @@
-import React from 'react';
+import React from 'react'
 import {
   StyleSheet,
   View,
   KeyboardAvoidingView
-} from 'react-native';
+} from 'react-native'
 
-import io from 'socket.io-client';
-import feathers from '@feathersjs/feathers';
-import socketio from '@feathersjs/socketio-client';
+import io from 'socket.io-client'
+import feathers from '@feathersjs/feathers'
+import socketio from '@feathersjs/socketio-client'
 
-import Header from './components/Header';
-import Body from './components/Body';
-import Footer from './components/Footer';
+import Header from './components/Header'
+import Body from './components/Body'
+import Footer from './components/Footer'
 
-import Camera from './components/sub_components/Camera';
+import Camera from './components/sub_components/Camera'
 
 import {
   colors
-} from './general';
+} from './general'
 
 import {
   validateInput,
   stringCasing,
-  validateFile,
-} from './utils';
+  validateFile
+} from './utils'
 
-let timer;
-let questions = [];
+let timer
+let questions = []
 
 export default class FormBotApp extends React.PureComponent {
-  constructor(props) {
-    super(props);
+  constructor (props) {
+    super(props)
     this.state = {
       uiData: {
         header: {
@@ -47,10 +47,10 @@ export default class FormBotApp extends React.PureComponent {
             type: 'material-community',
             color: colors.green,
             size: 12
-          },
+          }
         },
         loader: {
-          color: colors.primary,
+          color: colors.primary
         },
         footer: {
           icon: {
@@ -69,114 +69,114 @@ export default class FormBotApp extends React.PureComponent {
       isUserAllowedToAnswer: false,
       openCameraView: false,
       mode: 'question'
-    };
+    }
 
     // setup socket connection
     this.app = feathers()
-      .configure(socketio(io(this.props.host || 'http://192.168.42.170:7664', 
+      .configure(socketio(io(this.props.host || 'http://192.168.42.170:7664',
         {
-          transports: ['websocket'],
+          transports: ['websocket']
         }
-      )));
+      )))
 
-    this.messagesService = this.app.service('messages');
-    this.questionsService = this.app.service('questions');
+    this.messagesService = this.app.service('messages')
+    this.questionsService = this.app.service('questions')
 
-    this.submitInputValue = this.submitInputValue.bind(this);
-    this.handleNextQuestion = this.handleNextQuestion.bind(this);
-    this.handleStateValue = this.handleStateValue.bind(this);
+    this.submitInputValue = this.submitInputValue.bind(this)
+    this.handleNextQuestion = this.handleNextQuestion.bind(this)
+    this.handleStateValue = this.handleStateValue.bind(this)
   }
 
-  componentDidMount() {
-    this.fetchMessagesHistory();
+  componentDidMount () {
+    this.fetchMessagesHistory()
 
     this.messagesService.on('created', message => {
-      console.log('new message created :- ', message);
+      console.log('new message created :- ', message)
       this.setState(prevState => ({
         messages: [ ...prevState.messages, message ]
-      }));
-    });
+      }))
+    })
   }
 
-  componentWillUnmount() {
+  componentWillUnmount () {
     if (timer) {
-      clearTimeout(timer);
+      clearTimeout(timer)
     }
 
-    this.app = null;
+    this.app = null
   }
 
-  fetchMessagesHistory() {
+  fetchMessagesHistory () {
     this.messagesService.find()
       .then(response => {
         if (response.data.length > 0) {
           // this.setState({
           //   messages: response.data
-          // });
+          // })
         }
         if (this.state.mode.trim().toLowerCase() === 'question') {
-          this.fetchNextQuestion();
+          this.fetchNextQuestion()
         }
       })
       .catch(err => {
-        console.log('err in fetching messages history :- ', err);
-      });
+        console.log('err in fetching messages history :- ', err)
+      })
   }
 
-  handleStateValue(state, value) {
-    this.setState({ [state]: value });
+  handleStateValue (state, value) {
+    this.setState({ [state]: value })
   }
 
-  getLastQuestionNode() {
-    return null;
+  getLastQuestionNode () {
+    return null
   }
 
-  fetchNextQuestion() {
+  fetchNextQuestion () {
     this.questionsService.find(
-      { 
+      {
         query: {
-          $limit: 1,
+          $limit: 1
         }
       }
     )
       .then(response => {
-        console.log('next question :- ', response.data);
+        console.log('next question :- ', response.data)
         if (response.data.length > 0) {
           questions.push(response.data[0])
-          this.handleNextQuestion();
+          this.handleNextQuestion()
         }
       })
       .catch(err => {
-        console.log('err in fetching next question :- ', err);
-      });
+        console.log('err in fetching next question :- ', err)
+      })
   }
 
-  sendNewMessage(message) {
-    return this.messagesService.create(message);
+  sendNewMessage (message) {
+    return this.messagesService.create(message)
   }
 
-  handleNextQuestion() {
+  handleNextQuestion () {
     this.setState({ isBotTyping: true, isUserAllowedToAnswer: false }, () => {
       timer = setTimeout(() => {
-        const [ currentQuestion ] = questions.slice(-1);
+        const [ currentQuestion ] = questions.slice(-1)
 
         if (currentQuestion) {
           const {
-            question 
-          } = currentQuestion;
+            question
+          } = currentQuestion
 
-          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : []);
+          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : [])
 
-          const { currentQuestionIndex } = this.state;
+          const { currentQuestionIndex } = this.state
 
           if (questionArray.length > 0) {
-            let newMessages = [];
+            let newMessages = []
             if (currentQuestionIndex === questionArray.length - 1) {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
                 sender: 'bot',
                 showTime: true
-              });
+              })
 
               if (currentQuestion.widget === 'radio' && currentQuestion.radioOptions) {
                 newMessages.push({
@@ -185,7 +185,7 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   isAnswer: true,
                   sender: 'bot'
-                });
+                })
               } else if (currentQuestion.widget === 'checkbox' && currentQuestion.checkboxOptions) {
                 newMessages.push({
                   widget: 'checkbox',
@@ -194,29 +194,28 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   isAnswer: true,
                   sender: 'bot'
-                });
+                })
               }
 
               this.setState({
                 currentQuestionIndex: 0,
-                isBotTyping: false,
+                isBotTyping: false
               }, () => {
                 this.sendNewMessage(newMessages)
                   .then(() => {
                     this.setState({
-                      isUserAllowedToAnswer: true,
-                    });
+                      isUserAllowedToAnswer: true
+                    })
                   })
                   .catch(err => {
-                    console.log('msg not sent :- ', err);
-                  });
-              });
-                
+                    console.log('msg not sent :- ', err)
+                  })
+              })
             } else {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
                 sender: 'bot'
-              });
+              })
 
               this.sendNewMessage(newMessages)
                 .then(() => {
@@ -225,64 +224,64 @@ export default class FormBotApp extends React.PureComponent {
                     currentQuestionIndex: currentQuestionIndex + 1
                   }, () => {
                     this.handleNextQuestion()
-                  });
+                  })
                 })
                 .catch(err => {
-                  console.log('msg not sent :- ', err);
-                });
+                  console.log('msg not sent :- ', err)
+                })
             }
           }
         }
-      }, 500);
-    });
+      }, 500)
+    })
   }
 
-  submitInputValue(currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
+  submitInputValue (currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
     // first replace all spaces by single for safety
-    answerInput = answerInput.replace(/\s\s+/g, ' ').trim();
+    answerInput = answerInput.replace(/\s\s+/g, ' ').trim()
 
     if (currentQuestion.validateInput && currentQuestion.validateInput.casing) {
-      answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase());
+      answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase())
     }
 
-    const { messages } = this.state;
+    const { messages } = this.state
 
-    let answerInputModified;
+    let answerInputModified
     if (formValue !== '') {
-      answerInputModified = formValue.replace(/\s\s+/g, ' ').trim();
+      answerInputModified = formValue.replace(/\s\s+/g, ' ').trim()
     } else {
-      answerInputModified = answerInput.replace(/\s\s+/g, ' ').trim();
+      answerInputModified = answerInput.replace(/\s\s+/g, ' ').trim()
     }
 
-    let fullFileName = '';
+    let fullFileName = ''
     if (source === 'camera') {
-      fullFileName = answerInput.split('/').slice(-1)[0];
-      fileName = fullFileName.split('.')[0];
-      fileExtension = fullFileName.split('.')[1];
+      fullFileName = answerInput.split('/').slice(-1)[0]
+      fileName = fullFileName.split('.')[0]
+      fileExtension = fullFileName.split('.')[1]
     }
 
-    console.log('fileName :-', fileName);
-    console.log('fileExtension :-', fileExtension);
+    console.log('fileName :-', fileName)
+    console.log('fileExtension :-', fileExtension)
 
-    let inputValidatedObject;
+    let inputValidatedObject
     if (source !== 'file' && source !== 'camera') {
-      inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result);
+      inputValidatedObject = validateInput(currentQuestion, answerInputModified, source, this.state.result)
     } else {
-      console.log(currentQuestion, answerInputModified, fileName, fileExtension);
-      inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension);
+      console.log(currentQuestion, answerInputModified, fileName, fileExtension)
+      inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension)
     }
 
-    console.log('inputValidatedObject :- ', inputValidatedObject);
+    console.log('inputValidatedObject :- ', inputValidatedObject)
 
     if (inputValidatedObject.success) {
-      let newMessages = [];
+      let newMessages = []
       if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
         newMessages.push({
           source,
           text: answerInput,
           sender: 'user',
           showTime: true
-        });
+        })
       } else {
         newMessages.push({
           source,
@@ -291,7 +290,7 @@ export default class FormBotApp extends React.PureComponent {
           fileExtension,
           sender: 'user',
           showTime: true
-        });
+        })
       }
 
       this.sendNewMessage(newMessages)
@@ -300,12 +299,12 @@ export default class FormBotApp extends React.PureComponent {
             isUserTyping: false,
             inputError: false
           }, () => {
-            this.fetchNextQuestion();
-          });
+            this.fetchNextQuestion()
+          })
         })
         .catch(err => {
-          console.log('usr msg not sent :- ', err);
-        });
+          console.log('usr msg not sent :- ', err)
+        })
     } else {
       if (inputValidatedObject.foundError) {
         if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
@@ -314,8 +313,8 @@ export default class FormBotApp extends React.PureComponent {
             text: answerInput,
             sender: 'user',
             showTime: true,
-            isError: true,
-          });
+            isError: true
+          })
         } else {
           messages.push({
             source: source,
@@ -324,54 +323,48 @@ export default class FormBotApp extends React.PureComponent {
             fileExtension,
             sender: 'user',
             showTime: true
-          });
+          })
         }
-        
+
         messages.push({
           source: 'text',
           text: inputValidatedObject.errorMessage,
           sender: 'bot',
           errorMessage: true
-        });
-        this.setState({ messages });
+        })
+        this.setState({ messages })
       }
-      return;
     }
   }
 
-  render() {
+  render () {
     const {
       uiData
-    } = this.state;
+    } = this.state
 
-    const [ currentQuestion = {} ] = questions.slice(-1);
+    const [ currentQuestion = {} ] = questions.slice(-1)
 
     return (
       <View style={styles.flexView}>
         {
           this.state.openCameraView
-          ?
-            <View style={styles.flexView}>
+            ? <View style={styles.flexView}>
               {
                 currentQuestion.widget === 'qrscanner'
-                ?
-                  null
-                :
-                  <View style={styles.flexView}>
+                  ? null
+                  : <View style={styles.flexView}>
                     {
                       currentQuestion.widget === 'camera'
-                      ?
-                        <Camera
+                        ? <Camera
                           handleStateValue={this.handleStateValue}
-                          onCapture={this.submitInputValue} />
-                      :
-                        null
+                          onCapture={this.submitInputValue}
+                        />
+                        : null
                     }
                   </View>
               }
             </View>
-          :
-            <View style={styles.flexView}>
+            : <View style={styles.flexView}>
               <Header
                 title={uiData.header.title}
                 subtitle={uiData.header.subtitle}
@@ -393,8 +386,7 @@ export default class FormBotApp extends React.PureComponent {
                 />
                 {
                   this.state.isUserAllowedToAnswer
-                  ?
-                    <Footer
+                    ? <Footer
                       icon={uiData.footer.icon}
                       submitInputValue={this.submitInputValue}
                       isBotTyping={this.state.isBotTyping}
@@ -402,19 +394,18 @@ export default class FormBotApp extends React.PureComponent {
                       isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
                       currentQuestion={currentQuestion}
                     />
-                  :
-                    null
+                    : null
                 }
               </KeyboardAvoidingView>
             </View>
         }
       </View>
-    );
+    )
   }
 }
 
 const styles = StyleSheet.create({
   flexView: {
-    flex: 1,
-  },
-});
+    flex: 1
+  }
+})

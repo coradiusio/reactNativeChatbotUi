@@ -1,78 +1,78 @@
-import React from 'react';
+import React from 'react'
 
 import {
   StyleSheet,
   View,
   Text,
   ListView,
-  TouchableOpacity,
-} from 'react-native';
+  TouchableOpacity
+} from 'react-native'
 
 import {
-  ChatInput,
-} from 'reactNativeBasicComponents';
+  ChatInput
+} from 'reactNativeBasicComponents'
 
 import {
   colors
-} from '../../general';
+} from '../../general'
 
 const ds = new ListView.DataSource({
-  rowHasChanged: (r1, r2) => r1.id !== r2.id,
-});
+  rowHasChanged: (r1, r2) => r1.id !== r2.id
+})
 
 export default class SearchableSelect extends React.PureComponent {
-  constructor(props) {
-    super(props);
+  constructor (props) {
+    super(props)
     this.state = {
       isLoading: false,
       dataSource: ds.cloneWithRows([]),
       value: '',
       displayList: true
-    };
-    this.searchData = this.searchData.bind(this);
-    this.renderRow = this.renderRow.bind(this);
-    this.onInputCleared = this.onInputCleared.bind(this);
+    }
+    this.searchData = this.searchData.bind(this)
+    this.renderRow = this.renderRow.bind(this)
+    this.onInputCleared = this.onInputCleared.bind(this)
   }
 
-  searchData(value) {
+  searchData (value) {
     const {
-      searchKeyName,
-    } = this.props;
+      searchKeyName
+    } = this.props
 
     this.setState({ value }, () => {
       if (this.state.value.trim() === '') {
-        this.onInputCleared();
+        this.onInputCleared()
       } else if (value.length >= this.props.minCharToSearch) {
         this.setState({
           isLoading: true,
           value: value
-        });
-        
-        let refinedData = [];
-  
+        })
+
+        let refinedData = []
+
         if (searchKeyName) {
           refinedData = this.props.dataSource.filter(
             item => item.value[searchKeyName].toLowerCase().indexOf(value.trim().toLowerCase()) !== -1
-          );
+          )
         } else {
           refinedData = this.props.dataSource.filter(
             item => item.value.toLowerCase().indexOf(value.trim().toLowerCase()) !== -1
-          );
+          )
         }
-        
+
         this.setState({
           isLoading: false,
-          dataSource: ds.cloneWithRows(refinedData),
-        });
+          dataSource: ds.cloneWithRows(refinedData)
+        })
       } else {
         this.setState({
-          isLoading: true,
-        });
+          isLoading: true
+        })
       }
-    });
+    })
   }
 
-  renderRow(item) {
+  renderRow (item) {
     if (this.props.renderItemProps) {
       return (
         <TouchableOpacity
@@ -80,44 +80,44 @@ export default class SearchableSelect extends React.PureComponent {
         >
           {this.props.renderItemProps(item)}
         </TouchableOpacity>
-      );
+      )
     }
-    return null;
+    return null
   }
 
-  renderSeparator() {
-    return <View style={styles.listItemSeparator} />;
+  renderSeparator () {
+    return <View style={styles.listItemSeparator} />
   }
 
-  onInputCleared() {
+  onInputCleared () {
     this.setState({
       value: '',
       isLoading: false,
-      dataSource: ds.cloneWithRows([]),
-    });
+      dataSource: ds.cloneWithRows([])
+    })
   }
 
-  onListItemClicked(item) {
+  onListItemClicked (item) {
     const {
-      searchKeyName,
-    } = this.props;
+      searchKeyName
+    } = this.props
 
-    let result = '';
+    let result = ''
 
     if (searchKeyName) {
-      result = item.value[searchKeyName];
+      result = item.value[searchKeyName]
     } else {
-      result = item.value;
+      result = item.value
     }
 
     if (typeof this.props.onSelect === 'function') {
-      this.props.onSelect(result);
-      this.setState({ displayList: false });
+      this.props.onSelect(result)
+      this.setState({ displayList: false })
     }
   }
 
-  render() {
-    const element = [];
+  render () {
+    const element = []
 
     element.push(
       <ChatInput
@@ -129,18 +129,16 @@ export default class SearchableSelect extends React.PureComponent {
         loaderColor={colors.primary}
         loaderSize='small'
       />
-    );
+    )
 
     const listElement = (
-      <View key={2} style={[styles.listContainerStyle, {height: this.props.listHeight, top: this.props.listOffset}]} elevation={1}>
+      <View key={2} style={[styles.listContainerStyle, { height: this.props.listHeight, top: this.props.listOffset }]} elevation={1}>
         {
           this.state.dataSource._cachedRowCount === 0 && this.state.displayList && this.state.value !== '' && !this.state.isLoading
-          ?
-            <View style={styles.noItemFound}>
+            ? <View style={styles.noItemFound}>
               <Text>{this.props.noItemFoundMessage || 'No Item Found'}</Text>
             </View>
-          :
-            <ListView
+            : <ListView
               enableEmptySections
               dataSource={this.state.dataSource}
               renderRow={this.renderRow}
@@ -149,17 +147,17 @@ export default class SearchableSelect extends React.PureComponent {
             />
         }
       </View>
-    );
+    )
 
     if (this.state.displayList && !this.state.isLoading && this.state.value !== '') {
-      element.push(listElement);
+      element.push(listElement)
     }
 
     return (
       <View style={styles.container}>
         {element}
       </View>
-    );
+    )
   }
 }
 
@@ -174,18 +172,18 @@ const styles = StyleSheet.create({
     position: 'relative'
   },
   flexView: {
-    flex: 1,
+    flex: 1
   },
   progressiveInput: {
     marginTop: 20,
     marginLeft: 10,
-    marginRight: 10,
+    marginRight: 10
   },
   listContainerStyle: {
     backgroundColor: 'white',
     position: 'absolute',
     left: 0,
-    right: 0,
+    right: 0
   },
   listItemSeparator: {
     borderWidth: 0.5,
@@ -194,11 +192,11 @@ const styles = StyleSheet.create({
   iconContainerStyle: {
     minWidth: 40,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   noItemFound: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center'
   }
-});
+})

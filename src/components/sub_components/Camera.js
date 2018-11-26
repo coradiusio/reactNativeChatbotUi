@@ -1,45 +1,41 @@
-import React from 'react';
+import React from 'react'
 
 import {
   View,
-  StyleSheet,
-  TouchableOpacity,
-  Text
-} from 'react-native';
+  StyleSheet
+} from 'react-native'
 
-import { RNCamera } from 'react-native-camera';
+import { RNCamera } from 'react-native-camera'
 
 import {
-  Button,
-  Loader
-} from 'reactNativeBasicComponents';
+  Button
+} from 'reactNativeBasicComponents'
 
 import {
   colors
-} from '../../general';
+} from '../../general'
 
 class Camera extends React.PureComponent {
-
-  takePicture = async function() {
+  takePicture = async function () {
     if (this.camera) {
-      const options = { quality: 0.5, base64: true };
+      const options = { quality: 0.5, base64: true }
       const data = await this.camera.takePictureAsync(options)
-      console.log(data.uri);
-      this.props.onCapture(data.uri, '', 'camera');
-      this.props.handleStateValue('openCameraView', false);
+      console.log(data.uri)
+      this.props.onCapture(data.uri, '', 'camera')
+      this.props.handleStateValue('openCameraView', false)
     }
   }
 
-  render() {
+  render () {
     return (
       <View style={styles.cameraContainer}>
         <RNCamera
           ref={ref => {
-            this.camera = ref;
+            this.camera = ref
           }}
           style={styles.camera}
           type={RNCamera.Constants.Type.back}
-          autoFocus={true}
+          autoFocus
           permissionDialogTitle={'Permission to use camera'}
           permissionDialogMessage={'We need your permission to use your camera phone'}
         />
@@ -57,7 +53,7 @@ class Camera extends React.PureComponent {
           />
         </View>
       </View>
-    );
+    )
   }
 }
 
@@ -76,14 +72,14 @@ const styles = StyleSheet.create({
   },
   cameraButtonContainer: {
     position: 'absolute',
-    bottom: 16, 
+    bottom: 16,
     left: 16,
     right: 16,
     flexDirection: 'row',
     justifyContent: 'space-around'
   },
   buttonContainerStyle: {
-    padding: 0,
+    padding: 0
   },
   capture: {
     flex: 0,
@@ -92,9 +88,9 @@ const styles = StyleSheet.create({
     padding: 15,
     paddingHorizontal: 20,
     alignSelf: 'center',
-    margin: 20,
-  },
-});
+    margin: 20
+  }
+})
 
 const buttonStyles = StyleSheet.create({
   container: {
@@ -103,7 +99,7 @@ const buttonStyles = StyleSheet.create({
   },
   text: {
     color: colors.white
-  },
-});
+  }
+})
 
-export default Camera;
+export default Camera

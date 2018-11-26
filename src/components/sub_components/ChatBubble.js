@@ -1,32 +1,30 @@
-import React from 'react';
+import React from 'react'
 
 import {
   View,
   StyleSheet
-} from 'react-native';
+} from 'react-native'
 
-import TalkBubble from './TalkBubble';
+import TalkBubble from './TalkBubble'
 
 class ChatBubble extends React.PureComponent {
-  render() {
-    const { float = 'left' } = this.props;
+  render () {
+    const { float = 'left' } = this.props
     return (
       <View style={float === 'right' ? styles.rightContainer : styles.leftContainer}>
         {
           this.props.widget === 'camera'
-          ?
-            <View>
+            ? <View>
               {this.props.children}
             </View>
-          :
-            <TalkBubble
+            : <TalkBubble
               float={float}
             >
               {this.props.children}
             </TalkBubble>
         }
       </View>
-    );
+    )
   }
 }
 
@@ -37,6 +35,6 @@ const styles = StyleSheet.create({
   rightContainer: {
     alignSelf: 'flex-end'
   }
-});
+})
 
-export default ChatBubble;
+export default ChatBubble

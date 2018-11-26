@@ -1,35 +1,33 @@
-import React from 'react';
+import React from 'react'
 
 import {
   StyleSheet,
   View,
   Keyboard,
-  Text,
-} from 'react-native';
+  Text
+} from 'react-native'
 
-import * as Animatable from 'react-native-animatable';
+import * as Animatable from 'react-native-animatable'
 
 import {
-  Icon,
-  TextInput,
   DateTimePicker,
   Button,
   ChatInput
-} from 'reactNativeBasicComponents';
+} from 'reactNativeBasicComponents'
 
-import SearchableSelect from './sub_components/SearchableSelect';
+import SearchableSelect from './sub_components/SearchableSelect'
 
 import {
   colors
-} from '../general';
+} from '../general'
 
 import {
   formatDate
-} from '../utils';
+} from '../utils'
 
 class Footer extends React.PureComponent {
-  constructor(props) {
-    super(props);
+  constructor (props) {
+    super(props)
     this.state = {
       inputText: '',
       resetInputValue: false,
@@ -37,38 +35,38 @@ class Footer extends React.PureComponent {
     }
   }
 
-  handleInputText(value) {
-    this.setState({ inputText: value });
+  handleInputText (value) {
+    this.setState({ inputText: value })
   }
 
-  handleSubmit() {
-    this.props.submitInputValue(this.props.currentQuestion, this.state.inputText.trim());
+  handleSubmit () {
+    this.props.submitInputValue(this.props.currentQuestion, this.state.inputText.trim())
   }
 
-  handleSelect(value) {
-    this.props.submitInputValue(this.props.currentQuestion, value);
+  handleSelect (value) {
+    this.props.submitInputValue(this.props.currentQuestion, value)
   }
 
-  showDateTimePicker = () => this.setState({ isDatePickerVisible: true });
+  showDateTimePicker = () => this.setState({ isDatePickerVisible: true })
 
-  _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false });
+  _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false })
 
   _handleDatePicked = (date) => {
-    this.props.submitInputValue(this.props.currentQuestion, formatDate(date));
-    this._hideDateTimePicker();
-  };
+    this.props.submitInputValue(this.props.currentQuestion, formatDate(date))
+    this._hideDateTimePicker()
+  }
 
-  componentDecider() {
+  componentDecider () {
     const {
       currentQuestion
-    } = this.props;
+    } = this.props
 
     const {
       type,
       placeholder
-    } = currentQuestion.widget || {};
+    } = currentQuestion.widget || {}
 
-    switch(type) {
+    switch (type) {
       case 'text':
         return (
           <ChatInput
@@ -76,18 +74,18 @@ class Footer extends React.PureComponent {
             onFocus={() => this.props.handleStateValue('isUserTyping', true)}
             onBlur={() => this.props.handleStateValue('isUserTyping', false)}
             onSubmitEditing={() => {
-              this.handleSubmit();
-              this.handleInputText('');
+              this.handleSubmit()
+              this.handleInputText('')
             }}
             onSendIconPress={() => {
-              Keyboard.dismiss();
-              this.handleSubmit();
-              this.handleInputText('');
+              Keyboard.dismiss()
+              this.handleSubmit()
+              this.handleInputText('')
             }}
             sendIcon={this.props.icon}
             inputText={this.state.inputText}
           />
-        );
+        )
       case 'calendar':
         return (
           <View style={styles.flexView}>
@@ -103,7 +101,7 @@ class Footer extends React.PureComponent {
               onCancel={this._hideDateTimePicker}
             />
           </View>
-        );
+        )
       case 'qrscanner':
       case 'camera':
         return (
@@ -115,8 +113,8 @@ class Footer extends React.PureComponent {
               onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>
-        );
-      case 'searchselect': 
+        )
+      case 'searchselect':
         return (
           <View style={styles.flexView}>
             <SearchableSelect
@@ -168,13 +166,13 @@ class Footer extends React.PureComponent {
                     city: 'Andheri',
                     state: 'Maharashtra'
                   }
-                },
+                }
               ]}
               minCharToSearch={3}
               renderItemProps={item => (
                 <View style={{ padding: 10, margin: 4 }}>
                   <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Pincode: {item.value.pincode}</Text>
-                  <Text style={{ fontSize: 14, }}>City: {item.value.city}</Text>
+                  <Text style={{ fontSize: 14 }}>City: {item.value.city}</Text>
                   <Text style={{ fontSize: 14 }}>State: {item.value.state}</Text>
                 </View>
               )}
@@ -182,13 +180,13 @@ class Footer extends React.PureComponent {
               onSelect={(value) => this.handleSelect(value)}
             />
           </View>
-        );
+        )
       default:
-        return null;
+        return null
     }
   }
 
-  render() {
+  render () {
     return (
       <Animatable.View
         animation='slideInUp'
@@ -201,14 +199,14 @@ class Footer extends React.PureComponent {
           {this.componentDecider()}
         </View>
       </Animatable.View>
-    );
+    )
   }
 }
 
 const styles = StyleSheet.create({
   container: {
     margin: 8,
-    height: 48,
+    height: 48
   },
   inputContainer: {
     backgroundColor: colors.white,
@@ -222,27 +220,27 @@ const styles = StyleSheet.create({
       height: 3
     },
     shadowRadius: 5,
-    shadowOpacity: 1.0,
+    shadowOpacity: 1.0
   },
   flexView: {
     flex: 1
   },
   innerContainer: {
     flex: 1,
-    flexDirection: 'row',
+    flexDirection: 'row'
   },
   inputContainerStyle: {
-    flex: 1,
+    flex: 1
   },
   iconContainerStyle: {
     minWidth: 40,
     alignItems: 'flex-end',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
   buttonContainerStyle: {
-    padding: 0,
-  },
-});
+    padding: 0
+  }
+})
 
 const buttonStyles = StyleSheet.create({
   container: {
@@ -252,6 +250,6 @@ const buttonStyles = StyleSheet.create({
   text: {
     color: colors.white
   }
-});
+})
 
-export default Footer;
+export default Footer

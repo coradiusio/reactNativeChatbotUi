@@ -1,51 +1,51 @@
-import React from 'react';
+import React from 'react'
 
-import _ from 'lodash';
+import _ from 'lodash'
 
-import Search from '../modules/Search/Search';
+import Search from '../modules/Search/Search'
 
 class SearchSelect extends React.PureComponent {
-  constructor(props) {
-    super(props);
+  constructor (props) {
+    super(props)
     this.state = {
       isLoading: false,
       results: [],
       value: '',
-      source: [],
+      source: []
     }
   }
 
-  componentDidMount() {
+  componentDidMount () {
     this.setState({
       source: this.props.source || []
     })
   }
 
-  resetComponent = () => this.setState({ isLoading: false, results: [], value: '' });
+  resetComponent = () => this.setState({ isLoading: false, results: [], value: '' })
 
   handleResultSelect = (e, { result }) => {
-    this.setState({ value: result.title });
-    this.props.onSelect(result.value, result.title, 'searchselect');
+    this.setState({ value: result.title })
+    this.props.onSelect(result.value, result.title, 'searchselect')
   }
 
   handleSearchChange = (e, { value }) => {
-    this.setState({ isLoading: true, value });
+    this.setState({ isLoading: true, value })
 
     setTimeout(() => {
-      if (this.state.value.length < 1) return this.resetComponent();
+      if (this.state.value.length < 1) return this.resetComponent()
 
-      const re = new RegExp(_.escapeRegExp(this.state.value), 'i');
-      const isMatch = result => re.test(result.title);
+      const re = new RegExp(_.escapeRegExp(this.state.value), 'i')
+      const isMatch = result => re.test(result.title)
 
       this.setState({
         isLoading: false,
-        results: _.filter(this.state.source, isMatch),
+        results: _.filter(this.state.source, isMatch)
       })
-    }, 300);
+    }, 300)
   }
 
-  render() {
-    const { isLoading, value, results } = this.state;
+  render () {
+    const { isLoading, value, results } = this.state
 
     return (
       <Search
@@ -58,8 +58,8 @@ class SearchSelect extends React.PureComponent {
         fluid
         input={{ fluid: true, placeholder: this.props.placeholder || '' }}
       />
-    );
+    )
   }
 }
 
-export default SearchSelect;
+export default SearchSelect
