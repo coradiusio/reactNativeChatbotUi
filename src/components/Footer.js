@@ -71,8 +71,8 @@ class Footer extends React.PureComponent {
         return (
           <ChatInput
             onChange={(text) => this.handleInputText(text)}
-            onFocus={() => this.props.handleStateValue('isUserTyping', true)}
-            onBlur={() => this.props.handleStateValue('isUserTyping', false)}
+            onFocus={() => this.props.handleStateValue('isSenderTyping', true)}
+            onBlur={() => this.props.handleStateValue('isSenderTyping', false)}
             onSubmitEditing={() => {
               this.handleSubmit()
               this.handleInputText('')
