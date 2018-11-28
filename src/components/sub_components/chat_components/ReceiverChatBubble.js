@@ -17,7 +17,7 @@ import {
 class ReceiverChatBubble extends React.PureComponent {
   render () {
     return (
-      <ChatBubble style={styles.container}>
+      <ChatBubble style={styles.container} isTyping={this.props.isTyping} isError={this.props.isError}>
         <View style={styles.innerContainer}>
           {
             this.props.isTyping

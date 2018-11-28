@@ -7,12 +7,11 @@ import {
   Text
 } from 'react-native'
 
-import * as Animatable from 'react-native-animatable'
-
 import {
   DateTimePicker,
   Button,
-  ChatInput
+  ChatInput,
+  Loader
 } from 'reactNativeBasicComponents'
 
 import SearchableSelect from './sub_components/SearchableSelect'
@@ -71,14 +70,16 @@ class Footer extends React.PureComponent {
         return (
           <ChatInput
             onChange={(text) => this.handleInputText(text)}
-            onFocus={() => this.props.handleStateValue('isSenderTyping', true)}
-            onBlur={() => this.props.handleStateValue('isSenderTyping', false)}
+            onFocus={() => this.props.handleSenderTyping(true)}
+            onBlur={() => this.props.handleSenderTyping(false)}
             onSubmitEditing={() => {
+              this.props.handleSenderTyping(false)
               this.handleSubmit()
               this.handleInputText('')
             }}
             onSendIconPress={() => {
               Keyboard.dismiss()
+              this.props.handleSenderTyping(false)
               this.handleSubmit()
               this.handleInputText('')
             }}
@@ -188,17 +189,17 @@ class Footer extends React.PureComponent {
 
   render () {
     return (
-      <Animatable.View
-        animation='slideInUp'
-        duration={500}
-        useNativeDriver
+      <View
+        style={styles.container}
       >
-        <View
-          style={styles.container}
-        >
-          {this.componentDecider()}
-        </View>
-      </Animatable.View>
+        {
+          this.props.isUserAllowedToAnswer
+            ? this.componentDecider()
+            : <View style={styles.inputContainer} elevation={2}>
+              <Loader color={colors.primary} size='small' />
+            </View>
+        }
+      </View>
     )
   }
 }

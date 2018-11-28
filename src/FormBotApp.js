@@ -71,8 +71,6 @@ export default class FormBotApp extends React.PureComponent {
       result: {},
       currentQuestionIndex: 0,
       messages: [],
-      isReceiverTyping: false,
-      isSenderTyping: false,
       isUserAllowedToAnswer: false,
       openCameraView: false,
       botMode: 'question',
@@ -96,6 +94,7 @@ export default class FormBotApp extends React.PureComponent {
     this.submitInputValue = this.submitInputValue.bind(this)
     this.handleNextQuestion = this.handleNextQuestion.bind(this)
     this.handleStateValue = this.handleStateValue.bind(this)
+    this.handleSenderTyping = this.handleSenderTyping.bind(this)
   }
 
   componentDidMount () {
@@ -138,6 +137,23 @@ export default class FormBotApp extends React.PureComponent {
     this.setState({ [state]: value })
   }
 
+  handleSenderTyping (value) {
+    const isTyping = this.state.messages[this.state.messages.length - 1].isSenderTyping
+
+    if (value) {
+      if (!isTyping) {
+        this.setState(prevState => ({
+          messages: [...prevState.messages, { creator: this.state.role, isSenderTyping: true }]
+        }))
+      }
+    } else {
+      console.log('handleSenderTyping else called')
+      this.setState(prevState => ({
+        messages: prevState.messages.filter(item => !item.isSenderTyping)
+      }))
+    }
+  }
+
   getLastQuestionNode () {
     return null
   }
@@ -178,7 +194,10 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleNextQuestion () {
-    this.setState({ isReceiverTyping: true, isUserAllowedToAnswer: false }, () => {
+    this.setState(prevState => ({
+      messages: [...prevState.messages, { creator: botRole, isReceiverTyping: true }],
+      isUserAllowedToAnswer: false
+    }), () => {
       timer = setTimeout(() => {
         const [ currentQuestion ] = questions.slice(-1)
 
@@ -200,18 +219,16 @@ export default class FormBotApp extends React.PureComponent {
                 showTime: true
               })
 
-              if (currentQuestion.widget === 'radio' && currentQuestion.radioOptions) {
+              if (currentQuestion.widget.type === 'radio' && currentQuestion.widget.options) {
                 newMessages.push({
-                  widget: 'radio',
-                  radioOptions: currentQuestion.radioOptions,
+                  widget: currentQuestion.widget,
                   node: currentQuestion.node,
                   isAnswer: true,
                   creator: botRole
                 })
-              } else if (currentQuestion.widget === 'checkbox' && currentQuestion.checkboxOptions) {
+              } else if (currentQuestion.widget.type === 'checkbox' && currentQuestion.widget.options) {
                 newMessages.push({
-                  widget: 'checkbox',
-                  checkboxOptions: currentQuestion.checkboxOptions,
+                  widget: currentQuestion.widget,
                   joinWith: currentQuestion.validateInput.joinWith || ',',
                   node: currentQuestion.node,
                   isAnswer: true,
@@ -219,20 +236,17 @@ export default class FormBotApp extends React.PureComponent {
                 })
               }
 
-              this.setState({
-                currentQuestionIndex: 0,
-                isReceiverTyping: false
-              }, () => {
-                this.sendNewMessage(newMessages)
-                  .then(() => {
-                    this.setState({
-                      isUserAllowedToAnswer: true
-                    })
-                  })
-                  .catch(err => {
-                    console.log('msg not sent :- ', err)
-                  })
-              })
+              this.sendNewMessage(newMessages)
+                .then(() => {
+                  this.setState(prevState => ({
+                    messages: prevState.messages.filter(item => !item.isReceiverTyping),
+                    currentQuestionIndex: 0,
+                    isUserAllowedToAnswer: true
+                  }))
+                })
+                .catch(err => {
+                  console.log('msg not sent :- ', err)
+                })
             } else {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
@@ -241,10 +255,10 @@ export default class FormBotApp extends React.PureComponent {
 
               this.sendNewMessage(newMessages)
                 .then(() => {
-                  this.setState({
-                    isReceiverTyping: false,
+                  this.setState(prevState => ({
+                    messages: prevState.messages.filter(item => !item.isReceiverTyping),
                     currentQuestionIndex: currentQuestionIndex + 1
-                  }, () => {
+                  }), () => {
                     this.handleNextQuestion()
                   })
                 })
@@ -317,12 +331,7 @@ export default class FormBotApp extends React.PureComponent {
 
       this.sendNewMessage(newMessages)
         .then(() => {
-          this.setState({
-            isSenderTyping: false,
-            inputError: false
-          }, () => {
-            this.fetchNextQuestion()
-          })
+          this.fetchNextQuestion()
         })
         .catch(err => {
           console.log('usr msg not sent :- ', err)
@@ -351,8 +360,9 @@ export default class FormBotApp extends React.PureComponent {
           source: 'text',
           text: inputValidatedObject.errorMessage,
           creator: botRole,
-          errorMessage: true
+          isError: true
         })
+
         this.setState({ messages })
       }
     }
@@ -398,8 +408,6 @@ export default class FormBotApp extends React.PureComponent {
                   loader={uiData.loader}
                   submitInputValue={this.submitInputValue}
                   messages={this.state.messages}
-                  isSenderTyping={this.state.isSenderTyping}
-                  isReceiverTyping={this.state.isReceiverTyping}
                   currentQuestion={currentQuestion}
                   handleNextQuestion={this.handleNextQuestion}
                   handleStateValue={this.handleStateValue}
@@ -407,18 +415,14 @@ export default class FormBotApp extends React.PureComponent {
                   role={this.state.role}
                   botMode={this.state.botMode}
                 />
-                {
-                  this.state.isUserAllowedToAnswer
-                    ? <Footer
-                      icon={uiData.footer.icon}
-                      submitInputValue={this.submitInputValue}
-                      isReceiverTyping={this.state.isReceiverTyping}
-                      handleStateValue={this.handleStateValue}
-                      isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
-                      currentQuestion={currentQuestion}
-                    />
-                    : null
-                }
+                <Footer
+                  icon={uiData.footer.icon}
+                  submitInputValue={this.submitInputValue}
+                  handleStateValue={this.handleStateValue}
+                  isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
+                  currentQuestion={currentQuestion}
+                  handleSenderTyping={this.handleSenderTyping}
+                />
               </KeyboardAvoidingView>
             </View>
         }

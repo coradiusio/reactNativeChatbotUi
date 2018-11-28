@@ -3,8 +3,7 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  ScrollView,
-  Text,
+  FlatList,
   Image,
   TouchableOpacity
 } from 'react-native'
@@ -12,15 +11,14 @@ import {
 import { isUndefined } from 'lodash'
 
 import {
-  Icon,
-  Loader,
-  RadioChoices
+  Loader
 } from 'reactNativeBasicComponents'
 
 import SenderChatBubble from './sub_components/chat_components/SenderChatBubble'
 import ReceiverChatBubble from './sub_components/chat_components/ReceiverChatBubble'
-import ChatBubble from './sub_components/chat_components/ChatBubble'
-import TypingIndicator from './sub_components/chat_components/TypingIndicator'
+import ErrorBubble from './sub_components/chat_components/ErrorBubble'
+
+import RadioButtons from './sub_components/chat_components/RadioButtons'
 
 import {
   massageText,
@@ -36,32 +34,26 @@ let checkBoxActualValueList = []
 
 class Body extends React.PureComponent {
   scrollToBottom () {
-    if (this.scrollView) {
-      this.scrollView.scrollToEnd({ animated: true })
+    if (this.flatlist) {
+      this.flatlist.scrollToEnd({ animated: true })
     }
   }
 
   radioChoices = (message, currentQuestion) => {
-    if (message.radioOptions) {
+    if (message.widget.options) {
       return (
-        <RadioChoices
-          choices={message.radioOptions}
-          onChange={(option) => {
-            if (message.node === currentQuestion.node) {
-              this.props.submitInputValue(currentQuestion, option.label, option.value, 'radio')
-            }
-          }}
-          buttonsContainerStyle={styles.buttonsContainer}
-          containerStyle={styles.buttonContainer}
-          fillContainerStyle={styles.fillContainer}
+        <RadioButtons
+          message={message}
+          currentQuestion={currentQuestion}
+          submitInputValue={this.props.submitInputValue}
         />
       )
     }
   }
 
   checkboxChoices = (message) => {
-    if (message.checkboxOptions) {
-      return message.checkboxOptions.map((option, index) => {
+    if (message.widget.options) {
+      return message.widget.options.map((option, index) => {
         return (
           <div key={index}>
             <label>
@@ -95,84 +87,119 @@ class Body extends React.PureComponent {
     }
   }
 
+  _keyExtractor = (item, index) => index.toString()
+
+  _renderItem = ({ item, index }) => {
+    let leftOrRight = 'left'
+    let differentSender = false
+    let botMode = this.props.botMode
+
+    leftOrRight = item.creator.type === this.props.role.type ? 'right' : 'left'
+    differentSender = (
+      index === 0 || (this.props.messages[index - 1].creator.type !== this.props.messages[index].creator.type)
+    )
+
+    if (item.isError) {
+      return (
+        <View key={index}>
+          {
+            differentSender
+              ? <View style={styles.verticalSpacing} />
+              : null
+          }
+          <ErrorBubble errorMessage={item.text} />
+        </View>
+      )
+    } else if (item.isReceiverTyping) {
+      return (
+        <View>
+          {
+            differentSender
+              ? <View style={styles.verticalSpacing} />
+              : null
+          }
+          <ReceiverChatBubble isTyping />
+        </View>
+      )
+    } else if (item.isSenderTyping) {
+      return (
+        <View>
+          {
+            differentSender
+              ? <View style={styles.verticalSpacing} />
+              : null
+          }
+          <SenderChatBubble isTyping />
+        </View>
+      )
+    }
+
+    return (
+      <View key={index}>
+        {
+          differentSender
+            ? <View style={styles.verticalSpacing} />
+            : null
+        }
+        {
+          isUndefined(item.isAnswer)
+            ? <View>
+              {
+                leftOrRight === 'left'
+                  ? <ReceiverChatBubble
+                    text={item.text}
+                    showName={differentSender}
+                    creator={item.creator.displayName}
+                    showTime={(botMode === 'chat' || (botMode === 'question' && item.showTime))}
+                    time={item.createdAt}
+                  />
+                  : <SenderChatBubble
+                    text={item.text}
+                    showTime
+                    time={item.createdAt}
+                  />
+              }
+            </View>
+            : <View>
+              {
+                item.widget.type === 'radio'
+                  ? this.radioChoices(item, this.props.currentQuestion)
+                  : <View />
+              }
+            </View>
+        }
+      </View>
+    )
+  }
+
   render () {
     const {
-      result,
       messages,
-      currentQuestion,
-      loader,
-      role,
-      botMode
+      loader
     } = this.props
 
     console.log('messages :- ', messages)
-
-    let leftOrRight = 'left'
-    let differentSender = false
 
     return (
       <View style={styles.flexView}>
         {
           this.props.noMessageAvailable
             ? <Loader color={loader.color} size={'large'} />
-            : <ScrollView
-              style={styles.flexView}
-              ref={ref => {
-                this.scrollView = ref
-              }}
-              onContentSizeChange={() => this.scrollToBottom()}
-              keyboardShouldPersistTaps='always'
-            >
-              <View style={styles.container}>
-                {
-                  messages.map((message, index) => {
-                    leftOrRight = message.creator.type === role.type ? 'right' : 'left'
-                    differentSender = (
-                      index === 0 || (messages[index - 1].creator.type !== messages[index].creator.type)
-                    )
-                    return (
-                      <View key={index}>
-                        {
-                          isUndefined(message.isAnswer)
-                            ? <View>
-                              {
-                                leftOrRight === 'left'
-                                  ? <ReceiverChatBubble
-                                    text={message.text}
-                                    showName={differentSender}
-                                    creator={message.creator.displayName}
-                                    showTime={(botMode === 'chat' || (botMode === 'question' && message.showTime))}
-                                    time={message.createdAt}
-                                  />
-                                  : <SenderChatBubble
-                                    text={message.text}
-                                  />
-                              }
-                            </View>
-                            : <View>
-                              {
-                                message.widget === 'radio'
-                                  ? this.radioChoices(message, currentQuestion)
-                                  : <View />
-                              }
-                            </View>
-                        }
-                      </View>
-                    )
-                  })
-                }
-                {
-                  this.props.isReceiverTyping
-                    ? <ReceiverChatBubble isTyping />
-                    : null
-                }
-                {
-                  this.props.isSenderTyping
-                    ? <SenderChatBubble isTyping />
-                    : null
-                }
-              </View>
-            </ScrollView>
+            : <View style={styles.flexView}>
+              <FlatList
+                data={messages}
+                keyExtractor={this._keyExtractor}
+                renderItem={this._renderItem}
+                style={[StyleSheet.absoluteFill, styles.container]}
+                contentContainerStyle={styles.flatlistContentContainer}
+                onContentSizeChange={() => this.scrollToBottom()}
+                onLayout={() => this.scrollToBottom()}
+                ref={ref => {
+                  this.flatlist = ref
+                }}
+                keyboardShouldPersistTaps='always'
+              />
+            </View>
         }
       </View>
     )
@@ -181,8 +208,7 @@ class Body extends React.PureComponent {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    padding: 8
+    flex: 1
   },
   flexView: {
     flex: 1
@@ -202,9 +228,6 @@ const styles = StyleSheet.create({
   flexDirectionRow: {
     flexDirection: 'row'
   },
-  errorIconContainer: {
-    marginRight: 8
-  },
   timeString: {
     fontSize: 10
   },
@@ -222,15 +245,6 @@ const styles = StyleSheet.create({
   rightTypingContainer: {
     height: 68
   },
-  buttonsContainer: {
-    marginBottom: 0
-  },
-  buttonContainer: {
-    borderColor: colors.primary
-  },
-  fillContainer: {
-    backgroundColor: colors.primary
-  },
   imageContainer: {
     width: 270,
     height: 270
@@ -239,6 +253,13 @@ const styles = StyleSheet.create({
     flex: 1,
     width: null,
     height: null
+  },
+  verticalSpacing: {
+    flex: 1,
+    height: 4
+  },
+  flatlistContentContainer: {
+    padding: 8
   }
 })
 
