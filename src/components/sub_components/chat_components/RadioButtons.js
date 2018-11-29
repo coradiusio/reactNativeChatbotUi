@@ -19,10 +19,25 @@ class RadioButtons extends React.PureComponent {
   constructor (props) {
     super(props)
     this.state = {
+      value: '',
       pointerEvents: 'auto'
     }
 
     this.handleStateValue = this.handleStateValue.bind(this)
+  }
+
+  componentDidMount () {
+    if (this.props.pointerEvents) {
+      this.setState({
+        pointerEvents: this.props.pointerEvents
+      })
+    }
+
+    if (this.props.value) {
+      this.setState({
+        value: this.props.value
+      })
+    }
   }
 
   handleStateValue (state, value) {
@@ -42,10 +57,12 @@ class RadioButtons extends React.PureComponent {
             choices={message.widget.options}
             onChange={(option) => {
               if (message.node === currentQuestion.node) {
+                this.handleStateValue('value', option.value)
                 this.handleStateValue('pointerEvents', 'none')
                 this.props.submitInputValue(currentQuestion, option.label, option.value, 'radio')
               }
             }}
+            value={this.state.value}
             buttonsContainerStyle={styles.buttonsContainer}
             containerStyle={styles.buttonContainer}
             fillContainerStyle={styles.fillContainer}

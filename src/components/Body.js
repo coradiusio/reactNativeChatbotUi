@@ -46,6 +46,8 @@ class Body extends React.PureComponent {
           message={message}
           currentQuestion={currentQuestion}
           submitInputValue={this.props.submitInputValue}
+          pointerEvents={message.node === currentQuestion.node ? 'auto' : 'none'}
+          value={message.state.value || ''}
         />
       )
     }
@@ -142,7 +144,7 @@ class Body extends React.PureComponent {
             : null
         }
         {
-          isUndefined(item.isAnswer)
+          isUndefined(item.isAnswerOptions)
             ? <View>
               {
                 leftOrRight === 'left'
@@ -177,8 +179,6 @@ class Body extends React.PureComponent {
       messages,
       loader
     } = this.props
-
-    console.log('messages :- ', messages)
 
     return (
       <View style={styles.flexView}>

@@ -9,8 +9,6 @@ import io from 'socket.io-client'
 import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
-import { isUndefined } from 'lodash'
-
 import Header from './components/Header'
 import Body from './components/Body'
 import Footer from './components/Footer'
@@ -29,6 +27,7 @@ import {
 
 let timer
 let questions = []
+let currentQuestionMessages = []
 
 const botRole = {
   type: 'bot',
@@ -101,10 +100,12 @@ export default class FormBotApp extends React.PureComponent {
     this.fetchMessagesHistory()
 
     this.messagesService.on('created', message => {
-      console.log('new message created :- ', message)
-      this.setState(prevState => ({
-        messages: [ ...prevState.messages, message ]
-      }))
+      if (this.state.botMode === 'chat') {
+        console.log('new message created :- ', message)
+        this.setState(prevState => ({
+          messages: [ ...prevState.messages, message ]
+        }))
+      }
     })
   }
 
@@ -120,9 +121,9 @@ export default class FormBotApp extends React.PureComponent {
     this.messagesService.find()
       .then(response => {
         if (response.data.length > 0) {
-          // this.setState({
-          //   messages: response.data
-          // })
+          this.setState({
+            messages: response.data
+          })
         }
         if (this.state.botMode.trim().toLowerCase() === 'question') {
           this.fetchNextQuestion()
@@ -170,6 +171,7 @@ export default class FormBotApp extends React.PureComponent {
         console.log('next question :- ', response.data)
         if (response.data.length > 0) {
           questions.push(response.data[0])
+          currentQuestionMessages = []
           this.handleNextQuestion()
         }
       })
@@ -178,19 +180,8 @@ export default class FormBotApp extends React.PureComponent {
       })
   }
 
-  attachRole (message) {
-    if (isUndefined(message.role)) {
-      message.role = {
-        type: this.state.role.type,
-        displayName: this.state.role.displayName
-      }
-    }
-
-    return message
-  }
-
   sendNewMessage (message) {
-    return this.messagesService.create(this.attachRole(message))
+    return this.messagesService.create(message)
   }
 
   handleNextQuestion () {
@@ -215,6 +206,7 @@ export default class FormBotApp extends React.PureComponent {
             if (currentQuestionIndex === questionArray.length - 1) {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
+                node: currentQuestion.node,
                 creator: botRole,
                 showTime: true
               })
@@ -223,7 +215,8 @@ export default class FormBotApp extends React.PureComponent {
                 newMessages.push({
                   widget: currentQuestion.widget,
                   node: currentQuestion.node,
-                  isAnswer: true,
+                  state: currentQuestion.state,
+                  isAnswerOptions: true,
                   creator: botRole
                 })
               } else if (currentQuestion.widget.type === 'checkbox' && currentQuestion.widget.options) {
@@ -231,40 +224,34 @@ export default class FormBotApp extends React.PureComponent {
                   widget: currentQuestion.widget,
                   joinWith: currentQuestion.validateInput.joinWith || ',',
                   node: currentQuestion.node,
-                  isAnswer: true,
+                  state: currentQuestion.state,
+                  isAnswerOptions: true,
                   creator: botRole
                 })
               }
 
-              this.sendNewMessage(newMessages)
-                .then(() => {
-                  this.setState(prevState => ({
-                    messages: prevState.messages.filter(item => !item.isReceiverTyping),
-                    currentQuestionIndex: 0,
-                    isUserAllowedToAnswer: true
-                  }))
-                })
-                .catch(err => {
-                  console.log('msg not sent :- ', err)
-                })
+              currentQuestionMessages.push(...newMessages)
+
+              this.setState(prevState => ({
+                messages: [...prevState.messages.filter(item => !item.isReceiverTyping), ...newMessages],
+                currentQuestionIndex: 0,
+                isUserAllowedToAnswer: true
+              }))
             } else {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
+                node: currentQuestion.node,
                 creator: botRole
               })
 
-              this.sendNewMessage(newMessages)
-                .then(() => {
-                  this.setState(prevState => ({
-                    messages: prevState.messages.filter(item => !item.isReceiverTyping),
-                    currentQuestionIndex: currentQuestionIndex + 1
-                  }), () => {
-                    this.handleNextQuestion()
-                  })
-                })
-                .catch(err => {
-                  console.log('msg not sent :- ', err)
-                })
+              currentQuestionMessages.push(...newMessages)
+
+              this.setState(prevState => ({
+                messages: [...prevState.messages.filter(item => !item.isReceiverTyping), ...newMessages],
+                currentQuestionIndex: currentQuestionIndex + 1
+              }), () => {
+                this.handleNextQuestion()
+              })
             }
           }
         }
@@ -315,6 +302,7 @@ export default class FormBotApp extends React.PureComponent {
         newMessages.push({
           source,
           text: answerInput,
+          answerOfNode: currentQuestion.node,
           creator: this.state.role,
           showTime: true
         })
@@ -324,14 +312,19 @@ export default class FormBotApp extends React.PureComponent {
           fileURL: answerInput,
           fileName,
           fileExtension,
+          answerOfNode: currentQuestion.node,
           creator: this.state.role,
           showTime: true
         })
       }
 
-      this.sendNewMessage(newMessages)
+      this.sendNewMessage([...currentQuestionMessages, ...newMessages])
         .then(() => {
-          this.fetchNextQuestion()
+          this.setState(prevState => ({
+            messages: [...prevState.messages, ...newMessages]
+          }), () => {
+            this.fetchNextQuestion()
+          })
         })
         .catch(err => {
           console.log('usr msg not sent :- ', err)
@@ -372,6 +365,8 @@ export default class FormBotApp extends React.PureComponent {
     const {
       uiData
     } = this.state
+
+    console.log('messages :- ', this.state.messages)
 
     const [ currentQuestion = {} ] = questions.slice(-1)
 

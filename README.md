@@ -53,3 +53,7 @@ widget: {
   placeholder: 'placeholder...',
   minCharToSearch: 3,
 }
+
+8. Radio
+
+9. Checkbox

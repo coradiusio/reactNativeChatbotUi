@@ -7,6 +7,8 @@ import {
   Text
 } from 'react-native'
 
+import * as Animatable from 'react-native-animatable'
+
 import {
   DateTimePicker,
   Button,
@@ -189,17 +191,21 @@ class Footer extends React.PureComponent {
 
   render () {
     return (
-      <View
-        style={styles.container}
+      <Animatable.View
+        animation='slideInUp'
+        duration={500}
+        useNativeDriver
       >
-        {
-          this.props.isUserAllowedToAnswer
-            ? this.componentDecider()
-            : <View style={styles.inputContainer} elevation={2}>
-              <Loader color={colors.primary} size='small' />
-            </View>
-        }
-      </View>
+        <View
+          style={styles.container}
+        >
+          {
+            this.props.isUserAllowedToAnswer
+              ? this.componentDecider()
+              : <Loader color={colors.primary} size='small' />
+          }
+        </View>
+      </Animatable.View>
     )
   }
 }
