@@ -243,6 +243,38 @@ export function massageText (text, state) {
   return text
 }
 
+export function ddMMMYYYY (date) {
+  if (typeof date === 'string') {
+    date = new Date(date)
+  }
+
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ]
+
+  const day = date.getDate()
+  const monthIndex = date.getMonth()
+  var year = date.getFullYear()
+
+  return '' + day + '-' + monthNames[monthIndex] + '-' + year
+}
+
+export function isValidDate (date) {
+  return date && Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date)
+}
+
+export function compareDate (firstDate, secondDate) {
+  if (typeof firstDate === 'string') {
+    firstDate = new Date(firstDate)
+  }
+
+  if (typeof secondDate === 'string') {
+    secondDate = new Date(secondDate)
+  }
+
+  return firstDate.setHours(0, 0, 0, 0) > secondDate.setHours(0, 0, 0, 0)
+}
+
 export function formatAMPM (date) {
   if (typeof date === 'string') {
     date = new Date(date)

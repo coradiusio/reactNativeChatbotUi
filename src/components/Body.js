@@ -3,34 +3,18 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  FlatList,
-  Image,
-  TouchableOpacity
+  FlatList
 } from 'react-native'
-
-import { isUndefined } from 'lodash'
 
 import {
   Loader
 } from 'reactNativeBasicComponents'
 
-import SenderChatBubble from './sub_components/chat_components/SenderChatBubble'
-import ReceiverChatBubble from './sub_components/chat_components/ReceiverChatBubble'
-import ErrorBubble from './sub_components/chat_components/ErrorBubble'
-
-import RadioButtons from './sub_components/chat_components/RadioButtons'
-
-import {
-  massageText,
-  formatAMPM
-} from '../utils'
+import Generic from './Generic'
 
 import {
   colors
 } from '../general'
-
-let checkBoxDisplayValueList = []
-let checkBoxActualValueList = []
 
 class Body extends React.PureComponent {
   scrollToBottom () {
@@ -39,140 +23,17 @@ class Body extends React.PureComponent {
     }
   }
 
-  radioChoices = (message, currentQuestion) => {
-    if (message.widget.options) {
-      return (
-        <RadioButtons
-          message={message}
-          currentQuestion={currentQuestion}
-          submitInputValue={this.props.submitInputValue}
-          pointerEvents={message.node === currentQuestion.node ? 'auto' : 'none'}
-          value={message.state.value || ''}
-        />
-      )
-    }
-  }
-
-  checkboxChoices = (message) => {
-    if (message.widget.options) {
-      return message.widget.options.map((option, index) => {
-        return (
-          <div key={index}>
-            <label>
-              <input
-                type='checkbox'
-                defaultValue={option.value}
-                dataLabel={option.label}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    checkBoxActualValueList.push(e.target.value)
-                    checkBoxDisplayValueList.push(e.target.attributes.datalabel.value)
-                  } else {
-                    let index = checkBoxActualValueList.indexOf(e.target.value)
-                    if (index > -1) {
-                      checkBoxActualValueList.splice(index, 1)
-                    }
-                    index = checkBoxDisplayValueList.indexOf(e.target.attributes.datalabel.value)
-                    if (index > -1) {
-                      checkBoxDisplayValueList.splice(index, 1)
-                    }
-                  }
-                }}
-              />
-              <span>
-                <span />
-              </span> {option.label}
-            </label>
-          </div>
-        )
-      })
-    }
-  }
-
   _keyExtractor = (item, index) => index.toString()
 
-  _renderItem = ({ item, index }) => {
-    let leftOrRight = 'left'
-    let differentSender = false
-    let botMode = this.props.botMode
-
-    leftOrRight = item.creator.type === this.props.role.type ? 'right' : 'left'
-    differentSender = (
-      index === 0 || (this.props.messages[index - 1].creator.type !== this.props.messages[index].creator.type)
-    )
-
-    if (item.isError) {
-      return (
-        <View key={index}>
-          {
-            differentSender
-              ? <View style={styles.verticalSpacing} />
-              : null
-          }
-          <ErrorBubble errorMessage={item.text} />
-        </View>
-      )
-    } else if (item.isReceiverTyping) {
-      return (
-        <View>
-          {
-            differentSender
-              ? <View style={styles.verticalSpacing} />
-              : null
-          }
-          <ReceiverChatBubble isTyping />
-        </View>
-      )
-    } else if (item.isSenderTyping) {
-      return (
-        <View>
-          {
-            differentSender
-              ? <View style={styles.verticalSpacing} />
-              : null
-          }
-          <SenderChatBubble isTyping />
-        </View>
-      )
-    }
-
-    return (
-      <View key={index}>
-        {
-          differentSender
-            ? <View style={styles.verticalSpacing} />
-            : null
-        }
-        {
-          isUndefined(item.isAnswerOptions)
-            ? <View>
-              {
-                leftOrRight === 'left'
-                  ? <ReceiverChatBubble
-                    text={item.text}
-                    showName={differentSender}
-                    creator={item.creator.displayName}
-                    showTime={(botMode === 'chat' || (botMode === 'question' && item.showTime))}
-                    time={item.createdAt}
-                  />
-                  : <SenderChatBubble
-                    text={item.text}
-                    showTime
-                    time={item.createdAt}
-                  />
-              }
-            </View>
-            : <View>
-              {
-                item.widget.type === 'radio'
-                  ? this.radioChoices(item, this.props.currentQuestion)
-                  : <View />
-              }
-            </View>
-        }
-      </View>
-    )
-  }
+  _renderItem = ({ item, index }) => <Generic
+    item={item}
+    index={index}
+    currentQuestion={this.props.currentQuestion}
+    messages={this.props.messages}
+    botMode={this.props.botMode}
+    role={this.props.role}
+    submitInputValue={this.props.submitInputValue}
+  />
 
   render () {
     const {

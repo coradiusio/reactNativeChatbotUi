@@ -197,6 +197,8 @@ export default class FormBotApp extends React.PureComponent {
             question
           } = currentQuestion
 
+          const today = new Date()
+
           const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : [])
 
           const { currentQuestionIndex } = this.state
@@ -207,6 +209,7 @@ export default class FormBotApp extends React.PureComponent {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
                 node: currentQuestion.node,
+                createdAt: today,
                 creator: botRole,
                 showTime: true
               })
@@ -217,6 +220,7 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   state: currentQuestion.state,
                   isAnswerOptions: true,
+                  createdAt: today,
                   creator: botRole
                 })
               } else if (currentQuestion.widget.type === 'checkbox' && currentQuestion.widget.options) {
@@ -226,6 +230,7 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   state: currentQuestion.state,
                   isAnswerOptions: true,
+                  createdAt: today,
                   creator: botRole
                 })
               }
@@ -241,6 +246,7 @@ export default class FormBotApp extends React.PureComponent {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
                 node: currentQuestion.node,
+                createdAt: today,
                 creator: botRole
               })
 
@@ -268,6 +274,7 @@ export default class FormBotApp extends React.PureComponent {
     }
 
     const { messages } = this.state
+    const today = new Date()
 
     let answerInputModified
     if (formValue !== '') {
@@ -303,6 +310,7 @@ export default class FormBotApp extends React.PureComponent {
           source,
           text: answerInput,
           answerOfNode: currentQuestion.node,
+          createdAt: today,
           creator: this.state.role,
           showTime: true
         })
@@ -313,6 +321,7 @@ export default class FormBotApp extends React.PureComponent {
           fileName,
           fileExtension,
           answerOfNode: currentQuestion.node,
+          createdAt: today,
           creator: this.state.role,
           showTime: true
         })
