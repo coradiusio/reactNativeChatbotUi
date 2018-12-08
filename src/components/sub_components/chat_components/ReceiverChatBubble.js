@@ -14,6 +14,10 @@ import {
   colors
 } from '../../../general'
 
+import {
+  formatAMPM
+} from '../../../utils'
+
 class ReceiverChatBubble extends React.PureComponent {
   render () {
     return (
@@ -45,7 +49,7 @@ class ReceiverChatBubble extends React.PureComponent {
                     ? <Time
                       containerStyle={styles.rightAlign}
                       textStyle={styles.fontColor}
-                      text='12:45PM'
+                      text={formatAMPM(this.props.time)}
                     />
                     : null
                 }

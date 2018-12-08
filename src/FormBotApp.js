@@ -9,6 +9,8 @@ import io from 'socket.io-client'
 import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
+import dayjs from 'dayjs'
+
 import Header from './components/Header'
 import Body from './components/Body'
 import Footer from './components/Footer'
@@ -25,9 +27,10 @@ import {
   validateFile
 } from './utils'
 
+const uuidv4 = require('uuid/v4')
+
 let timer
 let questions = []
-let currentQuestionMessages = []
 
 const botRole = {
   type: 'bot',
@@ -100,12 +103,13 @@ export default class FormBotApp extends React.PureComponent {
     this.fetchMessagesHistory()
 
     this.messagesService.on('created', message => {
-      if (this.state.botMode === 'chat') {
-        console.log('new message created :- ', message)
-        this.setState(prevState => ({
-          messages: [ ...prevState.messages, message ]
-        }))
-      }
+      console.log('new message created :- ', message)
+      // here need to improve in removing typing component logic whether it was sender or receiver
+      this.setState(prevState => {
+        return ({
+          messages: [ ...prevState.messages.filter(item => ((!item.isSenderTyping) && (!item.isReceiverTyping))), message ]
+        })
+      })
     })
   }
 
@@ -171,7 +175,6 @@ export default class FormBotApp extends React.PureComponent {
         console.log('next question :- ', response.data)
         if (response.data.length > 0) {
           questions.push(response.data[0])
-          currentQuestionMessages = []
           this.handleNextQuestion()
         }
       })
@@ -197,7 +200,8 @@ export default class FormBotApp extends React.PureComponent {
             question
           } = currentQuestion
 
-          const today = new Date()
+          const time = new Date()
+          console.log('time :- ', time)
 
           const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : [])
 
@@ -209,9 +213,10 @@ export default class FormBotApp extends React.PureComponent {
               newMessages.push({
                 text: questionArray[currentQuestionIndex],
                 node: currentQuestion.node,
-                createdAt: today,
+                createdAt: time,
                 creator: botRole,
-                showTime: true
+                showTime: true,
+                uid: uuidv4()
               })
 
               if (currentQuestion.widget.type === 'radio' && currentQuestion.widget.options) {
@@ -220,8 +225,9 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   state: currentQuestion.state,
                   isAnswerOptions: true,
-                  createdAt: today,
-                  creator: botRole
+                  createdAt: time,
+                  creator: botRole,
+                  uid: uuidv4()
                 })
               } else if (currentQuestion.widget.type === 'checkbox' && currentQuestion.widget.options) {
                 newMessages.push({
@@ -230,33 +236,38 @@ export default class FormBotApp extends React.PureComponent {
                   node: currentQuestion.node,
                   state: currentQuestion.state,
                   isAnswerOptions: true,
-                  createdAt: today,
-                  creator: botRole
+                  createdAt: time,
+                  creator: botRole,
+                  uid: uuidv4()
                 })
               }
 
-              currentQuestionMessages.push(...newMessages)
-
-              this.setState(prevState => ({
-                messages: [...prevState.messages.filter(item => !item.isReceiverTyping), ...newMessages],
-                currentQuestionIndex: 0,
-                isUserAllowedToAnswer: true
-              }))
+              this.sendNewMessage(newMessages)
+                .then(() => {
+                  this.setState({
+                    currentQuestionIndex: 0,
+                    isReceiverTyping: false,
+                    isUserAllowedToAnswer: true
+                  })
+                }).catch(err => {
+                  console.log('err :- ', err)
+                })
             } else {
-              newMessages.push({
+              this.sendNewMessage({
                 text: questionArray[currentQuestionIndex],
                 node: currentQuestion.node,
-                createdAt: today,
-                creator: botRole
-              })
-
-              currentQuestionMessages.push(...newMessages)
-
-              this.setState(prevState => ({
-                messages: [...prevState.messages.filter(item => !item.isReceiverTyping), ...newMessages],
-                currentQuestionIndex: currentQuestionIndex + 1
-              }), () => {
-                this.handleNextQuestion()
+                createdAt: time,
+                creator: botRole,
+                uid: uuidv4()
+              }).then(() => {
+                this.setState({
+                  isReceiverTyping: false,
+                  currentQuestionIndex: currentQuestionIndex + 1
+                }, () => {
+                  this.handleNextQuestion()
+                })
+              }).catch(err => {
+                console.log('err :- ', err)
               })
             }
           }
@@ -273,7 +284,6 @@ export default class FormBotApp extends React.PureComponent {
       answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase())
     }
 
-    const { messages } = this.state
     const today = new Date()
 
     let answerInputModified
@@ -304,18 +314,19 @@ export default class FormBotApp extends React.PureComponent {
     console.log('inputValidatedObject :- ', inputValidatedObject)
 
     if (inputValidatedObject.success) {
-      let newMessages = []
+      let newMessage
       if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
-        newMessages.push({
+        newMessage = {
           source,
           text: answerInput,
           answerOfNode: currentQuestion.node,
           createdAt: today,
           creator: this.state.role,
-          showTime: true
-        })
+          showTime: true,
+          uid: uuidv4()
+        }
       } else {
-        newMessages.push({
+        newMessage = {
           source,
           fileURL: answerInput,
           fileName,
@@ -323,32 +334,31 @@ export default class FormBotApp extends React.PureComponent {
           answerOfNode: currentQuestion.node,
           createdAt: today,
           creator: this.state.role,
-          showTime: true
-        })
+          showTime: true,
+          uid: uuidv4()
+        }
       }
 
-      this.sendNewMessage([...currentQuestionMessages, ...newMessages])
+      this.sendNewMessage(newMessage)
         .then(() => {
-          this.setState(prevState => ({
-            messages: [...prevState.messages, ...newMessages]
-          }), () => {
-            this.fetchNextQuestion()
-          })
+          // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
+          this.fetchNextQuestion()
         })
         .catch(err => {
           console.log('usr msg not sent :- ', err)
         })
     } else {
       if (inputValidatedObject.foundError) {
+        let newMessages = []
         if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
-          messages.push({
+          newMessages.push({
             source,
             text: answerInput,
             showTime: true,
             creator: this.state.role
           })
         } else {
-          messages.push({
+          newMessages.push({
             source: source,
             fileURL: answerInput,
             fileName,
@@ -358,14 +368,14 @@ export default class FormBotApp extends React.PureComponent {
           })
         }
 
-        messages.push({
+        newMessages.push({
           source: 'text',
           text: inputValidatedObject.errorMessage,
           creator: botRole,
           isError: true
         })
 
-        this.setState({ messages })
+        this.sendNewMessage(newMessages)
       }
     }
   }

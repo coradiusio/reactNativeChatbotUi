@@ -19,6 +19,10 @@ import {
   colors
 } from '../../../general'
 
+import {
+  formatAMPM
+} from '../../../utils'
+
 class SenderChatBubble extends React.PureComponent {
   render () {
     return (
@@ -39,7 +43,7 @@ class SenderChatBubble extends React.PureComponent {
                 <View style={styles.editTimeContainer}>
                   <Time
                     textStyle={styles.fontColor}
-                    text='12:45 PM'
+                    text={formatAMPM(this.props.time)}
                   />
                   <TouchableOpacity>
                     <Icon
