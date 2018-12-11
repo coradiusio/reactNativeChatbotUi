@@ -92,9 +92,9 @@ class Generic extends React.PureComponent {
     let differentSender = false
     let botMode = this.props.botMode
 
-    leftOrRight = item.creator.type === this.props.role.type ? 'right' : 'left'
+    leftOrRight = item.sender.type === this.props.role.type ? 'right' : 'left'
     differentSender = (
-      index === 0 || (this.props.messages[index - 1].creator.type !== this.props.messages[index].creator.type)
+      index === 0 || (this.props.messages[index - 1].sender.type !== this.props.messages[index].sender.type)
     )
 
     if (item.isError) {
@@ -108,29 +108,29 @@ class Generic extends React.PureComponent {
           <ErrorBubble errorMessage={item.text} />
         </View>
       )
-    } else if (item.isReceiverTyping) {
-      return (
-        <View>
-          {
-            differentSender
-              ? <View style={styles.verticalSpacing} />
-              : null
-          }
-          <ReceiverChatBubble isTyping />
-        </View>
-      )
-    } else if (item.isSenderTyping) {
-      return (
-        <View>
-          {
-            differentSender
-              ? <View style={styles.verticalSpacing} />
-              : null
-          }
-          <SenderChatBubble isTyping />
-        </View>
-      )
-    }
+    }// else if (item.isReceiverTyping) {
+    //   return (
+    //     <View>
+    //       {
+    //         differentSender
+    //           ? <View style={styles.verticalSpacing} />
+    //           : null
+    //       }
+    //       <ReceiverChatBubble isTyping />
+    //     </View>
+    //   )
+    // } else if (item.isSenderTyping) {
+    //   return (
+    //     <View>
+    //       {
+    //         differentSender
+    //           ? <View style={styles.verticalSpacing} />
+    //           : null
+    //       }
+    //       <SenderChatBubble isTyping />
+    //     </View>
+    //   )
+    // }
 
     toShowDateComponent = false
 
@@ -163,14 +163,14 @@ class Generic extends React.PureComponent {
               {
                 leftOrRight === 'left'
                   ? <ReceiverChatBubble
-                    text={item.text}
+                    text={item.message.text}
                     showName={differentSender}
-                    creator={item.creator.displayName}
+                    sender={item.sender.displayName}
                     showTime={(botMode === 'chat' || (botMode === 'question' && item.showTime))}
                     time={item.createdAt}
                   />
                   : <SenderChatBubble
-                    text={item.text}
+                    text={item.message.text}
                     showTime
                     time={item.createdAt}
                   />

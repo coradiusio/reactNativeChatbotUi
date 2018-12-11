@@ -9,8 +9,6 @@ import io from 'socket.io-client'
 import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
-import dayjs from 'dayjs'
-
 import Header from './components/Header'
 import Body from './components/Body'
 import Footer from './components/Footer'
@@ -79,7 +77,8 @@ export default class FormBotApp extends React.PureComponent {
       role: this.props.role || {
         type: 'user',
         displayName: 'Robin'
-      }
+      },
+      isReceiverTyping: false
     }
 
     // setup socket connection
@@ -104,13 +103,51 @@ export default class FormBotApp extends React.PureComponent {
 
     this.messagesService.on('created', message => {
       console.log('new message created :- ', message)
-      // here need to improve in removing typing component logic whether it was sender or receiver
-      this.setState(prevState => {
-        return ({
-          messages: [ ...prevState.messages.filter(item => ((!item.isSenderTyping) && (!item.isReceiverTyping))), message ]
-        })
+      this.handleCreatedMessage(message)
+    })
+
+    this.messagesService.on('updated', message => {
+      console.log('message updated :- ', message)
+      this.handleUpdatedMessage(message)
+    })
+
+    this.messagesService.on('patched', message => {
+      console.log('message patched :- ', message)
+      this.handleUpdatedMessage(message)
+    })
+
+    this.messagesService.on('removed', message => {
+      console.log('message removed :- ', message)
+      this.handleRemovedMessage(message)
+    })
+  }
+
+  handleCreatedMessage (message) {
+    this.setState(prevState => {
+      return ({
+        messages: [ ...prevState.messages, message ]
       })
     })
+  }
+
+  handleUpdatedMessage (message) {
+    this.setState(prevState => {
+      return ({
+        messages: [ ...prevState.messages.filter(item => item.message_id !== message.message_id), message ]
+      })
+    })
+  }
+
+  handleRemovedMessage (message) {
+    this.setState(prevState => {
+      return ({
+        messages: [ ...prevState.messages.filter(item => item.message_id !== message.message_id) ]
+      })
+    })
+  }
+
+  handleSenderTyping (value) {
+    // do something here
   }
 
   componentWillUnmount () {
@@ -121,8 +158,8 @@ export default class FormBotApp extends React.PureComponent {
     this.app = null
   }
 
-  fetchMessagesHistory () {
-    this.messagesService.find()
+  fetchMessagesHistory (message_id = null) {
+    this.messagesService.find({ message_id })
       .then(response => {
         if (response.data.length > 0) {
           this.setState({
@@ -140,27 +177,6 @@ export default class FormBotApp extends React.PureComponent {
 
   handleStateValue (state, value) {
     this.setState({ [state]: value })
-  }
-
-  handleSenderTyping (value) {
-    const isTyping = this.state.messages[this.state.messages.length - 1].isSenderTyping
-
-    if (value) {
-      if (!isTyping) {
-        this.setState(prevState => ({
-          messages: [...prevState.messages, { creator: this.state.role, isSenderTyping: true }]
-        }))
-      }
-    } else {
-      console.log('handleSenderTyping else called')
-      this.setState(prevState => ({
-        messages: prevState.messages.filter(item => !item.isSenderTyping)
-      }))
-    }
-  }
-
-  getLastQuestionNode () {
-    return null
   }
 
   fetchNextQuestion () {
@@ -188,10 +204,10 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleNextQuestion () {
-    this.setState(prevState => ({
-      messages: [...prevState.messages, { creator: botRole, isReceiverTyping: true }],
-      isUserAllowedToAnswer: false
-    }), () => {
+    this.setState({
+      isUserAllowedToAnswer: false,
+      isReceiverTyping: true
+    }, () => {
       timer = setTimeout(() => {
         const [ currentQuestion ] = questions.slice(-1)
 
@@ -203,46 +219,58 @@ export default class FormBotApp extends React.PureComponent {
           const time = new Date()
           console.log('time :- ', time)
 
+          delete currentQuestion._id
+          currentQuestion.message_id = uuidv4()
+
+          currentQuestion.sender = botRole
+
           const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : [])
 
           const { currentQuestionIndex } = this.state
 
           if (questionArray.length > 0) {
-            let newMessages = []
+            let lastMessages = []
             if (currentQuestionIndex === questionArray.length - 1) {
-              newMessages.push({
-                text: questionArray[currentQuestionIndex],
-                node: currentQuestion.node,
+              lastMessages.push({
+                message: {
+                  text: questionArray[currentQuestionIndex]
+                },
                 createdAt: time,
-                creator: botRole,
+                sender: botRole,
                 showTime: true,
-                uid: uuidv4()
+                message_id: uuidv4()
               })
 
-              if (currentQuestion.widget.type === 'radio' && currentQuestion.widget.options) {
-                newMessages.push({
-                  widget: currentQuestion.widget,
-                  node: currentQuestion.node,
-                  state: currentQuestion.state,
-                  isAnswerOptions: true,
+              if (currentQuestion.input.widget.type === 'radio' && currentQuestion.input.widget.options) {
+                lastMessages.push({
+                  message: {
+                    quick_replies: currentQuestion.input.widget.options
+                  },
+                  widget: currentQuestion.input.widget.type,
                   createdAt: time,
-                  creator: botRole,
-                  uid: uuidv4()
+                  state: currentQuestion.state,
+                  sender: botRole,
+                  isAnswerOptions: true,
+                  showTime: true,
+                  message_id: uuidv4()
                 })
-              } else if (currentQuestion.widget.type === 'checkbox' && currentQuestion.widget.options) {
-                newMessages.push({
-                  widget: currentQuestion.widget,
-                  joinWith: currentQuestion.validateInput.joinWith || ',',
-                  node: currentQuestion.node,
-                  state: currentQuestion.state,
-                  isAnswerOptions: true,
+              } else if (currentQuestion.input.widget.type === 'checkbox' && currentQuestion.input.widget.options) {
+                lastMessages.push({
+                  message: {
+                    quick_replies: currentQuestion.input.widget.options
+                  },
+                  widget: currentQuestion.input.widget.type,
                   createdAt: time,
-                  creator: botRole,
-                  uid: uuidv4()
+                  joinWith: currentQuestion.validateInput.joinWith || ',',
+                  state: currentQuestion.state,
+                  sender: botRole,
+                  isAnswerOptions: true,
+                  showTime: true,
+                  message_id: uuidv4()
                 })
               }
 
-              this.sendNewMessage(newMessages)
+              this.sendNewMessage(lastMessages)
                 .then(() => {
                   this.setState({
                     currentQuestionIndex: 0,
@@ -254,11 +282,12 @@ export default class FormBotApp extends React.PureComponent {
                 })
             } else {
               this.sendNewMessage({
-                text: questionArray[currentQuestionIndex],
-                node: currentQuestion.node,
+                message: {
+                  text: questionArray[currentQuestionIndex],
+                },
                 createdAt: time,
-                creator: botRole,
-                uid: uuidv4()
+                sender: botRole,
+                message_id: uuidv4()
               }).then(() => {
                 this.setState({
                   isReceiverTyping: false,
@@ -318,10 +347,11 @@ export default class FormBotApp extends React.PureComponent {
       if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
         newMessage = {
           source,
-          text: answerInput,
-          answerOfNode: currentQuestion.node,
+          message: {
+            text: answerInput
+          },
           createdAt: today,
-          creator: this.state.role,
+          sender: this.state.role,
           showTime: true,
           uid: uuidv4()
         }
@@ -333,7 +363,7 @@ export default class FormBotApp extends React.PureComponent {
           fileExtension,
           answerOfNode: currentQuestion.node,
           createdAt: today,
-          creator: this.state.role,
+          sender: this.state.role,
           showTime: true,
           uid: uuidv4()
         }
@@ -353,9 +383,11 @@ export default class FormBotApp extends React.PureComponent {
         if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
           newMessages.push({
             source,
-            text: answerInput,
+            message: {
+              text: answerInput
+            },
             showTime: true,
-            creator: this.state.role
+            sender: this.state.role
           })
         } else {
           newMessages.push({
@@ -364,14 +396,16 @@ export default class FormBotApp extends React.PureComponent {
             fileName,
             fileExtension,
             showTime: true,
-            creator: this.state.role
+            sender: this.state.role
           })
         }
 
         newMessages.push({
           source: 'text',
-          text: inputValidatedObject.errorMessage,
-          creator: botRole,
+          message: {
+            text: inputValidatedObject.errorMessage
+          },
+          sender: botRole,
           isError: true
         })
 
@@ -415,6 +449,7 @@ export default class FormBotApp extends React.PureComponent {
                 subtitle={uiData.header.subtitle}
                 icon={uiData.header.icon}
                 subtitleIcon={uiData.header.subtitleIcon}
+                isReceiverTyping={this.state.isReceiverTyping}
               />
               <KeyboardAvoidingView style={styles.flexView} behavior='padding' keyboardVerticalOffset={-500}>
                 <Body

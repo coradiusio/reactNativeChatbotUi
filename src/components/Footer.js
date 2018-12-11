@@ -63,11 +63,11 @@ class Footer extends React.PureComponent {
     } = this.props
 
     const {
-      type,
+      widget,
       placeholder
-    } = currentQuestion.widget || {}
+    } = currentQuestion.input || {}
 
-    switch (type) {
+    switch (widget) {
       case 'text':
         return (
           <ChatInput

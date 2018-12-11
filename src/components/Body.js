@@ -23,7 +23,7 @@ class Body extends React.PureComponent {
     }
   }
 
-  _keyExtractor = (item, index) => index.toString()
+  _keyExtractor = (item, index) => item.message_id ? item.message_id.toString() : index.toString()
 
   _renderItem = ({ item, index }) => <Generic
     item={item}
