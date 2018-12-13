@@ -85,8 +85,7 @@ export default class FormBotApp extends React.PureComponent {
     this.app = feathers()
       .configure(socketio(io(this.props.host || 'http://192.168.42.63:7664',
         {
-          transports: ['websocket'],
-          forceNew: true
+          transports: ['websocket']
         }
       )))
 
