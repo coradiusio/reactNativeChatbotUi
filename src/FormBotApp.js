@@ -96,6 +96,7 @@ export default class FormBotApp extends React.PureComponent {
     this.handleNextQuestion = this.handleNextQuestion.bind(this)
     this.handleStateValue = this.handleStateValue.bind(this)
     this.handleSenderTyping = this.handleSenderTyping.bind(this)
+    this.fetchMessagesHistory = this.fetchMessagesHistory.bind(this)
   }
 
   componentDidMount () {
@@ -133,7 +134,7 @@ export default class FormBotApp extends React.PureComponent {
   handleUpdatedMessage (message) {
     this.setState(prevState => {
       return ({
-        messages: [ ...prevState.messages.filter(item => item.message_id !== message.message_id), message ]
+        messages: [ ...prevState.messages.filter(item => item.messageId !== message.messageId), message ]
       })
     })
   }
@@ -141,7 +142,7 @@ export default class FormBotApp extends React.PureComponent {
   handleRemovedMessage (message) {
     this.setState(prevState => {
       return ({
-        messages: [ ...prevState.messages.filter(item => item.message_id !== message.message_id) ]
+        messages: [ ...prevState.messages.filter(item => item.messageId !== message.messageId) ]
       })
     })
   }
@@ -158,15 +159,15 @@ export default class FormBotApp extends React.PureComponent {
     this.app = null
   }
 
-  fetchMessagesHistory (message_id = null) {
-    this.messagesService.find({ message_id })
+  fetchMessagesHistory (messageId) {
+    this.messagesService.find({ query: { messageId } })
       .then(response => {
         if (response.data.length > 0) {
-          this.setState({
-            messages: response.data
-          })
+          this.setState(prevState => ({
+            messages: [...response.data, ...prevState.messages]
+          }))
         }
-        if (this.state.botMode.trim().toLowerCase() === 'question') {
+        if (!messageId && this.state.botMode.trim().toLowerCase() === 'question') {
           this.fetchNextQuestion()
         }
       })
@@ -220,7 +221,7 @@ export default class FormBotApp extends React.PureComponent {
           console.log('time :- ', time)
 
           delete currentQuestion._id
-          currentQuestion.message_id = uuidv4()
+          currentQuestion.messageId = uuidv4()
 
           currentQuestion.sender = botRole
 
@@ -238,7 +239,7 @@ export default class FormBotApp extends React.PureComponent {
                 createdAt: time,
                 sender: botRole,
                 showTime: true,
-                message_id: uuidv4()
+                messageId: uuidv4()
               })
 
               if (currentQuestion.input.widget.type === 'radio' && currentQuestion.input.widget.options) {
@@ -252,7 +253,7 @@ export default class FormBotApp extends React.PureComponent {
                   sender: botRole,
                   isAnswerOptions: true,
                   showTime: true,
-                  message_id: uuidv4()
+                  messageId: uuidv4()
                 })
               } else if (currentQuestion.input.widget.type === 'checkbox' && currentQuestion.input.widget.options) {
                 lastMessages.push({
@@ -266,7 +267,7 @@ export default class FormBotApp extends React.PureComponent {
                   sender: botRole,
                   isAnswerOptions: true,
                   showTime: true,
-                  message_id: uuidv4()
+                  messageId: uuidv4()
                 })
               }
 
@@ -287,7 +288,7 @@ export default class FormBotApp extends React.PureComponent {
                 },
                 createdAt: time,
                 sender: botRole,
-                message_id: uuidv4()
+                messageId: uuidv4()
               }).then(() => {
                 this.setState({
                   isReceiverTyping: false,
@@ -463,6 +464,7 @@ export default class FormBotApp extends React.PureComponent {
                   noMessageAvailable={questions && questions.length === 0}
                   role={this.state.role}
                   botMode={this.state.botMode}
+                  fetchMessagesHistory={this.fetchMessagesHistory}
                 />
                 <Footer
                   icon={uiData.footer.icon}

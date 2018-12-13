@@ -3,11 +3,13 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  FlatList
+  FlatList,
+  TouchableOpacity
 } from 'react-native'
 
 import {
-  Loader
+  Loader,
+  Icon
 } from 'reactNativeBasicComponents'
 
 import Generic from './Generic'
@@ -17,13 +19,39 @@ import {
 } from '../general'
 
 class Body extends React.PureComponent {
+  constructor (props) {
+    super(props)
+    this.state = {
+      isRefreshing: false,
+      showJumpToBottom: false
+    }
+
+    this.dataRefresh = this.dataRefresh.bind(this)
+  }
+
+  dataRefresh () {
+    this.setState({ isRefreshing: true })
+
+    const {
+      messageId
+    } = this.props.messages[0] || {}
+
+    this.props.fetchMessagesHistory(messageId)
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (this.state.isRefreshing && nextProps.messages.length > this.props.messages.length) {
+      this.setState({ isRefreshing: false })
+    }
+  }
+
   scrollToBottom () {
-    if (this.flatlist) {
+    if (this.flatlist && !this.state.isRefreshing) {
       this.flatlist.scrollToEnd({ animated: true })
     }
   }
 
-  _keyExtractor = (item, index) => item.message_id ? item.message_id.toString() : index.toString()
+  _keyExtractor = (item, index) => item.messageId ? item.messageId.toString() : index.toString()
 
   _renderItem = ({ item, index }) => <Generic
     item={item}
@@ -34,6 +62,33 @@ class Body extends React.PureComponent {
     role={this.props.role}
     submitInputValue={this.props.submitInputValue}
   />
+
+  onViewableItemsChanged = ({ viewableItems }) => {
+    if (viewableItems.length > 0) {
+      if (viewableItems[0].index < this.props.messages.length / 2) {
+        this.setState({
+          showJumpToBottom: true
+        })
+      } else {
+        this.setState({
+          showJumpToBottom: false
+        })
+      }
+    }
+  }
+
+  onJumpIconPress () {
+    this.scrollToBottom()
+    this.setState({
+      showJumpToBottom: false
+    })
+  }
+
+  beginingReached (nativeEvent) {
+    if (nativeEvent.contentOffset.y === 0) {
+      this.dataRefresh()
+    }
+  }
 
   render () {
     const {
@@ -53,14 +108,35 @@ class Body extends React.PureComponent {
                 renderItem={this._renderItem}
                 style={[StyleSheet.absoluteFill, styles.container]}
                 contentContainerStyle={styles.flatlistContentContainer}
-                onContentSizeChange={() => this.scrollToBottom()}
+                onContentSizeChange={() => this.onJumpIconPress()}
                 onLayout={() => this.scrollToBottom()}
                 ref={ref => {
                   this.flatlist = ref
                 }}
                 keyboardShouldPersistTaps='always'
+                onViewableItemsChanged={this.onViewableItemsChanged}
+                onScroll={({ nativeEvent }) => {
+                  this.beginingReached(nativeEvent)
+                }}
+                scrollEventThrottle={0}
               />
             </View>
+        }
+        {
+          this.state.showJumpToBottom
+            ? <View style={styles.jumpIconContainer}>
+              <TouchableOpacity
+                onPress={() => this.scrollToBottom()}
+              >
+                <Icon
+                  color={colors.primary}
+                  name={'chevron-down-circle'}
+                  type={'material-community'}
+                  size={32}
+                />
+              </TouchableOpacity>
+            </View>
+            : null
         }
       </View>
     )
@@ -121,6 +197,11 @@ const styles = StyleSheet.create({
   },
   flatlistContentContainer: {
     padding: 8
+  },
+  jumpIconContainer: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16
   }
 })
 

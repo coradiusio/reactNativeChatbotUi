@@ -199,11 +199,12 @@ class Footer extends React.PureComponent {
         <View
           style={styles.container}
         >
-          {
+          {/* {
             this.props.isUserAllowedToAnswer
               ? this.componentDecider()
               : <Loader color={colors.primary} size='small' />
-          }
+          } */}
+          {this.componentDecider()}
         </View>
       </Animatable.View>
     )
