@@ -6,15 +6,16 @@ import {
   StyleSheet
 } from 'react-native'
 
+import dayjs from 'dayjs'
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter'
+
 import ChatBubble from './ChatBubble'
 
 import {
   colors
 } from '../../../general'
 
-import {
-  ddMMMYYYY
-} from '../../../utils'
+dayjs.extend(isSameOrAfter)
 
 class DateComponent extends React.PureComponent {
   render () {
@@ -22,22 +23,19 @@ class DateComponent extends React.PureComponent {
       date
     } = this.props
 
-    let _date
+    let _date = dayjs(date)
 
-    if (typeof date === 'string') {
-      _date = new Date(date)
-    } else {
-      _date = date
-    }
-
-    const today = new Date()
+    const today = dayjs()
 
     let dateTextToBeRendered
+    const isSame = today.isSame(_date, 'date')
 
-    if (today.getDate() === _date.getDate()) {
+    if (isSame) {
       dateTextToBeRendered = 'Today'
+    } else if (_date.isSameOrAfter(today.subtract(1, 'day').startOf('day'))) {
+      dateTextToBeRendered = 'Yesterday'
     } else {
-      dateTextToBeRendered = ddMMMYYYY(_date)
+      dateTextToBeRendered = _date.format('DD-MMM-YYYY')
     }
 
     return (

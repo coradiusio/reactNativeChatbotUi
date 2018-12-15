@@ -2,7 +2,8 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  ToastAndroid
 } from 'react-native'
 
 import io from 'socket.io-client'
@@ -159,13 +160,17 @@ export default class FormBotApp extends React.PureComponent {
     this.app = null
   }
 
-  fetchMessagesHistory (messageId) {
+  fetchMessagesHistory (messageId, callback) {
     this.messagesService.find({ query: { messageId } })
       .then(response => {
         if (response.data.length > 0) {
           this.setState(prevState => ({
             messages: [...response.data, ...prevState.messages]
-          }))
+          }), () => {
+            if (typeof callback === 'function') {
+              callback()
+            }
+          })
         }
         if (!messageId && this.state.botMode.trim().toLowerCase() === 'question') {
           this.fetchNextQuestion()
@@ -173,6 +178,7 @@ export default class FormBotApp extends React.PureComponent {
       })
       .catch(err => {
         console.log('err in fetching messages history :- ', err)
+        this._toastWithDurationGravityOffsetHandler('Coundn\'t be able to connect to Server, Something Went Wrong !')
       })
   }
 
@@ -415,14 +421,24 @@ export default class FormBotApp extends React.PureComponent {
     }
   }
 
+  _toastWithDurationGravityOffsetHandler = (text) => {
+    ToastAndroid.showWithGravityAndOffset(
+      text,
+      ToastAndroid.LONG,
+      ToastAndroid.BOTTOM,
+      25,
+      50
+    )
+  }
+
   render () {
     const {
       uiData
     } = this.state
 
-    console.log('messages :- ', this.state.messages)
-
     const [ currentQuestion = {} ] = questions.slice(-1)
+
+    const noMessageAvailable = questions && questions.length === 0
 
     return (
       <View style={styles.flexView}>
@@ -461,19 +477,24 @@ export default class FormBotApp extends React.PureComponent {
                   currentQuestion={currentQuestion}
                   handleNextQuestion={this.handleNextQuestion}
                   handleStateValue={this.handleStateValue}
-                  noMessageAvailable={questions && questions.length === 0}
+                  noMessageAvailable={noMessageAvailable}
                   role={this.state.role}
                   botMode={this.state.botMode}
                   fetchMessagesHistory={this.fetchMessagesHistory}
                 />
-                <Footer
-                  icon={uiData.footer.icon}
-                  submitInputValue={this.submitInputValue}
-                  handleStateValue={this.handleStateValue}
-                  isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
-                  currentQuestion={currentQuestion}
-                  handleSenderTyping={this.handleSenderTyping}
-                />
+                {
+                  !noMessageAvailable
+                    ? <Footer
+                      icon={uiData.footer.icon}
+                      submitInputValue={this.submitInputValue}
+                      handleStateValue={this.handleStateValue}
+                      isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
+                      currentQuestion={currentQuestion}
+                      handleSenderTyping={this.handleSenderTyping}
+                    />
+                    : null
+                }
+                
               </KeyboardAvoidingView>
             </View>
         }

@@ -1,3 +1,19 @@
+import React from 'react'
+
+import {
+  ToastAndroid
+} from 'react-native'
+
+export const Toast = (text) => {
+  ToastAndroid.showWithGravityAndOffset(
+    text,
+    ToastAndroid.LONG,
+    ToastAndroid.BOTTOM,
+    25,
+    50
+  )
+}
+
 export const genericColors = {
   white: '#FFFFFF',
   red: '#FF0000',

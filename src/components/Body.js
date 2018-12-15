@@ -4,7 +4,8 @@ import {
   StyleSheet,
   View,
   FlatList,
-  TouchableOpacity
+  TouchableOpacity,
+  PanResponder
 } from 'react-native'
 
 import {
@@ -18,35 +19,65 @@ import {
   colors
 } from '../general'
 
+let timer
+
 class Body extends React.PureComponent {
   constructor (props) {
     super(props)
     this.state = {
-      isRefreshing: false,
-      showJumpToBottom: false
+      showJumpToBottom: false,
+      isDataRefreshingForcefully: false,
+      isDataRefreshingNormally: false
     }
 
-    this.dataRefresh = this.dataRefresh.bind(this)
+    this.dataRefreshForcefully = this.dataRefreshForcefully.bind(this)
+    this.dataForcefullyRefreshed = this.dataForcefullyRefreshed.bind(this)
+    this.dataRefreshNormally = this.dataRefreshNormally.bind(this)
+    this.dataNormallyRefreshed = this.dataNormallyRefreshed.bind(this)
   }
 
-  dataRefresh () {
-    this.setState({ isRefreshing: true })
-
-    const {
-      messageId
-    } = this.props.messages[0] || {}
-
-    this.props.fetchMessagesHistory(messageId)
+  dataForcefullyRefreshed () {
+    timer = setTimeout(() => {
+      this.setState({ isDataRefreshingForcefully: false })
+    }, 1000)
   }
 
-  componentWillReceiveProps (nextProps) {
-    if (this.state.isRefreshing && nextProps.messages.length > this.props.messages.length) {
-      this.setState({ isRefreshing: false })
+  dataRefreshForcefully () {
+    if (!this.state.isDataRefreshingForcefully) {
+      this.setState({
+        isDataRefreshingForcefully: true
+      })
+
+      const {
+        messageId
+      } = this.props.messages[0] || {}
+
+      this.props.fetchMessagesHistory(messageId, this.dataForcefullyRefreshed)
+    }
+  }
+
+  dataNormallyRefreshed () {
+    timer = setTimeout(() => {
+      this.setState({ isDataRefreshingNormally: false })
+    }, 1000)
+  }
+
+  dataRefreshNormally () {
+    if (!this.state.isDataRefreshingNormally) {
+      this.setState({
+        isDataRefreshingNormally: true
+      })
+
+      const {
+        messageId
+      } = this.props.messages[0] || {}
+
+      this.props.fetchMessagesHistory(messageId, this.dataNormallyRefreshed)
     }
   }
 
   scrollToBottom () {
-    if (this.flatlist && !this.state.isRefreshing) {
+    if (this.flatlist && !this.state.isDataRefreshingForcefully && !this.state.isDataRefreshingNormally) {
       this.flatlist.scrollToEnd({ animated: true })
     }
   }
@@ -65,7 +96,7 @@ class Body extends React.PureComponent {
 
   onViewableItemsChanged = ({ viewableItems }) => {
     if (viewableItems.length > 0) {
-      if (viewableItems[0].index < this.props.messages.length / 2) {
+      if (viewableItems[viewableItems.length - 1].index < Math.round((Math.floor(this.props.messages.length - 1) / 1.33))) {
         this.setState({
           showJumpToBottom: true
         })
@@ -84,9 +115,22 @@ class Body extends React.PureComponent {
     })
   }
 
-  beginingReached (nativeEvent) {
-    if (nativeEvent.contentOffset.y === 0) {
-      this.dataRefresh()
+  reachingTop (nativeEvent) {
+    console.log('nativeEvent.contentOffset :- ', nativeEvent.contentOffset)
+    console.log('isDataRefreshingNormally :- ', this.state.isDataRefreshingNormally)
+    console.log('isDataRefreshingForcefully :- ', this.state.isDataRefreshingForcefully)
+    if (!this.state.isDataRefreshingForcefully && !this.state.isDataRefreshingNormally) {
+      if (nativeEvent.contentOffset.y > 0 && nativeEvent.contentOffset.y <= 100) {
+        this.dataRefreshNormally()
+      } else if (nativeEvent.contentOffset.y === 0) {
+        this.dataRefreshForcefully()
+      }
+    }
+  }
+
+  componentWillUnmount () {
+    if (timer) {
+      clearTimeout(timer)
     }
   }
 
@@ -102,24 +146,35 @@ class Body extends React.PureComponent {
           this.props.noMessageAvailable
             ? <Loader color={loader.color} size={'large'} />
             : <View style={styles.flexView}>
-              <FlatList
-                data={messages}
-                keyExtractor={this._keyExtractor}
-                renderItem={this._renderItem}
-                style={[StyleSheet.absoluteFill, styles.container]}
-                contentContainerStyle={styles.flatlistContentContainer}
-                onContentSizeChange={() => this.onJumpIconPress()}
-                onLayout={() => this.scrollToBottom()}
-                ref={ref => {
-                  this.flatlist = ref
-                }}
-                keyboardShouldPersistTaps='always'
-                onViewableItemsChanged={this.onViewableItemsChanged}
-                onScroll={({ nativeEvent }) => {
-                  this.beginingReached(nativeEvent)
-                }}
-                scrollEventThrottle={0}
-              />
+              {
+                this.state.isDataRefreshingForcefully
+                  ? <View style={styles.loaderContainer}>
+                    <Loader color={loader.color} size={'small'} />
+                  </View>
+                  : null
+              }
+              <View style={styles.flexView}>
+                <FlatList
+                  data={messages}
+                  keyExtractor={this._keyExtractor}
+                  renderItem={this._renderItem}
+                  style={[StyleSheet.absoluteFill, styles.container]}
+                  contentContainerStyle={styles.flatlistContentContainer}
+                  onContentSizeChange={() => this.scrollToBottom()}
+                  onViewableItemsChanged={this.onViewableItemsChanged}
+                  ref={ref => {
+                    this.flatlist = ref
+                  }}
+                  keyboardShouldPersistTaps='always'
+                  onScroll={({ nativeEvent }) => {
+                    this.reachingTop(nativeEvent)
+                  }}
+                  scrollEventThrottle={0}
+                  removeClippedSubviews
+                  maxToRenderPerBatch={20}
+                  initialNumToRender={20}
+                />
+              </View>
             </View>
         }
         {
@@ -202,6 +257,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16
+  },
+  loaderContainer: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    left: 0,
+    height: 48,
+    zIndex: 1000,
+    backgroundColor: 'rgba(255,255,255,0.8)'
   }
 })
 

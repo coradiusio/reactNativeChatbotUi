@@ -1,4 +1,4 @@
-import { get } from 'lodash';
+import { get } from 'lodash'
 
 const numbersComparisionOperators = [
   '==',
@@ -261,18 +261,6 @@ export function ddMMMYYYY (date) {
 
 export function isValidDate (date) {
   return date && Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date)
-}
-
-export function compareDate (firstDate, secondDate) {
-  if (typeof firstDate === 'string') {
-    firstDate = new Date(firstDate)
-  }
-
-  if (typeof secondDate === 'string') {
-    secondDate = new Date(secondDate)
-  }
-
-  return firstDate.setHours(0, 0, 0, 0) > secondDate.setHours(0, 0, 0, 0)
 }
 
 export function formatAMPM (date) {

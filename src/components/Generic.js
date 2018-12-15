@@ -6,19 +6,19 @@ import {
 } from 'react-native'
 
 import { isUndefined } from 'lodash'
+import dayjs from 'dayjs'
 
 import SenderChatBubble from './sub_components/chat_components/SenderChatBubble'
 import ReceiverChatBubble from './sub_components/chat_components/ReceiverChatBubble'
 import ErrorBubble from './sub_components/chat_components/ErrorBubble'
-import Date from './sub_components/chat_components/Date'
+import DateComponent from './sub_components/chat_components/DateComponent'
 
 import RadioButtons from './sub_components/chat_components/RadioButtons'
 
 import {
   massageText,
   formatAMPM,
-  isValidDate,
-  compareDate
+  isValidDate
 } from '../utils'
 
 import {
@@ -27,7 +27,7 @@ import {
 
 let checkBoxDisplayValueList = []
 let checkBoxActualValueList = []
-let baseDate = (new Date('1970-01-01T00:00:00.000Z')).toString()
+let baseDate
 let toShowDateComponent = false
 let dateObject
 
@@ -97,6 +97,10 @@ class Generic extends React.PureComponent {
       index === 0 || (this.props.messages[index - 1].sender.type !== this.props.messages[index].sender.type)
     )
 
+    if (item.index === 0) {
+      baseDate = dayjs('1970-01-01')
+    }
+
     if (item.isError) {
       return (
         <View key={index}>
@@ -134,22 +138,20 @@ class Generic extends React.PureComponent {
 
     toShowDateComponent = false
 
-    if (isValidDate(item.createdAt)) {
-      dateObject = item.createdAt
-    } else if (typeof item.createdAt === 'string') {
-      dateObject = (new Date(item.createdAt)).toString()
-    }
+    dateObject = dayjs(item.createdAt)
 
-    if (compareDate(dateObject, baseDate)) {
+    if (!dayjs(dateObject).isSame(dayjs(baseDate), 'date')) {
       toShowDateComponent = true
-      baseDate = (new Date(dateObject.props)).toString()
+      baseDate = dayjs(dateObject)
+    } else {
+      toShowDateComponent = false
     }
 
     return (
       <View key={index}>
         {
           toShowDateComponent && dateObject
-            ? <Date date={dateObject} />
+            ? <DateComponent date={dateObject} />
             : null
         }
         {
