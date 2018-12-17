@@ -45,14 +45,20 @@ class SenderChatBubble extends React.PureComponent {
                     textStyle={styles.fontColor}
                     text={formatAMPM(this.props.time)}
                   />
-                  <TouchableOpacity>
-                    <Icon
-                      color={colors.senderBubbleText}
-                      name={'pencil'}
-                      type={'material-community'}
-                      size={16}
-                    />
-                  </TouchableOpacity>
+                  {
+                    this.props.isEditable
+                      ? <TouchableOpacity
+                        onPress={() => this.props.handleEditPress(this.props.messageId)}
+                      >
+                        <Icon
+                          color={colors.senderBubbleText}
+                          name={'pencil'}
+                          type={'material-community'}
+                          size={16}
+                        />
+                      </TouchableOpacity>
+                      : null
+                  }
                 </View>
               </View>
           }

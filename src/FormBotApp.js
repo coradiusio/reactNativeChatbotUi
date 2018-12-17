@@ -10,6 +10,8 @@ import io from 'socket.io-client'
 import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
+import { isUndefined, isEmpty } from 'lodash'
+
 import Header from './components/Header'
 import Body from './components/Body'
 import Footer from './components/Footer'
@@ -245,6 +247,7 @@ export default class FormBotApp extends React.PureComponent {
                 createdAt: time,
                 sender: botRole,
                 showTime: true,
+                isQuestion: true,
                 messageId: uuidv4()
               })
 
@@ -257,6 +260,7 @@ export default class FormBotApp extends React.PureComponent {
                   createdAt: time,
                   state: currentQuestion.state,
                   sender: botRole,
+                  isQuestion: true,
                   isAnswerOptions: true,
                   showTime: true,
                   messageId: uuidv4()
@@ -271,6 +275,7 @@ export default class FormBotApp extends React.PureComponent {
                   joinWith: currentQuestion.validateInput.joinWith || ',',
                   state: currentQuestion.state,
                   sender: botRole,
+                  isQuestion: true,
                   isAnswerOptions: true,
                   showTime: true,
                   messageId: uuidv4()
@@ -290,8 +295,9 @@ export default class FormBotApp extends React.PureComponent {
             } else {
               this.sendNewMessage({
                 message: {
-                  text: questionArray[currentQuestionIndex],
+                  text: questionArray[currentQuestionIndex]
                 },
+                isQuestion: true,
                 createdAt: time,
                 sender: botRole,
                 messageId: uuidv4()
@@ -310,6 +316,15 @@ export default class FormBotApp extends React.PureComponent {
         }
       }, 500)
     })
+  }
+
+  handleEditPress (messageId) {
+    const [ messageItem ] = this.props.messages.filter(item => item.messageId === messageId)
+    if (!(isUndefined(messageItem) || isEmpty(messageItem))) {
+      if (!(isUndefined(messageItem.answerOfNode) || isEmpty(messageItem.answerOfNode))) {
+
+      }
+    }
   }
 
   submitInputValue (currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
@@ -357,6 +372,9 @@ export default class FormBotApp extends React.PureComponent {
           message: {
             text: answerInput
           },
+          isAnswer: true,
+          answerOfNode: currentQuestion.node,
+          isRightAnswer: true,
           createdAt: today,
           sender: this.state.role,
           showTime: true,
@@ -369,6 +387,8 @@ export default class FormBotApp extends React.PureComponent {
           fileName,
           fileExtension,
           answerOfNode: currentQuestion.node,
+          isAnswer: true,
+          isRightAnswer: true,
           createdAt: today,
           sender: this.state.role,
           showTime: true,
@@ -393,6 +413,9 @@ export default class FormBotApp extends React.PureComponent {
             message: {
               text: answerInput
             },
+            answerOfNode: currentQuestion.node,
+            isAnswer: true,
+            isRightAnswer: false,
             showTime: true,
             sender: this.state.role
           })
@@ -400,6 +423,9 @@ export default class FormBotApp extends React.PureComponent {
           newMessages.push({
             source: source,
             fileURL: answerInput,
+            answerOfNode: currentQuestion.node,
+            isAnswer: true,
+            isRightAnswer: false,
             fileName,
             fileExtension,
             showTime: true,

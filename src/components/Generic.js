@@ -109,7 +109,7 @@ class Generic extends React.PureComponent {
               ? <View style={styles.verticalSpacing} />
               : null
           }
-          <ErrorBubble errorMessage={item.text} />
+          <ErrorBubble errorMessage={item.message.text} />
         </View>
       )
     }// else if (item.isReceiverTyping) {
@@ -173,14 +173,17 @@ class Generic extends React.PureComponent {
                   />
                   : <SenderChatBubble
                     text={item.message.text}
+                    messageId={item.messageId}
                     showTime
                     time={item.createdAt}
+                    isEditable={item.isRightAnswer}
+                    handleEditPress={this.props.handleEditPress}
                   />
               }
             </View>
             : <View>
               {
-                item.widget.type === 'radio'
+                item.input.widget === 'radio'
                   ? this.radioChoices(item, this.props.currentQuestion)
                   : <View />
               }

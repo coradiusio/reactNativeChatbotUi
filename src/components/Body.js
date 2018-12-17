@@ -4,8 +4,7 @@ import {
   StyleSheet,
   View,
   FlatList,
-  TouchableOpacity,
-  PanResponder
+  TouchableOpacity
 } from 'react-native'
 
 import {
@@ -77,6 +76,8 @@ class Body extends React.PureComponent {
   }
 
   scrollToBottom () {
+    // console.log('this.state.isDataRefreshingForcefully :- ', this.state.isDataRefreshingForcefully)
+    // console.log('this.state.isDataRefreshingNormally :- ', this.state.isDataRefreshingNormally)
     if (this.flatlist && !this.state.isDataRefreshingForcefully && !this.state.isDataRefreshingNormally) {
       this.flatlist.scrollToEnd({ animated: true })
     }
@@ -116,14 +117,11 @@ class Body extends React.PureComponent {
   }
 
   reachingTop (nativeEvent) {
-    console.log('nativeEvent.contentOffset :- ', nativeEvent.contentOffset)
-    console.log('isDataRefreshingNormally :- ', this.state.isDataRefreshingNormally)
-    console.log('isDataRefreshingForcefully :- ', this.state.isDataRefreshingForcefully)
     if (!this.state.isDataRefreshingForcefully && !this.state.isDataRefreshingNormally) {
-      if (nativeEvent.contentOffset.y > 0 && nativeEvent.contentOffset.y <= 100) {
-        this.dataRefreshNormally()
-      } else if (nativeEvent.contentOffset.y === 0) {
+      if (nativeEvent.contentOffset.y === 0) {
         this.dataRefreshForcefully()
+      } else if (nativeEvent.contentOffset.y > 0 && (nativeEvent.contentOffset.y / nativeEvent.contentSize.height) < 0.3) {
+        this.dataRefreshNormally()
       }
     }
   }
@@ -166,9 +164,9 @@ class Body extends React.PureComponent {
                     this.flatlist = ref
                   }}
                   keyboardShouldPersistTaps='always'
-                  onScroll={({ nativeEvent }) => {
-                    this.reachingTop(nativeEvent)
-                  }}
+                  // onScroll={({ nativeEvent }) => {
+                  //   this.reachingTop(nativeEvent)
+                  // }}
                   scrollEventThrottle={0}
                   removeClippedSubviews
                   maxToRenderPerBatch={20}

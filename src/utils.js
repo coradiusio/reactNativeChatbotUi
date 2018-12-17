@@ -78,10 +78,10 @@ function stringComparisionValidator (comparision, firstValue, secondValue) {
 }
 
 export function validateInput (currentQuestion, answerInputModified, source = 'text', resultData) {
-  const validateInput = currentQuestion.validateInput
   const {
-    widget = {}
-  } = currentQuestion
+    widget,
+    validateInput
+  } = currentQuestion.input || {}
 
   function validateByComparisionOperator (typeLowerCase, propertyNameLowerCase, comparisionOperator,
     answerInputModified, propertyValue, result) {
@@ -146,7 +146,7 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     errorMessage: ''
   }
 
-  if (['text', 'calendar', 'qrscanner', 'camera'].indexOf(widget.type) > -1) {
+  if (['text', 'calendar', 'qrscanner', 'camera'].indexOf(widget) > -1) {
     if (answerInputModified !== '' && validateInput) {
       const outputType = validateInput.outputType
       if (outputType === 'object') {
@@ -177,7 +177,7 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     if (!result.foundError) {
       result.success = true
     }
-  } else if (widget.type === 'radio' || widget.type === 'checkbox') {
+  } else if (widget === 'radio' || widget === 'checkbox') {
     if (answerInputModified !== '' && source === 'text') {
       result.foundError = true
       result.success = false
@@ -185,7 +185,7 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     } else {
       result.success = true
     }
-  } else if (widget.type === 'select' || widget.type === 'searchselect' || widget.type === 'file') {
+  } else if (widget === 'select' || widget === 'searchselect' || widget === 'file') {
     result.success = true
   }
   result.answerInputModified = answerInputModified

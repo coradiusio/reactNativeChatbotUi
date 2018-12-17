@@ -12,8 +12,7 @@ import * as Animatable from 'react-native-animatable'
 import {
   DateTimePicker,
   Button,
-  ChatInput,
-  Loader
+  ChatInput
 } from 'reactNativeBasicComponents'
 
 import SearchableSelect from './sub_components/SearchableSelect'
