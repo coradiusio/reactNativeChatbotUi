@@ -1,6 +1,7 @@
 import React from 'react'
 
 import {
+  Animated,
   StyleSheet,
   View,
   Keyboard,
@@ -28,15 +29,30 @@ import {
 class Footer extends React.PureComponent {
   constructor (props) {
     super(props)
+    this.animatedValue = new Animated.Value(0)
     this.state = {
       inputText: '',
-      resetInputValue: false,
       isDatePickerVisible: false
     }
   }
 
-  handleInputText (value) {
-    this.setState({ inputText: value })
+  componentDidMount () {
+    if (this.props.inputText) {
+      this.inputTextSetter()
+    }
+    this.backgroundColorAnimation()
+  }
+
+  inputTextSetter (value) {
+    this.setState({
+      inputText: value
+    })
+  }
+
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.inputText !== this.state.inputText) {
+      this.inputTextSetter(nextProps.inputText)
+    }
   }
 
   handleSubmit () {
@@ -56,6 +72,14 @@ class Footer extends React.PureComponent {
     this._hideDateTimePicker()
   }
 
+  inputSubmitHandler = () => {
+    this.props.handleSenderTyping(false)
+    this.handleSubmit()
+    if (!this.props.isEditingMode) {
+      this.props.handleStateValue('inputText', '')
+    }
+  }
+
   componentDecider () {
     const {
       currentQuestion
@@ -70,19 +94,13 @@ class Footer extends React.PureComponent {
       case 'text':
         return (
           <ChatInput
-            onChange={(text) => this.handleInputText(text)}
+            onChange={(text) => this.props.handleStateValue('inputText', text)}
             onFocus={() => this.props.handleSenderTyping(true)}
             onBlur={() => this.props.handleSenderTyping(false)}
-            onSubmitEditing={() => {
-              this.props.handleSenderTyping(false)
-              this.handleSubmit()
-              this.handleInputText('')
-            }}
+            onSubmitEditing={() => this.inputSubmitHandler()}
             onSendIconPress={() => {
               Keyboard.dismiss()
-              this.props.handleSenderTyping(false)
-              this.handleSubmit()
-              this.handleInputText('')
+              this.inputSubmitHandler()
             }}
             sendIcon={this.props.icon}
             inputText={this.state.inputText}
@@ -188,6 +206,42 @@ class Footer extends React.PureComponent {
     }
   }
 
+  backgroundColorAnimation () {
+    this.animatedValue.setValue(0)
+    Animated.timing(
+      this.animatedValue,
+      {
+        toValue: 100,
+        duration: 1000
+      }
+    ).start(() => { this.backgroundColorAnimation() })
+  }
+
+  wrapper (component) {
+    const backgroundColor = this.props.isEditingMode ? this.animatedValue.interpolate({
+      inputRange: [0, 100],
+      outputRange: [colors.primary, colors.receiverBubbleBackground]
+    }) : null
+
+    return (
+      <View>
+        {
+          this.props.isEditingMode
+            ? <Animated.View
+              style={{ backgroundColor }}
+            >
+              <View style={styles.container}>
+                {component}
+              </View>
+            </Animated.View>
+            : <View style={styles.container}>
+              {component}
+            </View>
+        }
+      </View>
+    )
+  }
+
   render () {
     return (
       <Animatable.View
@@ -195,16 +249,7 @@ class Footer extends React.PureComponent {
         duration={500}
         useNativeDriver
       >
-        <View
-          style={styles.container}
-        >
-          {/* {
-            this.props.isUserAllowedToAnswer
-              ? this.componentDecider()
-              : <Loader color={colors.primary} size='small' />
-          } */}
-          {this.componentDecider()}
-        </View>
+        {this.wrapper(this.componentDecider())}
       </Animatable.View>
     )
   }

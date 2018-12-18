@@ -2,8 +2,7 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  KeyboardAvoidingView,
-  ToastAndroid
+  KeyboardAvoidingView
 } from 'react-native'
 
 import io from 'socket.io-client'
@@ -16,10 +15,13 @@ import Header from './components/Header'
 import Body from './components/Body'
 import Footer from './components/Footer'
 
+import Progress from './components/sub_components/Progress'
 import Camera from './components/sub_components/Camera'
 
 import {
-  colors
+  colors,
+  Alert,
+  Toast
 } from './general'
 
 import {
@@ -81,7 +83,11 @@ export default class FormBotApp extends React.PureComponent {
         type: 'user',
         displayName: 'Robin'
       },
-      isReceiverTyping: false
+      isReceiverTyping: false,
+      inputText: '',
+      isEditingMode: false,
+      showProgress: false,
+      currentEditingMessageId: ''
     }
 
     // setup socket connection
@@ -100,6 +106,7 @@ export default class FormBotApp extends React.PureComponent {
     this.handleStateValue = this.handleStateValue.bind(this)
     this.handleSenderTyping = this.handleSenderTyping.bind(this)
     this.fetchMessagesHistory = this.fetchMessagesHistory.bind(this)
+    this.handleEditPress = this.handleEditPress.bind(this)
   }
 
   componentDidMount () {
@@ -135,9 +142,12 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleUpdatedMessage (message) {
+    console.log('updated message :- ', message)
     this.setState(prevState => {
+      const index = prevState.messages.findIndex(item => item.messageId === this.state.currentEditingMessageId)
+
       return ({
-        messages: [ ...prevState.messages.filter(item => item.messageId !== message.messageId), message ]
+        messages: [ ...prevState.messages.slice(0, index), message, ...prevState.messages.slice(index + 1) ]
       })
     })
   }
@@ -180,7 +190,7 @@ export default class FormBotApp extends React.PureComponent {
       })
       .catch(err => {
         console.log('err in fetching messages history :- ', err)
-        this._toastWithDurationGravityOffsetHandler('Coundn\'t be able to connect to Server, Something Went Wrong !')
+        Toast('Coundn\'t be able to connect to Server, Something Went Wrong !')
       })
   }
 
@@ -208,8 +218,18 @@ export default class FormBotApp extends React.PureComponent {
       })
   }
 
-  sendNewMessage (message) {
-    return this.messagesService.create(message)
+  sendNewMessage (data, params = {}) {
+    return this.messagesService.create(data, params)
+  }
+
+  updateExistingMessage (id, data, params = {}) {
+    if (id) {
+      return this.messagesService.update(id, data, params)
+    }
+  }
+
+  patchExistingMessage (id, data, params = {}) {
+    return this.messagesService.patch(id, data, params)
   }
 
   handleNextQuestion () {
@@ -319,15 +339,46 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleEditPress (messageId) {
-    const [ messageItem ] = this.props.messages.filter(item => item.messageId === messageId)
-    if (!(isUndefined(messageItem) || isEmpty(messageItem))) {
-      if (!(isUndefined(messageItem.answerOfNode) || isEmpty(messageItem.answerOfNode))) {
+    if (!this.state.isEditingMode) {
+      this.setState({ isEditingMode: true, currentEditingMessageId: messageId })
+      const messageItem = this.state.messages.filter(item => item.messageId === messageId)[0]
+      if (!(isUndefined(messageItem) || isEmpty(messageItem))) {
+        if (!(isUndefined(messageItem.answerOfNode) || isEmpty(messageItem.answerOfNode))) {
+          // first fetch question of this node i.e answerOfNode
+          this.questionsService.find({ query: { node: messageItem.answerOfNode } })
+            .then(response => {
+              if (response.data.length > 0) {
+                const question = response.data[0]
+                const {
+                  widget
+                } = question.input || {}
 
+                if (widget === 'text') {
+                  this.setState({ inputText: messageItem.message.text })
+                }
+              } else {
+                // coudn't find any question of that node
+              }
+            })
+            .catch(err => {
+              console.log('coundn\'t found question', err)
+            })
+        }
       }
     }
   }
 
+  handleFinishedEdit () {
+    this.setState({
+      showProgress: false,
+      isEditingMode: false,
+      currentEditingMessageId: '',
+      inputText: ''
+    })
+  }
+
   submitInputValue (currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
+    console.log('this.state.messages :- ', this.state.messages)
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim()
 
@@ -365,96 +416,111 @@ export default class FormBotApp extends React.PureComponent {
     console.log('inputValidatedObject :- ', inputValidatedObject)
 
     if (inputValidatedObject.success) {
-      let newMessage
-      if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
-        newMessage = {
-          source,
-          message: {
-            text: answerInput
-          },
-          isAnswer: true,
-          answerOfNode: currentQuestion.node,
-          isRightAnswer: true,
-          createdAt: today,
-          sender: this.state.role,
-          showTime: true,
-          uid: uuidv4()
-        }
+      if (this.state.isEditingMode) {
+        this.setState({ showProgress: true }, () => {
+          const messageItem = JSON.parse(JSON.stringify((this.state.messages.filter(item => item.messageId === this.state.currentEditingMessageId))[0] || {}))
+          if (!isEmpty(messageItem)) {
+            messageItem.message.text = this.state.inputText
+            this.patchExistingMessage(null, messageItem, { query: { messageId: messageItem.messageId } })
+              .then(() => {
+                timer = setTimeout(() => {
+                  this.handleFinishedEdit()
+                }, 1000)
+              })
+              .catch(err => {
+                Toast('Something Went Wrong, Coudn\'t update message')
+                console.log('Something Went Wrong, Coudn\'t update message :- ', err)
+                this.handleFinishedEdit()
+                console.log('this.state.messages :- ', this.state.messages)
+              })
+          }
+        })
       } else {
-        newMessage = {
-          source,
-          fileURL: answerInput,
-          fileName,
-          fileExtension,
-          answerOfNode: currentQuestion.node,
-          isAnswer: true,
-          isRightAnswer: true,
-          createdAt: today,
-          sender: this.state.role,
-          showTime: true,
-          uid: uuidv4()
-        }
-      }
-
-      this.sendNewMessage(newMessage)
-        .then(() => {
-          // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
-          this.fetchNextQuestion()
-        })
-        .catch(err => {
-          console.log('usr msg not sent :- ', err)
-        })
-    } else {
-      if (inputValidatedObject.foundError) {
-        let newMessages = []
+        let newMessage
         if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
-          newMessages.push({
+          newMessage = {
             source,
             message: {
               text: answerInput
             },
-            answerOfNode: currentQuestion.node,
             isAnswer: true,
-            isRightAnswer: false,
+            answerOfNode: currentQuestion.node,
+            isRightAnswer: true,
+            createdAt: today,
+            sender: this.state.role,
             showTime: true,
-            sender: this.state.role
-          })
+            messageId: uuidv4()
+          }
         } else {
-          newMessages.push({
-            source: source,
+          newMessage = {
+            source,
             fileURL: answerInput,
-            answerOfNode: currentQuestion.node,
-            isAnswer: true,
-            isRightAnswer: false,
             fileName,
             fileExtension,
+            answerOfNode: currentQuestion.node,
+            isAnswer: true,
+            isRightAnswer: true,
+            createdAt: today,
+            sender: this.state.role,
             showTime: true,
-            sender: this.state.role
-          })
+            messageId: uuidv4()
+          }
         }
 
-        newMessages.push({
-          source: 'text',
-          message: {
-            text: inputValidatedObject.errorMessage
-          },
-          sender: botRole,
-          isError: true
-        })
+        this.sendNewMessage(newMessage)
+          .then(() => {
+            // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
+            this.fetchNextQuestion()
+          })
+          .catch(err => {
+            console.log('usr msg not sent :- ', err)
+          })
+      }
+    } else {
+      if (inputValidatedObject.foundError) {
+        if (this.state.isEditingMode) {
+          Alert('Error', inputValidatedObject.errorMessage)
+        } else {
+          let newMessages = []
+          if (currentQuestion.widget !== 'file' && currentQuestion.widget !== 'camera') {
+            newMessages.push({
+              source,
+              message: {
+                text: answerInput
+              },
+              answerOfNode: currentQuestion.node,
+              isAnswer: true,
+              isRightAnswer: false,
+              showTime: true,
+              sender: this.state.role
+            })
+          } else {
+            newMessages.push({
+              source: source,
+              fileURL: answerInput,
+              answerOfNode: currentQuestion.node,
+              isAnswer: true,
+              isRightAnswer: false,
+              fileName,
+              fileExtension,
+              showTime: true,
+              sender: this.state.role
+            })
+          }
 
-        this.sendNewMessage(newMessages)
+          newMessages.push({
+            source: 'text',
+            message: {
+              text: inputValidatedObject.errorMessage
+            },
+            sender: botRole,
+            isError: true
+          })
+
+          this.sendNewMessage(newMessages)
+        }
       }
     }
-  }
-
-  _toastWithDurationGravityOffsetHandler = (text) => {
-    ToastAndroid.showWithGravityAndOffset(
-      text,
-      ToastAndroid.LONG,
-      ToastAndroid.BOTTOM,
-      25,
-      50
-    )
   }
 
   render () {
@@ -507,6 +573,7 @@ export default class FormBotApp extends React.PureComponent {
                   role={this.state.role}
                   botMode={this.state.botMode}
                   fetchMessagesHistory={this.fetchMessagesHistory}
+                  handleEditPress={this.handleEditPress}
                 />
                 {
                   !noMessageAvailable
@@ -517,12 +584,18 @@ export default class FormBotApp extends React.PureComponent {
                       isUserAllowedToAnswer={this.state.isUserAllowedToAnswer}
                       currentQuestion={currentQuestion}
                       handleSenderTyping={this.handleSenderTyping}
+                      inputText={this.state.inputText}
+                      isEditingMode={this.state.isEditingMode}
                     />
                     : null
                 }
-                
               </KeyboardAvoidingView>
             </View>
+        }
+        {
+          this.state.showProgress
+            ? <Progress />
+            : null
         }
       </View>
     )

@@ -93,11 +93,13 @@ class Body extends React.PureComponent {
     botMode={this.props.botMode}
     role={this.props.role}
     submitInputValue={this.props.submitInputValue}
+    handleEditPress={this.props.handleEditPress}
   />
 
   onViewableItemsChanged = ({ viewableItems }) => {
     if (viewableItems.length > 0) {
-      if (viewableItems[viewableItems.length - 1].index < Math.round((Math.floor(this.props.messages.length - 1) / 1.33))) {
+      const lastMessage = viewableItems[viewableItems.length - 1]
+      if (!lastMessage.isViewable && lastMessage.index < Math.round((Math.floor(this.props.messages.length - 1) / 1.33))) {
         this.setState({
           showJumpToBottom: true
         })
