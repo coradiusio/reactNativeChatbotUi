@@ -32,23 +32,24 @@ let toShowDateComponent = false
 let dateObject
 
 class Generic extends React.PureComponent {
-  radioChoices = (message, currentQuestion) => {
-    if (message.widget.options) {
+  radioChoices = (item, currentQuestion) => {
+    if (item.message.quick_replies) {
       return (
         <RadioButtons
-          message={message}
+          message={item.message}
+          node={item.node}
           currentQuestion={currentQuestion}
           submitInputValue={this.props.submitInputValue}
-          pointerEvents={message.node === currentQuestion.node ? 'auto' : 'none'}
-          value={message.state.value || ''}
+          pointerEvents={item.node === currentQuestion.node ? 'auto' : 'none'}
+          value={item.state.value || ''}
         />
       )
     }
   }
 
   checkboxChoices = (message) => {
-    if (message.widget.options) {
-      return message.widget.options.map((option, index) => {
+    if (message.quick_replies) {
+      return message.quick_replies.map((option, index) => {
         return (
           <div key={index}>
             <label>

@@ -226,6 +226,7 @@ export default class FormBotApp extends React.PureComponent {
     if (id) {
       return this.messagesService.update(id, data, params)
     }
+    throw new Error('id should not be undefined or null')
   }
 
   patchExistingMessage (id, data, params = {}) {
@@ -248,7 +249,7 @@ export default class FormBotApp extends React.PureComponent {
           const time = new Date()
           console.log('time :- ', time)
 
-          delete currentQuestion._id
+          delete currentQuestion._id // for safety
           currentQuestion.messageId = uuidv4()
 
           currentQuestion.sender = botRole
@@ -268,34 +269,45 @@ export default class FormBotApp extends React.PureComponent {
                 sender: botRole,
                 showTime: true,
                 isQuestion: true,
+                node: currentQuestion.node,
                 messageId: uuidv4()
               })
 
-              if (currentQuestion.input.widget.type === 'radio' && currentQuestion.input.widget.options) {
+              if (currentQuestion.input.widget === 'radio' && currentQuestion.input.radioOptions) {
                 lastMessages.push({
                   message: {
-                    quick_replies: currentQuestion.input.widget.options
+                    quick_replies: currentQuestion.input.radioOptions
                   },
-                  widget: currentQuestion.input.widget.type,
+                  input: {
+                    widget: currentQuestion.input.widget
+                  },
                   createdAt: time,
-                  state: currentQuestion.state,
+                  state: {
+                    value: ''
+                  },
                   sender: botRole,
                   isQuestion: true,
+                  node: currentQuestion.node,
                   isAnswerOptions: true,
                   showTime: true,
                   messageId: uuidv4()
                 })
-              } else if (currentQuestion.input.widget.type === 'checkbox' && currentQuestion.input.widget.options) {
+              } else if (currentQuestion.input.widget === 'checkbox' && currentQuestion.input.checkboxOptions) {
                 lastMessages.push({
                   message: {
-                    quick_replies: currentQuestion.input.widget.options
+                    quick_replies: currentQuestion.input.checkboxOptions
                   },
-                  widget: currentQuestion.input.widget.type,
+                  input: {
+                    widget: currentQuestion.input.widget
+                  },
                   createdAt: time,
-                  joinWith: currentQuestion.validateInput.joinWith || ',',
-                  state: currentQuestion.state,
+                  joinWith: currentQuestion.input.validateInput.joinWith || ',',
+                  state: {
+                    value: ''
+                  },
                   sender: botRole,
                   isQuestion: true,
+                  node: currentQuestion.node,
                   isAnswerOptions: true,
                   showTime: true,
                   messageId: uuidv4()
@@ -318,6 +330,7 @@ export default class FormBotApp extends React.PureComponent {
                   text: questionArray[currentQuestionIndex]
                 },
                 isQuestion: true,
+                node: currentQuestion.node,
                 createdAt: time,
                 sender: botRole,
                 messageId: uuidv4()

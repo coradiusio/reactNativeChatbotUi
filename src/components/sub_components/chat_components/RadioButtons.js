@@ -47,6 +47,7 @@ class RadioButtons extends React.PureComponent {
   render () {
     const {
       message,
+      node,
       currentQuestion
     } = this.props
 
@@ -54,9 +55,9 @@ class RadioButtons extends React.PureComponent {
       <ChatBubble style={styles.container}>
         <View style={styles.innerContainer}>
           <RadioChoices
-            choices={message.widget.options}
+            choices={message.quick_replies}
             onChange={(option) => {
-              if (message.node === currentQuestion.node) {
+              if (node === currentQuestion.node) {
                 this.handleStateValue('value', option.value)
                 this.handleStateValue('pointerEvents', 'none')
                 this.props.submitInputValue(currentQuestion, option.label, option.value, 'radio')

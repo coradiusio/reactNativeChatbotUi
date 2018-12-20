@@ -45,6 +45,14 @@ export function stringCasing (value, casing) {
   return value
 }
 
+export function toTitleCase (str) {
+  str = str.toLowerCase().split(' ')
+  for (var i = 0; i < str.length; i++) {
+    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1)
+  }
+  return str.join(' ')
+};
+
 export function isElementByIdValueEmpty (id) {
   return isEmptyString(document.getElementById(id) && document.getElementById(id).value)
 }
@@ -82,6 +90,10 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     widget,
     validateInput
   } = currentQuestion.input || {}
+
+  const {
+    output
+  } = currentQuestion
 
   function validateByComparisionOperator (typeLowerCase, propertyNameLowerCase, comparisionOperator,
     answerInputModified, propertyValue, result) {
@@ -148,8 +160,7 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
 
   if (['text', 'calendar', 'qrscanner', 'camera'].indexOf(widget) > -1) {
     if (answerInputModified !== '' && validateInput) {
-      const outputType = validateInput.outputType
-      if (outputType === 'object') {
+      if (output.type === 'object') {
         if (validateInput.splitBy) {
           answerInputModified = answerInputModified.split(validateInput.splitBy)
         } else {
@@ -243,22 +254,6 @@ export function massageText (text, state) {
   return text
 }
 
-export function ddMMMYYYY (date) {
-  if (typeof date === 'string') {
-    date = new Date(date)
-  }
-
-  const monthNames = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-  ]
-
-  const day = date.getDate()
-  const monthIndex = date.getMonth()
-  var year = date.getFullYear()
-
-  return '' + day + '-' + monthNames[monthIndex] + '-' + year
-}
-
 export function isValidDate (date) {
   return date && Object.prototype.toString.call(date) === '[object Date]' && !isNaN(date)
 }
@@ -275,26 +270,6 @@ export function formatAMPM (date) {
   minutes = minutes < 10 ? '0' + minutes : minutes
   var strTime = hours + ':' + minutes + ' ' + ampm
   return strTime
-}
-
-export function toTitleCase (str) {
-  str = str.toLowerCase().split(' ')
-  for (var i = 0; i < str.length; i++) {
-    str[i] = str[i].charAt(0).toUpperCase() + str[i].slice(1)
-  }
-  return str.join(' ')
-};
-
-export function formatDate (date) {
-  let d = new Date(date)
-  let month = '' + (d.getMonth() + 1)
-  let day = '' + d.getDate()
-  let year = d.getFullYear()
-
-  if (month.length < 2) month = '0' + month
-  if (day.length < 2) day = '0' + day
-
-  return [year, month, day].join('-')
 }
 
 export function animateScroll (someElement, duration) {
