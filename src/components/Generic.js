@@ -16,9 +16,7 @@ import DateComponent from './sub_components/chat_components/DateComponent'
 import RadioButtons from './sub_components/chat_components/RadioButtons'
 
 import {
-  massageText,
-  formatAMPM,
-  isValidDate
+  massageText
 } from '../utils'
 
 import {
@@ -37,11 +35,12 @@ class Generic extends React.PureComponent {
       return (
         <RadioButtons
           message={item.message}
+          messageId={item.messageId}
           node={item.node}
           currentQuestion={currentQuestion}
-          submitInputValue={this.props.submitInputValue}
           pointerEvents={item.node === currentQuestion.node ? 'auto' : 'none'}
           value={item.state.value || ''}
+          handleRadioButton={this.props.handleRadioButton}
         />
       )
     }
@@ -173,7 +172,7 @@ class Generic extends React.PureComponent {
                     time={item.createdAt}
                   />
                   : <SenderChatBubble
-                    text={item.message.text}
+                    text={item.rawValue ? massageText((item.rawValue || item.message.text), item.state) : item.message.text}
                     messageId={item.messageId}
                     showTime
                     time={item.createdAt}

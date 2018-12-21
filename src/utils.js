@@ -222,33 +222,26 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
   return result
 }
 
-export function massageText (text, state) {
-  try {
-    const regexPattern = /\{{(.*?)\}}/g
-    const matched = text.match(regexPattern)
-    let parts, temp, replaceableText
+export function massageText (text, state = {}) {
+  console.log('state :- ', state)
+  if (text.indexOf('{') > -1 && text.indexOf('}') > -1) {
+    try {
+      const regexPattern = /\{(.*?)\}/g
+      const matched = text.match(regexPattern)
+      let temp
 
-    if (matched) {
-      for (let i = 0; i < matched.length; i++) {
-        parts = matched[i].slice(2, -2).split('.')
-        replaceableText = ''
-
-        if (parts) {
-          temp = { ...state }
-          for (let j = 0; j < parts.length; j++) {
-            temp = temp[parts[j]]
-
-            replaceableText = replaceableText + parts[j] + '.'
-          }
-
-          text = text.replace(new RegExp(`{{${replaceableText.slice(0, -1)}}}`, 'g'), temp)
+      console.log('matched :- ', matched)
+      if (matched) {
+        for (let i = 0; i < matched.length; i++) {
+          temp = matched[i].slice(1, -1)
+          text = text.replace(new RegExp(`{${temp}}`, 'g'), get(state, temp))
         }
-      }
 
-      return text
+        return text
+      }
+    } catch (err) {
+      console.error('Exception in massaging text :- ', err)
     }
-  } catch (err) {
-    console.error('Exception in massaging text :- ', err)
   }
 
   return text

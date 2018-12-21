@@ -58,9 +58,7 @@ class RadioButtons extends React.PureComponent {
             choices={message.quick_replies}
             onChange={(option) => {
               if (node === currentQuestion.node) {
-                this.handleStateValue('value', option.value)
-                this.handleStateValue('pointerEvents', 'none')
-                this.props.submitInputValue(currentQuestion, option.label, option.value, 'radio')
+                this.props.handleRadioButton(currentQuestion, this.props.messageId, option.label, option.value)
               }
             }}
             value={this.state.value}

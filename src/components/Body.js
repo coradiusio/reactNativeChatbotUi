@@ -92,8 +92,8 @@ class Body extends React.PureComponent {
     messages={this.props.messages}
     botMode={this.props.botMode}
     role={this.props.role}
-    submitInputValue={this.props.submitInputValue}
     handleEditPress={this.props.handleEditPress}
+    handleRadioButton={this.props.handleRadioButton}
   />
 
   onViewableItemsChanged = ({ viewableItems }) => {
