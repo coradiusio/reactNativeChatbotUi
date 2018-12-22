@@ -33,7 +33,6 @@ import {
 const uuidv4 = require('uuid/v4')
 
 let timer
-let questions = []
 
 const botRole = {
   type: 'bot',
@@ -74,6 +73,7 @@ export default class FormBotApp extends React.PureComponent {
         }
       },
       result: {},
+      currentQuestion: {},
       currentQuestionIndex: 0,
       currentEditingQuestion: {},
       messages: [],
@@ -113,8 +113,19 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   componentDidMount () {
-    this.fetchMessagesHistory()
+    this.handleEvents()
+    this.fetchOldMessagesAndCreateNewQuestion()
+  }
 
+  componentWillUnmount () {
+    if (timer) {
+      clearTimeout(timer)
+    }
+
+    this.app = null
+  }
+
+  handleEvents () {
     this.messagesService.on('created', message => {
       console.log('new message created :- ', message)
       this.handleCreatedMessage(message)
@@ -145,7 +156,6 @@ export default class FormBotApp extends React.PureComponent {
   }
 
   handleUpdatedMessage (message) {
-    console.log('updated message :- ', message)
     this.setState(prevState => {
       const index = prevState.messages.findIndex(item => item.messageId === this.state.currentEditingMessageId)
 
@@ -163,42 +173,48 @@ export default class FormBotApp extends React.PureComponent {
     })
   }
 
+  handleStateValue (state, value) {
+    this.setState({ [state]: value })
+  }
+
   handleSenderTyping (value) {
     // do something here
   }
 
-  componentWillUnmount () {
-    if (timer) {
-      clearTimeout(timer)
-    }
-
-    this.app = null
+  fetchOldMessagesAndCreateNewQuestion () {
+    this.fetchMessagesHistory()
+      .then(() => {
+        this.fetchNextQuestion()
+      })
+      .catch(err => {
+        console.log('error :- ', err)
+      })
   }
 
   fetchMessagesHistory (messageId, callback) {
-    this.messagesService.find({ query: { messageId } })
-      .then(response => {
-        if (response.data.length > 0) {
-          this.setState(prevState => ({
-            messages: [...response.data, ...prevState.messages]
-          }), () => {
-            if (typeof callback === 'function') {
-              callback()
-            }
-          })
-        }
-        if (!messageId && this.state.botMode.trim().toLowerCase() === 'question') {
-          this.fetchNextQuestion()
-        }
-      })
-      .catch(err => {
-        console.log('err in fetching messages history :- ', err)
-        Toast('Coundn\'t be able to connect to Server, Something Went Wrong !')
-      })
-  }
-
-  handleStateValue (state, value) {
-    this.setState({ [state]: value })
+    return new Promise((resolve, reject) => {
+      this.messagesService.find({ query: { messageId } })
+        .then(response => {
+          if (response.data instanceof Array && response.data.length > 0) {
+            this.setState(prevState => ({
+              messages: [ ...response.data, ...prevState.messages ]
+            }), () => {
+              if (typeof callback === 'function') {
+                callback()
+              }
+              resolve()
+            })
+          } else {
+            Toast('No More Messages Available !')
+            resolve()
+          }
+        })
+        .catch(err => {
+          console.log('err in fetching messages history :- ', err)
+          Toast('Coundn\'t be able to connect to Server, Something Went Wrong !')
+          reject(err)
+        })
+    })
   }
 
   fetchNextQuestion () {
@@ -206,15 +222,18 @@ export default class FormBotApp extends React.PureComponent {
       {
         query: {
           $limit: 1,
-          lastQuestionNode: ((this.state.messages.filter(item => item.isQuestion).slice(-1))[0] || []).node
+          lastQuestionNode: ((this.state.messages.filter(item => item.isQuestion).slice(-1))[0] || {}).node
         }
       }
     )
       .then(response => {
         console.log('next question :- ', response.data)
-        if (response.data.length > 0) {
-          questions.push(response.data[0])
-          this.handleNextQuestion()
+        if (response.data instanceof Array && response.data.length > 0) {
+          this.setState({
+            currentQuestion: response.data[0]
+          }, () => {
+            this.handleNextQuestion()
+          })
         }
       })
       .catch(err => {
@@ -222,7 +241,7 @@ export default class FormBotApp extends React.PureComponent {
       })
   }
 
-  sendNewMessage (data, params = {}) {
+  createNewMessage (data, params = {}) {
     return this.messagesService.create(data, params)
   }
 
@@ -243,27 +262,24 @@ export default class FormBotApp extends React.PureComponent {
       isReceiverTyping: true
     }, () => {
       timer = setTimeout(() => {
-        const [ currentQuestion ] = questions.slice(-1)
+        const {
+          currentQuestion
+        } = this.state
 
-        if (currentQuestion) {
+        if (!isEmpty(currentQuestion)) {
           const {
-            question
+            question,
+            input = {}
           } = currentQuestion
 
           const time = new Date()
-          console.log('time :- ', time)
 
-          delete currentQuestion._id // for safety
-          currentQuestion.messageId = uuidv4()
-
-          currentQuestion.sender = botRole
-
-          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [question] : [])
+          const questionArray = question instanceof Array ? question : (typeof question === 'string' ? [ question ] : [])
 
           const { currentQuestionIndex } = this.state
 
           if (questionArray.length > 0) {
-            let lastMessages = []
+            const lastMessages = []
             if (currentQuestionIndex === questionArray.length - 1) {
               lastMessages.push({
                 message: {
@@ -277,7 +293,7 @@ export default class FormBotApp extends React.PureComponent {
                 messageId: uuidv4()
               })
 
-              if (currentQuestion.input.widget === 'radio' && currentQuestion.input.radioOptions) {
+              if (input.widget === 'radio' && input.radioOptions) {
                 lastMessages.push({
                   message: {
                     quick_replies: currentQuestion.input.radioOptions
@@ -294,7 +310,7 @@ export default class FormBotApp extends React.PureComponent {
                   showTime: true,
                   messageId: uuidv4()
                 })
-              } else if (currentQuestion.input.widget === 'checkbox' && currentQuestion.input.checkboxOptions) {
+              } else if (input.widget === 'checkbox' && input.checkboxOptions) {
                 lastMessages.push({
                   message: {
                     quick_replies: currentQuestion.input.checkboxOptions
@@ -314,7 +330,7 @@ export default class FormBotApp extends React.PureComponent {
                 })
               }
 
-              this.sendNewMessage(lastMessages)
+              this.createNewMessage(lastMessages)
                 .then(() => {
                   this.setState({
                     currentQuestionIndex: 0,
@@ -325,7 +341,7 @@ export default class FormBotApp extends React.PureComponent {
                   console.log('err :- ', err)
                 })
             } else {
-              this.sendNewMessage({
+              this.createNewMessage({
                 message: {
                   text: questionArray[currentQuestionIndex]
                 },
@@ -365,7 +381,7 @@ export default class FormBotApp extends React.PureComponent {
           this.questionsService.find({ query: { node: messageItem.answerOfNode } })
             .then(response => {
               console.log('response :- ', response)
-              if (response.data.length > 0) {
+              if (response.data instanceof Array && response.data.length > 0) {
                 const question = response.data[0]
                 const {
                   widget
@@ -555,7 +571,7 @@ export default class FormBotApp extends React.PureComponent {
           }
         }
 
-        this.sendNewMessage(newMessage)
+        this.createNewMessage(newMessage)
           .then(() => {
             // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
             this.fetchNextQuestion()
@@ -605,7 +621,7 @@ export default class FormBotApp extends React.PureComponent {
             isError: true
           })
 
-          this.sendNewMessage(newMessages)
+          this.createNewMessage(newMessages)
         }
       }
     }
@@ -613,10 +629,9 @@ export default class FormBotApp extends React.PureComponent {
 
   render () {
     const {
-      uiData
+      uiData,
+      currentQuestion
     } = this.state
-
-    const [ currentQuestion = {} ] = questions.slice(-1)
 
     let currentEditingQuestionInput = this.state.currentEditingQuestion.input
     let currentEditingQuestionWidget
@@ -624,9 +639,7 @@ export default class FormBotApp extends React.PureComponent {
       currentEditingQuestionWidget = currentEditingQuestionInput.widget || ''
     }
 
-    const noMessageAvailable = questions && questions.length === 0
-
-    console.log('this.state.currentEditingQuestion :- ', this.state.currentEditingQuestion)
+    const noMessageAvailable = this.state.messages.length === 0
 
     return (
       <View style={styles.flexView}>
