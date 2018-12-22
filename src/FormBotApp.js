@@ -75,6 +75,7 @@ export default class FormBotApp extends React.PureComponent {
       },
       result: {},
       currentQuestionIndex: 0,
+      currentEditingQuestion: {},
       messages: [],
       isUserAllowedToAnswer: false,
       openCameraView: false,
@@ -87,7 +88,8 @@ export default class FormBotApp extends React.PureComponent {
       inputText: '',
       isEditingMode: false,
       showProgress: false,
-      currentEditingMessageId: ''
+      currentEditingMessageId: '',
+      currentEditingAnswerOptionsMessageId: ''
     }
 
     // setup socket connection
@@ -203,7 +205,8 @@ export default class FormBotApp extends React.PureComponent {
     this.questionsService.find(
       {
         query: {
-          $limit: 1
+          $limit: 1,
+          lastQuestionNode: ((this.state.messages.filter(item => item.isQuestion).slice(-1))[0] || []).node
         }
       }
     )
@@ -350,13 +353,18 @@ export default class FormBotApp extends React.PureComponent {
 
   handleEditPress (messageId) {
     if (!this.state.isEditingMode) {
-      this.setState({ isEditingMode: true, currentEditingMessageId: messageId })
+      this.setState({
+        isEditingMode: true,
+        currentEditingMessageId: messageId
+      })
       const messageItem = this.state.messages.filter(item => item.messageId === messageId)[0]
+      console.log('messageItem :- ', messageItem)
       if (!(isUndefined(messageItem) || isEmpty(messageItem))) {
         if (!(isUndefined(messageItem.answerOfNode) || isEmpty(messageItem.answerOfNode))) {
           // first fetch question of this node i.e answerOfNode
           this.questionsService.find({ query: { node: messageItem.answerOfNode } })
             .then(response => {
+              console.log('response :- ', response)
               if (response.data.length > 0) {
                 const question = response.data[0]
                 const {
@@ -364,7 +372,18 @@ export default class FormBotApp extends React.PureComponent {
                 } = question.input || {}
 
                 if (widget === 'text') {
-                  this.setState({ inputText: messageItem.message.text })
+                  this.setState({
+                    currentEditingQuestion: { ...question },
+                    inputText: messageItem.message.text
+                  })
+                } else if (widget === 'radio') {
+                  const index = this.state.messages.findIndex(item => item.messageId === messageId)
+                  if (index > 0) {
+                    this.setState({
+                      currentEditingQuestion: { ...question },
+                      currentEditingAnswerOptionsMessageId: this.state.messages[index - 1].messageId
+                    })
+                  }
                 }
               } else {
                 // coudn't find any question of that node
@@ -383,13 +402,20 @@ export default class FormBotApp extends React.PureComponent {
       showProgress: false,
       isEditingMode: false,
       currentEditingMessageId: '',
-      inputText: ''
+      inputText: '',
+      currentEditingAnswerOptionsMessageId: '',
+      currentEditingQuestion: {}
     })
   }
 
   handleRadioButton (currentQuestion, messageId, label, value) {
     const messageItem = JSON.parse(JSON.stringify((this.state.messages.filter(item => item.messageId === messageId))[0] || {}))
+    console.log('messageItem :- ', messageItem)
     if (!isEmpty(messageItem)) {
+      const {
+        currentEditingMessageId
+      } = this.state
+
       this.setState({ currentEditingMessageId: messageId })
 
       if (!isEmpty(label)) {
@@ -399,10 +425,11 @@ export default class FormBotApp extends React.PureComponent {
         messageItem.state.value = value
       }
 
-      console.log('messageItem :- ', messageItem)
       this.patchExistingMessage(null, messageItem, { query: { messageId: messageItem.messageId } })
         .then(() => {
-          this.submitInputValue(currentQuestion, label, value, 'radio')
+          this.setState({ currentEditingMessageId }, () => {
+            this.submitInputValue(currentQuestion, label, value, 'radio', { ...messageItem.state })
+          })
         })
         .catch(err => {
           Toast('Something Went Wrong, Coudn\'t update message')
@@ -412,7 +439,22 @@ export default class FormBotApp extends React.PureComponent {
     }
   }
 
-  submitInputValue (currentQuestion, answerInput, formValue = '', source = 'text', fileName = '', fileExtension = '') {
+  computeRawValueForRadioOptions (currentQuestion, answerInput, formValue) {
+    let rawValue
+    const [ radioOption = {} ] = currentQuestion.input.radioOptions.filter(item => item.value === formValue).slice(0)
+    console.log('radioOption :- ', radioOption)
+    if (!isUndefined(radioOption.displayText) && !isEmpty(radioOption.displayText)) {
+      rawValue = radioOption.displayText
+    } else if (!isUndefined(currentQuestion.output.value) && !isEmpty(currentQuestion.output.value)) {
+      rawValue = currentQuestion.output.value
+    } else {
+      rawValue = answerInput
+    }
+
+    return rawValue
+  }
+
+  submitInputValue (currentQuestion, answerInput, formValue = '', source = 'text', state, fileName = '', fileExtension = '') {
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim()
 
@@ -453,8 +495,17 @@ export default class FormBotApp extends React.PureComponent {
       if (this.state.isEditingMode) {
         this.setState({ showProgress: true }, () => {
           const messageItem = JSON.parse(JSON.stringify((this.state.messages.filter(item => item.messageId === this.state.currentEditingMessageId))[0] || {}))
+          console.log('messageItem :- ', messageItem)
           if (!isEmpty(messageItem)) {
-            messageItem.message.text = this.state.inputText
+            const {
+              widget
+            } = this.state.currentEditingQuestion.input || {}
+            if (widget === 'text') {
+              messageItem.message.text = this.state.inputText
+            } else if (widget === 'radio') {
+              messageItem.state = { ...state }
+              messageItem.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
+            }
             this.patchExistingMessage(null, messageItem, { query: { messageId: messageItem.messageId } })
               .then(() => {
                 timer = setTimeout(() => {
@@ -485,19 +536,8 @@ export default class FormBotApp extends React.PureComponent {
             messageId: uuidv4()
           }
           if (currentQuestion.input.widget === 'radio') {
-            let rawValue
-            const [ radioOption = {} ] = currentQuestion.input.radioOptions.filter(item => item.value === formValue).slice(0)
-            console.log('radioOption :- ', radioOption)
-            if (!isUndefined(radioOption.displayText) && !isEmpty(radioOption.displayText)) {
-              rawValue = radioOption.displayText
-            } else if (!isUndefined(currentQuestion.output.value) && !isEmpty(currentQuestion.output.value)) {
-              rawValue = currentQuestion.output.value
-            } else {
-              rawValue = answerInput
-            }
-
-            newMessage.state = { ...currentQuestion.state }
-            newMessage.rawValue = rawValue
+            newMessage.state = { ...state }
+            newMessage.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
           }
         } else {
           newMessage = {
@@ -518,7 +558,7 @@ export default class FormBotApp extends React.PureComponent {
         this.sendNewMessage(newMessage)
           .then(() => {
             // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
-            // this.fetchNextQuestion()
+            this.fetchNextQuestion()
           })
           .catch(err => {
             console.log('usr msg not sent :- ', err)
@@ -578,7 +618,15 @@ export default class FormBotApp extends React.PureComponent {
 
     const [ currentQuestion = {} ] = questions.slice(-1)
 
+    let currentEditingQuestionInput = this.state.currentEditingQuestion.input
+    let currentEditingQuestionWidget
+    if (currentEditingQuestionInput) {
+      currentEditingQuestionWidget = currentEditingQuestionInput.widget || ''
+    }
+
     const noMessageAvailable = questions && questions.length === 0
+
+    console.log('this.state.currentEditingQuestion :- ', this.state.currentEditingQuestion)
 
     return (
       <View style={styles.flexView}>
@@ -614,6 +662,7 @@ export default class FormBotApp extends React.PureComponent {
                   loader={uiData.loader}
                   messages={this.state.messages}
                   currentQuestion={currentQuestion}
+                  currentEditingQuestion={this.state.currentEditingQuestion}
                   handleNextQuestion={this.handleNextQuestion}
                   handleStateValue={this.handleStateValue}
                   noMessageAvailable={noMessageAvailable}
@@ -622,9 +671,11 @@ export default class FormBotApp extends React.PureComponent {
                   fetchMessagesHistory={this.fetchMessagesHistory}
                   handleEditPress={this.handleEditPress}
                   handleRadioButton={this.handleRadioButton}
+                  isEditingMode={this.state.isEditingMode}
+                  currentEditingAnswerOptionsMessageId={this.state.currentEditingAnswerOptionsMessageId}
                 />
                 {
-                  !noMessageAvailable
+                  !noMessageAvailable && this.state.isUserAllowedToAnswer && (this.state.isEditingMode ? currentEditingQuestionWidget !== 'radio' : true)
                     ? <Footer
                       icon={uiData.footer.icon}
                       submitInputValue={this.submitInputValue}

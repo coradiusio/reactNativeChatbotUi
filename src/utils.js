@@ -223,14 +223,12 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
 }
 
 export function massageText (text, state = {}) {
-  console.log('state :- ', state)
   if (text.indexOf('{') > -1 && text.indexOf('}') > -1) {
     try {
       const regexPattern = /\{(.*?)\}/g
       const matched = text.match(regexPattern)
       let temp
 
-      console.log('matched :- ', matched)
       if (matched) {
         for (let i = 0; i < matched.length; i++) {
           temp = matched[i].slice(1, -1)

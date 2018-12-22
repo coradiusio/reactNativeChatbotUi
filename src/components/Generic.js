@@ -36,9 +36,14 @@ class Generic extends React.PureComponent {
         <RadioButtons
           message={item.message}
           messageId={item.messageId}
-          node={item.node}
           currentQuestion={currentQuestion}
-          pointerEvents={item.node === currentQuestion.node ? 'auto' : 'none'}
+          isEditingMode={this.props.isEditingMode}
+          currentEditingQuestion={this.props.currentEditingQuestion}
+          pointerEvents={
+            (item.node === currentQuestion.node) || (this.props.isEditingMode && this.props.currentEditingAnswerOptionsMessageId === item.messageId)
+              ? 'auto'
+              : 'none'
+          }
           value={item.state.value || ''}
           handleRadioButton={this.props.handleRadioButton}
         />

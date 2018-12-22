@@ -40,6 +40,15 @@ class RadioButtons extends React.PureComponent {
     }
   }
 
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.pointerEvents !== this.state.pointerEvents) {
+      this.setState({ pointerEvents: nextProps.pointerEvents })
+    }
+    if (nextProps.value !== this.state.value) {
+      this.setState({ value: nextProps.value })
+    }
+  }
+
   handleStateValue (state, value) {
     this.setState({ [state]: value })
   }
@@ -47,7 +56,6 @@ class RadioButtons extends React.PureComponent {
   render () {
     const {
       message,
-      node,
       currentQuestion
     } = this.props
 
@@ -57,9 +65,7 @@ class RadioButtons extends React.PureComponent {
           <RadioChoices
             choices={message.quick_replies}
             onChange={(option) => {
-              if (node === currentQuestion.node) {
-                this.props.handleRadioButton(currentQuestion, this.props.messageId, option.label, option.value)
-              }
+              this.props.handleRadioButton(this.props.isEditingMode ? this.props.currentEditingQuestion : currentQuestion, this.props.messageId, option.label, option.value)
             }}
             value={this.state.value}
             buttonsContainerStyle={styles.buttonsContainer}

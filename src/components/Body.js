@@ -76,8 +76,6 @@ class Body extends React.PureComponent {
   }
 
   scrollToBottom () {
-    // console.log('this.state.isDataRefreshingForcefully :- ', this.state.isDataRefreshingForcefully)
-    // console.log('this.state.isDataRefreshingNormally :- ', this.state.isDataRefreshingNormally)
     if (this.flatlist && !this.state.isDataRefreshingForcefully && !this.state.isDataRefreshingNormally) {
       this.flatlist.scrollToEnd({ animated: true })
     }
@@ -89,11 +87,14 @@ class Body extends React.PureComponent {
     item={item}
     index={index}
     currentQuestion={this.props.currentQuestion}
+    currentEditingQuestion={this.props.currentEditingQuestion}
     messages={this.props.messages}
     botMode={this.props.botMode}
     role={this.props.role}
     handleEditPress={this.props.handleEditPress}
     handleRadioButton={this.props.handleRadioButton}
+    isEditingMode={this.props.isEditingMode}
+    currentEditingAnswerOptionsMessageId={this.props.currentEditingAnswerOptionsMessageId}
   />
 
   onViewableItemsChanged = ({ viewableItems }) => {
@@ -139,6 +140,8 @@ class Body extends React.PureComponent {
       messages,
       loader
     } = this.props
+
+    console.log('this.props.currentEditingAnswerOptionsMessageId :- ', this.props.currentEditingAnswerOptionsMessageId)
 
     return (
       <View style={styles.flexView}>
