@@ -2,7 +2,8 @@ import React from 'react'
 
 import {
   View,
-  StyleSheet
+  StyleSheet,
+  Image
 } from 'react-native'
 
 import { isUndefined } from 'lodash'
@@ -16,12 +17,9 @@ import DateComponent from './sub_components/chat_components/DateComponent'
 import RadioButtons from './sub_components/chat_components/RadioButtons'
 
 import {
+  colors,
   massageText
 } from '../utils'
-
-import {
-  colors
-} from '../general'
 
 let checkBoxDisplayValueList = []
 let checkBoxActualValueList = []
@@ -36,9 +34,7 @@ class Generic extends React.PureComponent {
         <RadioButtons
           message={item.message}
           messageId={item.messageId}
-          currentQuestion={currentQuestion}
           isEditingMode={this.props.isEditingMode}
-          currentEditingQuestion={this.props.currentEditingQuestion}
           pointerEvents={
             (item.node === currentQuestion.node) || (this.props.isEditingMode && this.props.currentEditingAnswerOptionsMessageId === item.messageId)
               ? 'auto'
@@ -117,29 +113,7 @@ class Generic extends React.PureComponent {
           <ErrorBubble errorMessage={item.message.text} />
         </View>
       )
-    }// else if (item.isReceiverTyping) {
-    //   return (
-    //     <View>
-    //       {
-    //         differentSender
-    //           ? <View style={styles.verticalSpacing} />
-    //           : null
-    //       }
-    //       <ReceiverChatBubble isTyping />
-    //     </View>
-    //   )
-    // } else if (item.isSenderTyping) {
-    //   return (
-    //     <View>
-    //       {
-    //         differentSender
-    //           ? <View style={styles.verticalSpacing} />
-    //           : null
-    //       }
-    //       <SenderChatBubble isTyping />
-    //     </View>
-    //   )
-    // }
+    }
 
     toShowDateComponent = false
 
@@ -151,6 +125,11 @@ class Generic extends React.PureComponent {
     } else {
       toShowDateComponent = false
     }
+
+    const {
+      text,
+      attachment
+    } = item.message || {}
 
     return (
       <View key={index}>
@@ -170,20 +149,43 @@ class Generic extends React.PureComponent {
               {
                 leftOrRight === 'left'
                   ? <ReceiverChatBubble
-                    text={item.message.text}
+                    text={text}
                     showName={differentSender}
                     sender={item.sender.displayName}
                     showTime={(botMode === 'chat' || (botMode === 'question' && item.showTime))}
                     time={item.createdAt}
-                  />
+                  >
+                    {
+                      attachment && attachment.type === 'image'
+                        ? <View style={styles.flexView}>
+                          <Image
+                            source={{ uri: attachment.payload.url }}
+                            resizeMode='contain'
+                          />
+                        </View>
+                        : null
+                    }
+                  </ReceiverChatBubble>
                   : <SenderChatBubble
-                    text={item.rawValue ? massageText((item.rawValue || item.message.text), item.state) : item.message.text}
+                    text={item.rawValue ? massageText((item.rawValue || text), item.state) : text}
                     messageId={item.messageId}
                     showTime
                     time={item.createdAt}
                     isEditable={item.isRightAnswer}
                     handleEditPress={this.props.handleEditPress}
-                  />
+                  >
+                    {
+                      attachment && attachment.type === 'image'
+                        ? <View style={styles.imageContainer}>
+                          <Image
+                            source={{ isStatic: true, uri: attachment.payload.url }}
+                            resizeMode='cover'
+                            style={styles.image}
+                          />
+                        </View>
+                        : null
+                    }
+                  </SenderChatBubble>
               }
             </View>
             : <View>

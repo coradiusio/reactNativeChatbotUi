@@ -8,7 +8,11 @@ import {
   Text
 } from 'react-native'
 
+import { isUndefined, isEmpty } from 'lodash'
+
 import * as Animatable from 'react-native-animatable'
+
+import dayjs from 'dayjs'
 
 import {
   DateTimePicker,
@@ -19,11 +23,8 @@ import {
 import SearchableSelect from './sub_components/SearchableSelect'
 
 import {
-  colors
-} from '../general'
-
-import {
-  formatDate
+  colors,
+  genericColors
 } from '../utils'
 
 class Footer extends React.PureComponent {
@@ -37,8 +38,12 @@ class Footer extends React.PureComponent {
   }
 
   componentDidMount () {
-    if (this.props.inputText) {
-      this.inputTextSetter()
+    const {
+      inputText
+    } = this.props
+
+    if (!isUndefined(inputText) && !isEmpty(inputText)) {
+      this.inputTextSetter(inputText)
     }
     this.backgroundColorAnimation()
   }
@@ -50,34 +55,35 @@ class Footer extends React.PureComponent {
   }
 
   componentWillReceiveProps (nextProps) {
-    if (nextProps.inputText !== this.state.inputText) {
-      this.inputTextSetter(nextProps.inputText)
+    const {
+      inputText
+    } = nextProps
+
+    if (!isUndefined(inputText) && inputText !== this.state.inputText) {
+      this.inputTextSetter(inputText)
     }
   }
 
   handleSubmit () {
-    this.props.submitInputValue(this.props.currentQuestion, this.state.inputText.trim())
+    this.props.submitInputValue(this.state.inputText.trim())
   }
 
   handleSelect (value) {
-    this.props.submitInputValue(this.props.currentQuestion, value)
+    this.props.submitInputValue(value)
   }
 
   showDateTimePicker = () => this.setState({ isDatePickerVisible: true })
 
-  _hideDateTimePicker = () => this.setState({ isDatePickerVisible: false })
+  hideDateTimePicker = () => this.setState({ isDatePickerVisible: false })
 
-  _handleDatePicked = (date) => {
-    this.props.submitInputValue(this.props.currentQuestion, formatDate(date))
-    this._hideDateTimePicker()
+  handleDatePicked = (date) => {
+    this.props.submitInputValue(dayjs(date).format(this.props.currentQuestion.output.format || 'YYYY-MM-DD'))
+    this.hideDateTimePicker()
   }
 
   inputSubmitHandler = () => {
     this.props.handleSenderTyping(false)
     this.handleSubmit()
-    if (!this.props.isEditingMode) {
-      this.props.handleStateValue('inputText', '')
-    }
   }
 
   componentDecider () {
@@ -87,7 +93,8 @@ class Footer extends React.PureComponent {
 
     const {
       widget,
-      placeholder
+      placeholder,
+      keyboardType
     } = currentQuestion.input || {}
 
     switch (widget) {
@@ -104,6 +111,7 @@ class Footer extends React.PureComponent {
             }}
             sendIcon={this.props.icon}
             inputText={this.state.inputText}
+            keyboardType={keyboardType || 'default'}
           />
         )
       case 'calendar':
@@ -113,15 +121,16 @@ class Footer extends React.PureComponent {
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
               text={placeholder || 'Click To Scan'}
-              onPress={this._showDateTimePicker}
+              onPress={this.showDateTimePicker}
             />
             <DateTimePicker
               isVisible={this.state.isDatePickerVisible}
-              onConfirm={this._handleDatePicked}
-              onCancel={this._hideDateTimePicker}
+              onConfirm={this.handleDatePicked}
+              onCancel={this.hideDateTimePicker}
             />
           </View>
         )
+      case 'file':
       case 'qrscanner':
       case 'camera':
         return (
@@ -129,7 +138,7 @@ class Footer extends React.PureComponent {
             <Button
               style={buttonStyles}
               buttonContainerStyle={styles.buttonContainerStyle}
-              text={placeholder || 'Click To Open Camera'}
+              text={placeholder || 'Click Here'}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>
@@ -300,7 +309,7 @@ const buttonStyles = StyleSheet.create({
     height: 48
   },
   text: {
-    color: colors.white
+    color: genericColors.white
   }
 })
 

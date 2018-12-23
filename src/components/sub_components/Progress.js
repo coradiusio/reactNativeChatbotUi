@@ -10,7 +10,7 @@ import {
 
 import {
   colors
-} from '../../general'
+} from '../../utils'
 
 class Progress extends React.PureComponent {
   render () {

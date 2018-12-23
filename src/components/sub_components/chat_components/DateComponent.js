@@ -13,7 +13,7 @@ import ChatBubble from './ChatBubble'
 
 import {
   colors
-} from '../../../general'
+} from '../../../utils'
 
 dayjs.extend(isSameOrAfter)
 

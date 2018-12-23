@@ -1,19 +1,22 @@
 import React from 'react'
 import { StyleSheet, View } from 'react-native'
 
-import FormBotApp from './src/FormBotApp'
+import ChatBotApp from './src/ChatBotApp'
 
 import {
   colors
-} from './src/general'
+} from './src/utils'
 
 export default class App extends React.PureComponent {
   render () {
     return (
       <View style={styles.container}>
-        <FormBotApp
-          host={this.props.host}
-          role={this.props.role}
+        <ChatBotApp
+          host={'http://192.168.42.63:7664'}
+          role={{
+            type: 'user',
+            displayName: 'Robin'
+          }}
         />
       </View>
     )

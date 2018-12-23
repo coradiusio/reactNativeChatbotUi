@@ -14,7 +14,7 @@ import {
 
 import {
   colors
-} from '../../../general'
+} from '../../../utils'
 
 class ErrorBubble extends React.PureComponent {
   render () {

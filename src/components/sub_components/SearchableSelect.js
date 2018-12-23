@@ -14,7 +14,7 @@ import {
 
 import {
   colors
-} from '../../general'
+} from '../../utils'
 
 const ds = new ListView.DataSource({
   rowHasChanged: (r1, r2) => r1.id !== r2.id

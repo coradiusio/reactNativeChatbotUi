@@ -9,11 +9,11 @@ import {
   RadioChoices
 } from 'reactNativeBasicComponents'
 
+import ChatBubble from './ChatBubble'
+
 import {
   colors
-} from '../../../general'
-
-import ChatBubble from './ChatBubble'
+} from '../../../utils'
 
 class RadioButtons extends React.PureComponent {
   constructor (props) {
@@ -55,8 +55,7 @@ class RadioButtons extends React.PureComponent {
 
   render () {
     const {
-      message,
-      currentQuestion
+      message
     } = this.props
 
     return (
@@ -65,7 +64,7 @@ class RadioButtons extends React.PureComponent {
           <RadioChoices
             choices={message.quick_replies}
             onChange={(option) => {
-              this.props.handleRadioButton(this.props.isEditingMode ? this.props.currentEditingQuestion : currentQuestion, this.props.messageId, option.label, option.value)
+              this.props.handleRadioButton(this.props.messageId, option.label, option.value)
             }}
             value={this.state.value}
             buttonsContainerStyle={styles.buttonsContainer}

@@ -16,7 +16,7 @@ import Generic from './Generic'
 
 import {
   colors
-} from '../general'
+} from '../utils'
 
 let timer
 
@@ -87,7 +87,6 @@ class Body extends React.PureComponent {
     item={item}
     index={index}
     currentQuestion={this.props.currentQuestion}
-    currentEditingQuestion={this.props.currentEditingQuestion}
     messages={this.props.messages}
     botMode={this.props.botMode}
     role={this.props.role}
@@ -140,8 +139,6 @@ class Body extends React.PureComponent {
       messages,
       loader
     } = this.props
-
-    console.log('this.props.currentEditingAnswerOptionsMessageId :- ', this.props.currentEditingAnswerOptionsMessageId)
 
     return (
       <View style={styles.flexView}>

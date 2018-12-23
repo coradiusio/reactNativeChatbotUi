@@ -13,7 +13,7 @@ import {
 
 import {
   colors
-} from '../general'
+} from '../utils'
 
 class Header extends React.PureComponent {
   render () {
@@ -58,7 +58,7 @@ class Header extends React.PureComponent {
               />
             </View>
             <SubTitle
-              text={this.props.isReceiverTyping ? 'Bot is Typing...' : subtitle}
+              text={this.props.isReceiverTyping ? 'Bot is typing...' : subtitle}
               style={styles.subtitle}
             />
           </View>

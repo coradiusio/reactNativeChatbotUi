@@ -1,4 +1,29 @@
-import { get } from 'lodash'
+import { get, isEmpty } from 'lodash'
+
+export const genericColors = {
+  white: '#FFFFFF',
+  red: '#FF0000',
+  green: '#00C853',
+  grey100: '#F5F5F5',
+  blue: '#2962FF',
+  lightGrey: '#9E9E9E',
+  darkGrey: '#4F5D64'
+}
+
+export const colors = {
+  primary: genericColors.blue,
+  headerTitleColor: genericColors.white,
+  headerSubTitleColor: genericColors.white,
+  errorIconColor: genericColors.red,
+  background: genericColors.white,
+  headerIconColor: genericColors.white,
+  onlineIconColor: genericColors.green,
+
+  receiverBubbleBackground: genericColors.grey100,
+  receiverBubbleText: genericColors.darkGrey,
+  senderBubbleBackground: genericColors.blue,
+  senderBubbleText: genericColors.white
+}
 
 const numbersComparisionOperators = [
   '==',
@@ -13,13 +38,6 @@ const stringsComparisionOperators = [
   '==',
   '!='
 ]
-
-function isEmptyString (value) {
-  if (typeof value === 'string') {
-    return value === ''
-  }
-  throw new Error('argument is not of string type')
-}
 
 export const stringCases = [
   'lower',
@@ -54,7 +72,8 @@ export function toTitleCase (str) {
 };
 
 export function isElementByIdValueEmpty (id) {
-  return isEmptyString(document.getElementById(id) && document.getElementById(id).value)
+  const element = document.getElementById(id)
+  return isEmpty(element && element.value)
 }
 
 function numberComparisionValidator (comparision, firstValue, secondValue) {
@@ -100,39 +119,43 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     const answerInputModifiedLength = answerInputModified.length
     if (typeLowerCase === 'number') {
       if (numbersComparisionOperators.indexOf(comparisionOperator) > -1) {
-        if (propertyNameLowerCase === 'inputlength') {
-          if (!numberComparisionValidator(comparisionOperator, answerInputModifiedLength,
-            typeof propertyValue === 'string' ? massageText(propertyValue, resultData) : propertyValue)) {
+        if (propertyNameLowerCase === 'length') {
+          if (!numberComparisionValidator(comparisionOperator, answerInputModifiedLength, propertyValue)) {
             result.foundError = true
           }
-        } else if (propertyNameLowerCase === 'inputvalue') {
-          if (!numberComparisionValidator(comparisionOperator, answerInputModified,
-            typeof propertyValue === 'string' ? massageText(propertyValue, resultData) : propertyValue)) {
+        } else if (propertyNameLowerCase === 'value') {
+          if (!numberComparisionValidator(comparisionOperator, answerInputModified, propertyValue)) {
             result.foundError = true
           }
         }
       }
     } else if (typeLowerCase === 'string') {
       if (stringsComparisionOperators.indexOf(comparisionOperator) > -1) {
-        if (!stringComparisionValidator(comparisionOperator, answerInputModified,
-          typeof propertyValue === 'string' ? massageText(propertyValue, resultData) : propertyValue)) {
+        if (!stringComparisionValidator(comparisionOperator, answerInputModified, propertyValue)) {
           result.foundError = true
         }
       }
+    } else {
+      throw new Error('type not matching')
     }
     return result
   }
 
   function validateByRegexPattern (regexPattern, propertyNameLowerCase, answerInputModified, result) {
     const answerInputModifiedLength = answerInputModified.length
-    if (propertyNameLowerCase === 'inputlength') {
+    console.log('propertyNameLowerCase :- ', propertyNameLowerCase)
+    if (propertyNameLowerCase === 'length') {
       if (!regexPattern.test(answerInputModifiedLength)) {
         result.foundError = true
       }
-    } else if (propertyNameLowerCase === 'inputvalue') {
+    } else if (propertyNameLowerCase === 'value') {
+      console.log('answerInputModified :- ', answerInputModified)
+      console.log('regexPattern :- ', regexPattern)
       if (!regexPattern.test(answerInputModified)) {
         result.foundError = true
       }
+    } else {
+      throw new Error('propertyName not matched')
     }
     return result
   }
@@ -143,6 +166,7 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
     const regexPattern = allValidations[i].regexPattern && new RegExp(allValidations[i].regexPattern.trim(), 'i')
     const propertyNameLowerCase = allValidations[i].propertyName && allValidations[i].propertyName.toLowerCase()
 
+    console.log('regexPattern :- ', regexPattern)
     if (regexPattern) {
       validateByRegexPattern(regexPattern, propertyNameLowerCase, answerInputModified, result)
     }
@@ -211,7 +235,11 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
   }
 
   if (fileName && fileExtension) {
-    if (currentQuestion.fileExtensions && currentQuestion.fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
+    const {
+      fileExtensions
+    } = currentQuestion.input
+
+    if (fileExtensions && fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
       result.success = true
     } else {
       result.foundError = true

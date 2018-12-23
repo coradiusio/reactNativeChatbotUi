@@ -11,15 +11,11 @@ import {
   Icon
 } from 'reactNativeBasicComponents'
 
-import TypingIndicator from './TypingIndicator'
 import ChatBubble from './ChatBubble'
 import Time from './Time'
 
 import {
-  colors
-} from '../../../general'
-
-import {
+  colors,
   formatAMPM
 } from '../../../utils'
 
@@ -28,40 +24,34 @@ class SenderChatBubble extends React.PureComponent {
     return (
       <ChatBubble style={styles.container}>
         <View style={styles.innerContainer}>
+          {this.props.children}
           {
-            this.props.isTyping
-              ? <TypingIndicator color={colors.senderBubbleText} size={10} count={3} />
-              : <View>
-                {this.props.children}
-                {
-                  this.props.text
-                    ? <Text style={styles.fontColor}>
-                      {this.props.text}
-                    </Text>
-                    : null
-                }
-                <View style={styles.editTimeContainer}>
-                  <Time
-                    textStyle={styles.fontColor}
-                    text={formatAMPM(this.props.time)}
-                  />
-                  {
-                    this.props.isEditable
-                      ? <TouchableOpacity
-                        onPress={() => this.props.handleEditPress(this.props.messageId)}
-                      >
-                        <Icon
-                          color={colors.senderBubbleText}
-                          name={'pencil'}
-                          type={'material-community'}
-                          size={16}
-                        />
-                      </TouchableOpacity>
-                      : null
-                  }
-                </View>
-              </View>
+            this.props.text
+              ? <Text style={styles.fontColor}>
+                {this.props.text}
+              </Text>
+              : null
           }
+          <View style={styles.editTimeContainer}>
+            <Time
+              textStyle={styles.fontColor}
+              text={formatAMPM(this.props.time)}
+            />
+            {
+              this.props.isEditable
+                ? <TouchableOpacity
+                  onPress={() => this.props.handleEditPress(this.props.messageId)}
+                >
+                  <Icon
+                    color={colors.senderBubbleText}
+                    name={'pencil'}
+                    type={'material-community'}
+                    size={16}
+                  />
+                </TouchableOpacity>
+                : null
+            }
+          </View>
         </View>
       </ChatBubble>
     )

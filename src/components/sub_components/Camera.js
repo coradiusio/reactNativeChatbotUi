@@ -13,20 +13,21 @@ import {
 
 import {
   colors
-} from '../../general'
+} from '../../utils'
 
 class Camera extends React.PureComponent {
   takePicture = async function () {
     if (this.camera) {
       const options = { quality: 0.5, base64: true }
       const data = await this.camera.takePictureAsync(options)
-      console.log(data.uri)
+      this.props.handleStateValue('openCameraView', false)
       this.props.onCapture(data.uri, '', 'camera')
       this.props.handleStateValue('openCameraView', false)
     }
   }
 
   render () {
+    console.log('in camera render')
     return (
       <View style={styles.cameraContainer}>
         <RNCamera
