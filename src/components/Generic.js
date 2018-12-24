@@ -2,8 +2,7 @@ import React from 'react'
 
 import {
   View,
-  StyleSheet,
-  Image
+  StyleSheet
 } from 'react-native'
 
 import { isUndefined } from 'lodash'
@@ -13,7 +12,7 @@ import SenderChatBubble from './sub_components/chat_components/SenderChatBubble'
 import ReceiverChatBubble from './sub_components/chat_components/ReceiverChatBubble'
 import ErrorBubble from './sub_components/chat_components/ErrorBubble'
 import DateComponent from './sub_components/chat_components/DateComponent'
-
+import Image from './sub_components/chat_components/Image'
 import RadioButtons from './sub_components/chat_components/RadioButtons'
 
 import {
@@ -157,12 +156,9 @@ class Generic extends React.PureComponent {
                   >
                     {
                       attachment && attachment.type === 'image'
-                        ? <View style={styles.flexView}>
-                          <Image
-                            source={{ uri: attachment.payload.url }}
-                            resizeMode='contain'
-                          />
-                        </View>
+                        ? <Image
+                          attachment={attachment}
+                        />
                         : null
                     }
                   </ReceiverChatBubble>
@@ -176,13 +172,9 @@ class Generic extends React.PureComponent {
                   >
                     {
                       attachment && attachment.type === 'image'
-                        ? <View style={styles.imageContainer}>
-                          <Image
-                            source={{ isStatic: true, uri: attachment.payload.url }}
-                            resizeMode='cover'
-                            style={styles.image}
-                          />
-                        </View>
+                        ? <Image
+                          attachment={attachment}
+                        />
                         : null
                     }
                   </SenderChatBubble>

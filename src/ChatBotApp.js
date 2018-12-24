@@ -1,9 +1,12 @@
+/* global FormData */
+
 import React from 'react'
 
 import io from 'socket.io-client'
 import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
+import axios from 'axios'
 import { isUndefined, isEmpty } from 'lodash'
 
 import {
@@ -160,6 +163,7 @@ export default class ChatBotApp extends React.PureComponent {
   }
 
   handleStateValue (state, value) {
+    console.log(`Setting ${state} :- ${value}`)
     this.setState({ [state]: value })
   }
 
@@ -636,6 +640,25 @@ export default class ChatBotApp extends React.PureComponent {
         }
       }
     }
+  }
+
+  uploadFile (url, base64) {
+    const config = {
+      timeout: 300000,
+      onUploadProgress: function (progressEvent) {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        console.log('percentCompleted :- ', percentCompleted)
+      }
+    }
+    let formData = new FormData()
+    formData.append('file', base64)
+    axios.post(url, formData, config)
+      .then(response => {
+        console.log('file uploaded :- ', response)
+      })
+      .catch(err => {
+        console.log('error in file uploading :- ', err)
+      })
   }
 
   render () {

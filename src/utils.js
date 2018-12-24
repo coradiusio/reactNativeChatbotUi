@@ -396,5 +396,3 @@ export function skipConditionsCheck (currentQuestion, result) {
   }
   return success
 }
-
-export const axiosConfig = { timeout: 300000 }

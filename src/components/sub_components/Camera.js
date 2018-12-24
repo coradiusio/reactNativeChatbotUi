@@ -15,14 +15,26 @@ import {
   colors
 } from '../../utils'
 
+const defaultCameraProps = {
+  type: 'back',
+  autoFocus: true,
+  permissionDialogTitle: 'Permission to use camera',
+  permissionDialogMessage: 'We need your permission to use your camera phone'
+}
+
 class Camera extends React.PureComponent {
   takePicture = async function () {
     if (this.camera) {
+      this.props.handleStateValue('showProgress', true)
       const options = { quality: 0.5, base64: true }
-      const data = await this.camera.takePictureAsync(options)
-      this.props.handleStateValue('openCameraView', false)
-      this.props.onCapture(data.uri, '', 'camera')
-      this.props.handleStateValue('openCameraView', false)
+      this.camera.takePictureAsync(options)
+        .then(data => {
+          this.props.handleStateValue('openCameraView', false)
+          this.props.onCapture(data.uri, '', 'camera')
+        })
+        .catch(err => {
+          console.log('error in taking picture :- ', err)
+        })
     }
   }
 
@@ -35,10 +47,7 @@ class Camera extends React.PureComponent {
             this.camera = ref
           }}
           style={styles.camera}
-          type={RNCamera.Constants.Type.back}
-          autoFocus
-          permissionDialogTitle={'Permission to use camera'}
-          permissionDialogMessage={'We need your permission to use your camera phone'}
+          {...Object.assign({}, defaultCameraProps, this.props.cameraProps)}
         />
         <View style={styles.cameraButtonContainer}>
           <Button

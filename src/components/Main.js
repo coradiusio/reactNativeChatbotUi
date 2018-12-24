@@ -6,14 +6,13 @@ import {
   KeyboardAvoidingView
 } from 'react-native'
 
-import QRCodeScanner from 'react-native-qrcode-scanner'
-
 import Header from './Header'
 import Body from './Body'
 import Footer from './Footer'
 
 import Progress from './sub_components/Progress'
 import Camera from './sub_components/Camera'
+import QRCodeScanner from './sub_components/QRCodeScanner'
 
 export default class Main extends React.PureComponent {
   render () {
@@ -55,9 +54,10 @@ export default class Main extends React.PureComponent {
                 widget === 'qrscanner'
                   ? <QRCodeScanner
                     onRead={(e) => {
-                      this.props.handleStateValue('openCameraView', false)
-                      this.props.submitInputValue(e.data)
+                      handleStateValue('openCameraView', false)
+                      submitInputValue(e.data)
                     }}
+                    cameraProps={currentQuestion.input.cameraProps}
                   />
                   : <View style={styles.flexView}>
                     {
@@ -65,6 +65,7 @@ export default class Main extends React.PureComponent {
                         ? <Camera
                           handleStateValue={handleStateValue}
                           onCapture={submitInputValue}
+
                         />
                         : null
                     }

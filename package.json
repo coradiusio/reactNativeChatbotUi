@@ -30,8 +30,9 @@
     "react-native": "0.57.5",
     "react-native-animatable": "1.3.0",
     "react-native-camera": "git+https://git@github.com/react-native-community/react-native-camera",
-    "react-native-qrcode-scanner": "^1.1.0",
+    "react-native-permissions": "^1.1.1",
     "reactNativeBasicComponents": "git://github.com/coradiusio/reactNativeBasicComponents#feature/robin_primary",
+    "prop-types": "^15.5.10",
     "socket.io-client": "2.1.1",
     "uuid": "3.3.2"
   },
