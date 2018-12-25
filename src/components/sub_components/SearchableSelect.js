@@ -169,7 +169,8 @@ SearchableSelect.defaultProps = {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    position: 'relative'
+    position: 'relative',
+    zIndex: 2000
   },
   flexView: {
     flex: 1

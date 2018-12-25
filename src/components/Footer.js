@@ -4,8 +4,7 @@ import {
   Animated,
   StyleSheet,
   View,
-  Keyboard,
-  Text
+  Keyboard
 } from 'react-native'
 
 import { isUndefined, isEmpty } from 'lodash'
@@ -20,11 +19,16 @@ import {
   ChatInput
 } from 'reactNativeBasicComponents'
 
+import {
+  CreateComponentFromJSON
+} from '../react_component_json'
+
 import SearchableSelect from './sub_components/SearchableSelect'
 
 import {
   colors,
-  genericColors
+  genericColors,
+  massageText
 } from '../utils'
 
 class Footer extends React.PureComponent {
@@ -94,7 +98,9 @@ class Footer extends React.PureComponent {
     const {
       widget,
       placeholder,
-      keyboardType
+      keyboardType,
+      minCharactersToSearch,
+      searchKeyName
     } = currentQuestion.input || {}
 
     switch (widget) {
@@ -147,65 +153,10 @@ class Footer extends React.PureComponent {
         return (
           <View style={styles.flexView}>
             <SearchableSelect
-              dataSource={[
-                {
-                  id: 1,
-                  value: {
-                    pincode: '400053',
-                    city: 'Andheri',
-                    state: 'Maharashtra'
-                  }
-                },
-                {
-                  id: 2,
-                  value: {
-                    pincode: '400052',
-                    city: 'Andheri',
-                    state: 'Maharashtra'
-                  }
-                },
-                {
-                  id: 3,
-                  value: {
-                    pincode: '400051',
-                    city: 'Bandra',
-                    state: 'Maharashtra'
-                  }
-                },
-                {
-                  id: 4,
-                  value: {
-                    pincode: '600053',
-                    city: 'Andheri',
-                    state: 'Delhi'
-                  }
-                },
-                {
-                  id: 5,
-                  value: {
-                    pincode: '700053',
-                    city: 'Andheri',
-                    state: 'Maharashtra'
-                  }
-                },
-                {
-                  id: 6,
-                  value: {
-                    pincode: '300053',
-                    city: 'Andheri',
-                    state: 'Maharashtra'
-                  }
-                }
-              ]}
-              minCharToSearch={3}
-              renderItemProps={item => (
-                <View style={{ padding: 10, margin: 4 }}>
-                  <Text style={{ fontSize: 16, fontWeight: 'bold' }}>Pincode: {item.value.pincode}</Text>
-                  <Text style={{ fontSize: 14 }}>City: {item.value.city}</Text>
-                  <Text style={{ fontSize: 14 }}>State: {item.value.state}</Text>
-                </View>
-              )}
-              searchKeyName='pincode'
+              dataSource={currentQuestion.input.searchOptions || []}
+              minCharToSearch={minCharactersToSearch || 3}
+              renderItemProps={item => CreateComponentFromJSON(currentQuestion.input.renderItemProps, item)}
+              searchKeyName={searchKeyName}
               onSelect={(value) => this.handleSelect(value)}
             />
           </View>

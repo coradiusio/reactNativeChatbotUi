@@ -3,7 +3,8 @@ import React from 'react'
 import {
   StyleSheet,
   View,
-  KeyboardAvoidingView
+  KeyboardAvoidingView,
+  BackHandler
 } from 'react-native'
 
 import Header from './Header'
@@ -15,6 +16,23 @@ import Camera from './sub_components/Camera'
 import QRCodeScanner from './sub_components/QRCodeScanner'
 
 export default class Main extends React.PureComponent {
+  componentDidMount () {
+    BackHandler.addEventListener('hardwareBackPress', this.handleBackPress)
+  }
+
+  componentWillUnmount () {
+    BackHandler.removeEventListener('hardwareBackPress', this.handleBackPress)
+  }
+
+  handleBackPress = () => {
+    if (this.props.openCameraView) {
+      this.props.handleStateValue('openCameraView', false)
+      return true
+    } else {
+      return false
+    }
+  }
+
   render () {
     const {
       botMode,
@@ -58,6 +76,7 @@ export default class Main extends React.PureComponent {
                       submitInputValue(e.data)
                     }}
                     cameraProps={currentQuestion.input.cameraProps}
+                    showMarker
                   />
                   : <View style={styles.flexView}>
                     {

@@ -251,6 +251,7 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
 }
 
 export function massageText (text, state = {}) {
+  console.log('state :- ', state)
   if (text.indexOf('{') > -1 && text.indexOf('}') > -1) {
     try {
       const regexPattern = /\{(.*?)\}/g

@@ -10,11 +10,20 @@ import {
   Text,
   Dimensions,
   Platform,
-  PermissionsAndroid
+  PermissionsAndroid,
+  TouchableOpacity
 } from 'react-native'
 
 import Permissions from 'react-native-permissions'
 import { RNCamera as Camera } from 'react-native-camera'
+
+import {
+  Icon
+} from 'reactNativeBasicComponents'
+
+import {
+  colors
+} from '../../utils'
 
 const PERMISSION_AUTHORIZED = 'authorized'
 const CAMERA_PERMISSION = 'camera'
@@ -105,10 +114,14 @@ export default class QRCodeScanner extends Component {
       fadeInOpacity: new Animated.Value(0),
       isAuthorized: false,
       isAuthorizationChecked: false,
-      disableVibrationByUser: false
+      disableVibrationByUser: false,
+      flashMode: 'off'
     }
 
+    this.animatedValue = new Animated.Value(0)
+
     this._handleBarCodeRead = this._handleBarCodeRead.bind(this)
+    this.toggleFlash = this.toggleFlash.bind(this)
   }
 
   componentWillMount () {
@@ -149,6 +162,7 @@ export default class QRCodeScanner extends Component {
         })
       ]).start()
     }
+    this.animate()
   }
 
   disable () {
@@ -178,19 +192,108 @@ export default class QRCodeScanner extends Component {
     }
   }
 
-  _renderCameraMarker () {
-    if (this.props.showMarker) {
-      if (this.props.customMarker) {
-        return this.props.customMarker
-      } else {
-        return (
-          <View style={styles.rectangleContainer}>
-            <View style={[styles.rectangle, this.props.markerStyle ? this.props.markerStyle : null]} />
-          </View>
-        )
+  toggleFlash () {
+    this.setState(prevState => ({
+      flashMode: prevState.flashMode === 'torch' ? 'off' : 'torch'
+    }))
+  }
+
+  animate () {
+    this.animatedValue.setValue(0)
+    Animated.timing(
+      this.animatedValue,
+      {
+        toValue: 1,
+        duration: 3000,
+        easing: Easing.linear
       }
-    }
-    return null
+    ).start(() => this.animate())
+  }
+
+  _renderCameraMarker () {
+    const {
+      primaryColor,
+      borderWidth
+    } = this.props
+
+    const movingMargin = this.animatedValue.interpolate({
+      inputRange: [0, 0.5, 1],
+      outputRange: [0, 220, 0]
+    })
+
+    return (
+      <View style={styles.mainContainer}>
+        <View style={[styles.flex, styles.transparentBackground]} />
+        <View style={styles.qrcodeWrapper}>
+          <View style={[styles.flex, styles.transparentBackground]} />
+          <View style={styles.qrcodeContainer}>
+            <View
+              style={[
+                styles.topLeftEdge,
+                {
+                  borderColor: primaryColor,
+                  borderLeftWidth: borderWidth,
+                  borderTopWidth: borderWidth
+                }
+              ]}
+            />
+            <View
+              style={[
+                styles.topRightEdge,
+                {
+                  borderColor: primaryColor,
+                  borderRightWidth: borderWidth,
+                  borderTopWidth: borderWidth
+                }
+              ]}
+            />
+            <View
+              style={[
+                styles.bottomLeftEdge,
+                {
+                  borderColor: primaryColor,
+                  borderLeftWidth: borderWidth,
+                  borderBottomWidth: borderWidth
+                }
+              ]}
+            />
+            <View
+              style={[
+                styles.bottomRightEdge,
+                {
+                  borderColor: primaryColor,
+                  borderRightWidth: borderWidth,
+                  borderBottomWidth: borderWidth
+                }
+              ]}
+            />
+            <Animated.View
+              style={{
+                marginTop: movingMargin
+              }}
+              useNativeDriver
+            >
+              <View style={{ height: 1, marginBottom: 2, backgroundColor: primaryColor }} />
+              <View style={{ height: 2, marginBottom: 2, backgroundColor: primaryColor }} />
+              <View style={{ height: 3, backgroundColor: primaryColor }} />
+            </Animated.View>
+          </View>
+          <View style={[styles.flex, styles.transparentBackground]} />
+        </View>
+        <View style={[styles.flex, styles.transparentBackground, styles.bottomContainer]}>
+          <TouchableOpacity
+            onPress={() => this.toggleFlash()}
+          >
+            <Icon
+              color={primaryColor}
+              name={this.state.flashMode === 'torch' ? 'flash-off' : 'flash'}
+              type='material-community'
+              size={24}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+    )
   }
 
   _renderCamera () {
@@ -202,6 +305,21 @@ export default class QRCodeScanner extends Component {
 
     const { isAuthorized, isAuthorizationChecked } = this.state
     if (isAuthorized) {
+      const element = (
+        <View style={styles.mainContainer}>
+          <Camera
+            style={[styles.camera, this.props.cameraStyle]}
+            onBarCodeRead={this._handleBarCodeRead.bind(this)}
+            type={cameraType}
+            autoFocus
+            flashMode={Camera.Constants.FlashMode[this.state.flashMode]}
+            {...Object.assign({}, defaultCameraProps, this.props.cameraProps)}
+          >
+            {this._renderCameraMarker()}
+          </Camera>
+        </View>
+      )
+
       if (this.props.fadeIn) {
         return (
           <Animated.View
@@ -209,28 +327,13 @@ export default class QRCodeScanner extends Component {
               opacity: this.state.fadeInOpacity,
               backgroundColor: 'transparent'
             }}
+            useNativeDriver
           >
-            <Camera
-              style={[styles.camera, this.props.cameraStyle]}
-              onBarCodeRead={this._handleBarCodeRead.bind(this)}
-              type={this.props.cameraType}
-              {...defaultCameraProps || this.props.cameraProps}
-            >
-              {this._renderCameraMarker()}
-            </Camera>
+            {element}
           </Animated.View>
         )
       }
-      return (
-        <Camera
-          type={cameraType}
-          style={[styles.camera, this.props.cameraStyle]}
-          onBarCodeRead={this._handleBarCodeRead.bind(this)}
-          {...defaultCameraProps || this.props.cameraProps}
-        >
-          {this._renderCameraMarker()}
-        </Camera>
-      )
+      return element
     } else if (!isAuthorizationChecked) {
       return pendingAuthorizationView
     } else {
@@ -244,16 +347,25 @@ export default class QRCodeScanner extends Component {
 
   render () {
     return (
-      <View style={[styles.mainContainer, this.props.containerStyle]}>
+      <View style={[styles.flex, this.props.containerStyle]}>
         {this._renderCamera()}
       </View>
     )
   }
 }
 
+QRCodeScanner.defaultProps = {
+  borderWidth: 4,
+  primaryColor: colors.primary
+}
+
 const styles = StyleSheet.create({
-  mainContainer: {
+  flex: {
     flex: 1
+  },
+  mainContainer: {
+    width: windowObject.width,
+    height: windowObject.height
   },
   camera: {
     flex: 0,
@@ -262,5 +374,48 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     width: windowObject.width,
     height: windowObject.height
+  },
+  transparentBackground: {
+    backgroundColor: 'rgba(255, 255, 255, 0.7)'
+  },
+  qrcodeWrapper: {
+    flexDirection: 'row'
+  },
+  qrcodeContainer: {
+    width: 230,
+    height: 230,
+    backgroundColor: 'transparent'
+  },
+  topLeftEdge: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: 25,
+    height: 25
+  },
+  topRightEdge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    width: 25,
+    height: 25
+  },
+  bottomLeftEdge: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    width: 25,
+    height: 25
+  },
+  bottomRightEdge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    width: 25,
+    height: 25
+  },
+  bottomContainer: {
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 })

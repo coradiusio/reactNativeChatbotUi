@@ -110,7 +110,6 @@ export default class ChatBotApp extends React.PureComponent {
     if (timer) {
       clearTimeout(timer)
     }
-
     this.app = null
   }
 
