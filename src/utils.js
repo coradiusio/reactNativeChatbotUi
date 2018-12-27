@@ -3,6 +3,7 @@ import { get, isEmpty } from 'lodash'
 export const genericColors = {
   white: '#FFFFFF',
   red: '#FF0000',
+  orange: '#ff9100',
   green: '#00C853',
   grey100: '#F5F5F5',
   blue: '#2962FF',
@@ -15,6 +16,7 @@ export const colors = {
   headerTitleColor: genericColors.white,
   headerSubTitleColor: genericColors.white,
   errorIconColor: genericColors.red,
+  cancelEditColor: genericColors.orange,
   background: genericColors.white,
   headerIconColor: genericColors.white,
   onlineIconColor: genericColors.green,
@@ -104,7 +106,7 @@ function stringComparisionValidator (comparision, firstValue, secondValue) {
   return false
 }
 
-export function validateInput (currentQuestion, answerInputModified, source = 'text', resultData) {
+export function validateInput (currentQuestion, answerInputModified, source = 'text') {
   const {
     widget,
     validateInput
@@ -127,6 +129,8 @@ export function validateInput (currentQuestion, answerInputModified, source = 't
           if (!numberComparisionValidator(comparisionOperator, answerInputModified, propertyValue)) {
             result.foundError = true
           }
+        } else {
+          throw new Error('propertyName not matched')
         }
       }
     } else if (typeLowerCase === 'string') {

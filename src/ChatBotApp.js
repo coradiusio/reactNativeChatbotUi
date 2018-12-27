@@ -98,6 +98,7 @@ export default class ChatBotApp extends React.PureComponent {
     this.handleSenderTyping = this.handleSenderTyping.bind(this)
     this.fetchMessagesHistory = this.fetchMessagesHistory.bind(this)
     this.handleEditPress = this.handleEditPress.bind(this)
+    this.handleFinishedEdit = this.handleFinishedEdit.bind(this)
     this.handleRadioButton = this.handleRadioButton.bind(this)
   }
 
@@ -665,6 +666,7 @@ export default class ChatBotApp extends React.PureComponent {
       botMode,
       currentEditingQuestion,
       currentEditingAnswerOptionsMessageId,
+      currentEditingMessageId,
       currentQuestion,
       inputText,
       isEditingMode,
@@ -681,6 +683,7 @@ export default class ChatBotApp extends React.PureComponent {
       <Main
         botMode={botMode}
         currentEditingAnswerOptionsMessageId={currentEditingAnswerOptionsMessageId}
+        currentEditingMessageId={currentEditingMessageId}
         currentQuestion={isEditingMode ? currentEditingQuestion : currentQuestion}
         inputText={inputText}
         isEditingMode={isEditingMode}
@@ -694,6 +697,7 @@ export default class ChatBotApp extends React.PureComponent {
 
         fetchMessagesHistory={this.fetchMessagesHistory}
         handleEditPress={this.handleEditPress}
+        handleFinishedEdit={this.handleFinishedEdit}
         handleNextQuestion={this.handleNextQuestion}
         handleRadioButton={this.handleRadioButton}
         handleStateValue={this.handleStateValue}

@@ -6,6 +6,10 @@ import {
   StyleSheet
 } from 'react-native'
 
+import {
+  Icon
+} from 'reactNativeBasicComponents'
+
 import ChatBubble from './ChatBubble'
 import Time from './Time'
 
@@ -16,13 +20,30 @@ import {
 
 class ReceiverChatBubble extends React.PureComponent {
   render () {
+    const {
+      showName,
+      showTime
+    } = this.props
+
     return (
-      <ChatBubble style={styles.container} isTyping={this.props.isTyping} isError={this.props.isError}>
-        <View style={styles.innerContainer}>
+      <ChatBubble style={styles.container} isError={this.props.isError}>
+        <View style={styles.iconContainer}>
           {
-            this.props.showName
+            showName
+              ? <Icon
+                color={colors.primary}
+                name={'robot-vacuum'}
+                type={'material-community'}
+                size={32}
+              />
+              : null
+          }
+        </View>
+        <View style={[styles.innerContainer, !showName ? styles.explicitMargin : null]}>
+          {
+            showName
               ? <Text
-                style={[styles.specialFont, styles.fontColor]}
+                style={styles.senderName}
               >
                 Bot
               </Text>
@@ -37,10 +58,9 @@ class ReceiverChatBubble extends React.PureComponent {
               : null
           }
           {
-            this.props.showTime
+            showTime
               ? <Time
-                containerStyle={styles.rightAlign}
-                textStyle={styles.fontColor}
+                textStyle={styles.timeStyle}
                 text={formatAMPM(this.props.time)}
               />
               : null
@@ -53,25 +73,33 @@ class ReceiverChatBubble extends React.PureComponent {
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'flex-start'
+    alignItems: 'flex-start',
+    flexDirection: 'row'
+  },
+  iconContainer: {
+    marginRight: 4
   },
   innerContainer: {
-    maxWidth: '85%',
+    maxWidth: '75%',
     minWidth: 100,
     backgroundColor: colors.receiverBubbleBackground,
     borderRadius: 4,
-    borderTopLeftRadius: 0,
     padding: 8,
     paddingRight: 12
   },
+  explicitMargin: {
+    marginLeft: 32
+  },
+  senderName: {
+    fontSize: 11,
+    color: colors.primary
+  },
+  timeStyle: {
+    color: colors.receiverBubbleText,
+    fontSize: 8
+  },
   fontColor: {
     color: colors.receiverBubbleText
-  },
-  specialFont: {
-    fontWeight: 'bold'
-  },
-  rightAlign: {
-    alignSelf: 'flex-end'
   }
 })
 

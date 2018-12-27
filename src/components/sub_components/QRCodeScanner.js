@@ -4,7 +4,6 @@ import PropTypes from 'prop-types'
 import {
   StyleSheet,
   Vibration,
-  Animated,
   Easing,
   View,
   Text,
@@ -16,6 +15,7 @@ import {
 
 import Permissions from 'react-native-permissions'
 import { RNCamera as Camera } from 'react-native-camera'
+import * as Animatable from 'react-native-animatable'
 
 import {
   Icon
@@ -111,14 +111,11 @@ export default class QRCodeScanner extends Component {
     super(props)
     this.state = {
       scanning: false,
-      fadeInOpacity: new Animated.Value(0),
       isAuthorized: false,
       isAuthorizationChecked: false,
       disableVibrationByUser: false,
       flashMode: 'off'
     }
-
-    this.animatedValue = new Animated.Value(0)
 
     this._handleBarCodeRead = this._handleBarCodeRead.bind(this)
     this.toggleFlash = this.toggleFlash.bind(this)
@@ -150,19 +147,6 @@ export default class QRCodeScanner extends Component {
     } else {
       this.setState({ isAuthorized: true, isAuthorizationChecked: true })
     }
-  }
-
-  componentDidMount () {
-    if (this.props.fadeIn) {
-      Animated.sequence([
-        Animated.delay(1000),
-        Animated.timing(this.state.fadeInOpacity, {
-          toValue: 1,
-          easing: Easing.inOut(Easing.quad)
-        })
-      ]).start()
-    }
-    this.animate()
   }
 
   disable () {
@@ -198,28 +182,11 @@ export default class QRCodeScanner extends Component {
     }))
   }
 
-  animate () {
-    this.animatedValue.setValue(0)
-    Animated.timing(
-      this.animatedValue,
-      {
-        toValue: 1,
-        duration: 3000,
-        easing: Easing.linear
-      }
-    ).start(() => this.animate())
-  }
-
   _renderCameraMarker () {
     const {
       primaryColor,
       borderWidth
     } = this.props
-
-    const movingMargin = this.animatedValue.interpolate({
-      inputRange: [0, 0.5, 1],
-      outputRange: [0, 220, 0]
-    })
 
     return (
       <View style={styles.mainContainer}>
@@ -267,16 +234,18 @@ export default class QRCodeScanner extends Component {
                 }
               ]}
             />
-            <Animated.View
-              style={{
-                marginTop: movingMargin
-              }}
+            <Animatable.View
+              animation='slideInUp'
+              direction='alternate'
+              iterationCount='infinite'
+              duration={2000}
+              easing='linear'
               useNativeDriver
             >
               <View style={{ height: 1, marginBottom: 2, backgroundColor: primaryColor }} />
               <View style={{ height: 2, marginBottom: 2, backgroundColor: primaryColor }} />
               <View style={{ height: 3, backgroundColor: primaryColor }} />
-            </Animated.View>
+            </Animatable.View>
           </View>
           <View style={[styles.flex, styles.transparentBackground]} />
         </View>
@@ -322,15 +291,13 @@ export default class QRCodeScanner extends Component {
 
       if (this.props.fadeIn) {
         return (
-          <Animated.View
-            style={{
-              opacity: this.state.fadeInOpacity,
-              backgroundColor: 'transparent'
-            }}
+          <Animatable.View
+            animation='fadeIn'
+            style={{ backgroundColor: 'transparent' }}
             useNativeDriver
           >
             {element}
-          </Animated.View>
+          </Animatable.View>
         )
       }
       return element

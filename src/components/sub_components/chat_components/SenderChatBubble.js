@@ -21,37 +21,49 @@ import {
 
 class SenderChatBubble extends React.PureComponent {
   render () {
+    const isEditingThisMessage = this.props.isEditable && this.props.currentEditingMessageId === this.props.messageId
     return (
       <ChatBubble style={styles.container}>
-        <View style={styles.innerContainer}>
+        <View style={[styles.innerContainer]}>
           {this.props.children}
           {
             this.props.text
-              ? <Text style={styles.fontColor}>
+              ? <Text style={styles.textStyle}>
                 {this.props.text}
               </Text>
               : null
           }
           <View style={styles.editTimeContainer}>
             <Time
-              textStyle={styles.fontColor}
+              textStyle={styles.timeStyle}
               text={formatAMPM(this.props.time)}
             />
-            {
-              this.props.isEditable
-                ? <TouchableOpacity
-                  onPress={() => this.props.handleEditPress(this.props.messageId)}
-                >
-                  <Icon
-                    color={colors.senderBubbleText}
-                    name={'pencil'}
-                    type={'material-community'}
-                    size={16}
-                  />
-                </TouchableOpacity>
-                : null
-            }
           </View>
+        </View>
+        <View style={[styles.iconContainer, isEditingThisMessage ? styles.bottomAlign : null]}>
+          {
+            !isEditingThisMessage
+              ? <TouchableOpacity
+                onPress={() => this.props.handleEditPress(this.props.messageId)}
+              >
+                <Icon
+                  color={colors.primary}
+                  name={'circle-edit-outline'}
+                  type={'material-community'}
+                  size={24}
+                />
+              </TouchableOpacity>
+              : <TouchableOpacity
+                onPress={() => this.props.handleFinishedEdit()}
+              >
+                <Icon
+                  color={colors.cancelEditColor}
+                  name={'circle-with-cross'}
+                  type={'entypo'}
+                  size={24}
+                />
+              </TouchableOpacity>
+          }
         </View>
       </ChatBubble>
     )
@@ -60,23 +72,35 @@ class SenderChatBubble extends React.PureComponent {
 
 const styles = StyleSheet.create({
   container: {
-    alignSelf: 'flex-end'
+    alignSelf: 'flex-end',
+    flexDirection: 'row'
+  },
+  iconContainer: {
+    marginLeft: 4
+  },
+  bottomAlign: {
+    justifyContent: 'flex-end'
   },
   innerContainer: {
     maxWidth: '85%',
     minWidth: 100,
     backgroundColor: colors.senderBubbleBackground,
     borderRadius: 4,
-    borderTopRightRadius: 0,
     padding: 8,
     paddingLeft: 12
   },
-  fontColor: {
+  explicitMargin: {
+    marginRight: 28
+  },
+  textStyle: {
+    textAlign: 'right',
     color: colors.senderBubbleText
   },
+  timeStyle: {
+    color: colors.senderBubbleText,
+    fontSize: 8
+  },
   editTimeContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'flex-end'
   }
 })

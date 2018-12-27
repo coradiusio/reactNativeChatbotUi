@@ -169,6 +169,8 @@ class Generic extends React.PureComponent {
                     time={item.createdAt}
                     isEditable={item.isRightAnswer}
                     handleEditPress={this.props.handleEditPress}
+                    handleFinishedEdit={this.props.handleFinishedEdit}
+                    currentEditingMessageId={this.props.currentEditingMessageId}
                   >
                     {
                       attachment && attachment.type === 'image'
@@ -180,7 +182,7 @@ class Generic extends React.PureComponent {
                   </SenderChatBubble>
               }
             </View>
-            : <View>
+            : <View style={styles.radioContainer}>
               {
                 item.input.widget === 'radio'
                   ? this.radioChoices(item, this.props.currentQuestion)
@@ -247,6 +249,9 @@ const styles = StyleSheet.create({
   },
   flatlistContentContainer: {
     padding: 8
+  },
+  radioContainer: {
+    marginLeft: 36
   }
 })
 

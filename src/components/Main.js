@@ -37,6 +37,7 @@ export default class Main extends React.PureComponent {
     const {
       botMode,
       currentEditingAnswerOptionsMessageId,
+      currentEditingMessageId,
       currentQuestion,
       inputText,
       isEditingMode,
@@ -50,6 +51,7 @@ export default class Main extends React.PureComponent {
 
       fetchMessagesHistory,
       handleEditPress,
+      handleFinishedEdit,
       handleNextQuestion,
       handleRadioButton,
       handleStateValue,
@@ -113,7 +115,9 @@ export default class Main extends React.PureComponent {
                   handleEditPress={handleEditPress}
                   handleRadioButton={handleRadioButton}
                   isEditingMode={isEditingMode}
+                  currentEditingMessageId={currentEditingMessageId}
                   currentEditingAnswerOptionsMessageId={currentEditingAnswerOptionsMessageId}
+                  handleFinishedEdit={handleFinishedEdit}
                 />
                 {
                   !noMessageAvailable && isUserAllowedToAnswer && (isEditingMode ? widget !== 'radio' : true)

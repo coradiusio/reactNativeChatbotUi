@@ -39,7 +39,7 @@ class DateComponent extends React.PureComponent {
     }
 
     return (
-      <ChatBubble style={styles.container} isTyping={this.props.isTyping} isError={this.props.isError}>
+      <ChatBubble style={styles.container} isError={this.props.isError}>
         <View style={styles.innerContainer}>
           <View style={styles.textContainer}>
             <Text style={styles.font}>{dateTextToBeRendered}</Text>

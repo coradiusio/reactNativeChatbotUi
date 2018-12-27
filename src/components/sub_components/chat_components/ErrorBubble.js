@@ -19,7 +19,7 @@ import {
 class ErrorBubble extends React.PureComponent {
   render () {
     return (
-      <ReceiverChatBubble isError>
+      <ReceiverChatBubble isError showName>
         <View style={styles.flexDirectionRow}>
           <View style={styles.errorIconContainer}>
             <Icon
@@ -29,8 +29,8 @@ class ErrorBubble extends React.PureComponent {
               size={16}
             />
           </View>
-          <View style={styles.minWidth}>
-            <Text style={styles.fontColor}>
+          <View style={styles.innerContainer}>
+            <Text style={styles.text}>
               {this.props.errorMessage}
             </Text>
           </View>
@@ -41,7 +41,7 @@ class ErrorBubble extends React.PureComponent {
 }
 
 const styles = StyleSheet.create({
-  minWidth: {
+  innerContainer: {
     minWidth: '25%'
   },
   flexDirectionRow: {
@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
   errorIconContainer: {
     marginRight: 8
   },
-  fontColor: {
+  text: {
     color: colors.receiverBubbleText
   }
 })

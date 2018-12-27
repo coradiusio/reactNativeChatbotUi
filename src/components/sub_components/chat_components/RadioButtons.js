@@ -87,14 +87,14 @@ const styles = StyleSheet.create({
     minWidth: 100
   },
   buttonsContainer: {
-    marginTop: 4,
-    marginBottom: 4,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    marginTop: 0,
+    marginBottom: 0,
+    flexDirection: 'column',
+    flexWrap: 'wrap'
   },
   buttonContainer: {
     borderColor: colors.primary,
-    margin: 4
+    marginTop: 4
   },
   fillContainer: {
     backgroundColor: colors.primary

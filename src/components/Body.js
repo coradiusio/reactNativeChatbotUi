@@ -91,8 +91,10 @@ class Body extends React.PureComponent {
     botMode={this.props.botMode}
     role={this.props.role}
     handleEditPress={this.props.handleEditPress}
+    handleFinishedEdit={this.props.handleFinishedEdit}
     handleRadioButton={this.props.handleRadioButton}
     isEditingMode={this.props.isEditingMode}
+    currentEditingMessageId={this.props.currentEditingMessageId}
     currentEditingAnswerOptionsMessageId={this.props.currentEditingAnswerOptionsMessageId}
   />
 

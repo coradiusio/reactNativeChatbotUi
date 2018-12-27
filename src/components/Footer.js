@@ -1,7 +1,6 @@
 import React from 'react'
 
 import {
-  Animated,
   StyleSheet,
   View,
   Keyboard
@@ -27,14 +26,12 @@ import SearchableSelect from './sub_components/SearchableSelect'
 
 import {
   colors,
-  genericColors,
-  massageText
+  genericColors
 } from '../utils'
 
 class Footer extends React.PureComponent {
   constructor (props) {
     super(props)
-    this.animatedValue = new Animated.Value(0)
     this.state = {
       inputText: '',
       isDatePickerVisible: false
@@ -49,7 +46,6 @@ class Footer extends React.PureComponent {
     if (!isUndefined(inputText) && !isEmpty(inputText)) {
       this.inputTextSetter(inputText)
     }
-    this.backgroundColorAnimation()
   }
 
   inputTextSetter (value) {
@@ -166,50 +162,16 @@ class Footer extends React.PureComponent {
     }
   }
 
-  backgroundColorAnimation () {
-    this.animatedValue.setValue(0)
-    Animated.timing(
-      this.animatedValue,
-      {
-        toValue: 100,
-        duration: 1000
-      }
-    ).start(() => { this.backgroundColorAnimation() })
-  }
-
-  wrapper (component) {
-    const backgroundColor = this.props.isEditingMode ? this.animatedValue.interpolate({
-      inputRange: [0, 100],
-      outputRange: [colors.primary, colors.receiverBubbleBackground]
-    }) : null
-
-    return (
-      <View>
-        {
-          this.props.isEditingMode
-            ? <Animated.View
-              style={{ backgroundColor }}
-            >
-              <View style={styles.container}>
-                {component}
-              </View>
-            </Animated.View>
-            : <View style={styles.container}>
-              {component}
-            </View>
-        }
-      </View>
-    )
-  }
-
   render () {
     return (
       <Animatable.View
-        animation='slideInUp'
+        animation={this.props.isEditingMode ? 'flipInY' : 'slideInUp'}
         duration={500}
         useNativeDriver
       >
-        {this.wrapper(this.componentDecider())}
+        <View style={styles.container}>
+          {this.componentDecider()}
+        </View>
       </Animatable.View>
     )
   }
