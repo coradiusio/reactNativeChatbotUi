@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72px" height="48px" viewBox="0 0 72 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>Backarrow Copy</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="ChatBot" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-203.000000, -329.000000)" fill="#FFFFFF">
+            <g id="backarrow" transform="translate(203.000000, 329.000000)">
+                <path d="M71.0192615,21.7069382 L49.5933304,0.950111318 C48.2853443,-0.316703773 46.1655162,-0.316703773 44.859204,0.950111318 C43.5515527,2.21692641 43.5515527,4.26925767 44.859204,5.53639708 L60.5690984,20.7566647 L3.34780173,20.7566647 C1.49881083,20.7566647 0,22.2086696 0,23.9999189 C0,25.7914925 1.49881083,27.2431731 3.34780173,27.2431731 L60.5690984,27.2431731 L44.859204,42.4637651 C43.5515527,43.7305802 43.5515527,45.7829114 44.859204,47.0500508 C45.5130297,47.6834584 46.3697322,48 47.2260998,48 C48.0828023,48 48.9408439,47.6834584 49.5933304,47.0500508 L71.0192615,26.293224 C72.3269128,25.0260845 72.3269128,22.9737533 71.0192615,21.7069382 Z" id="arrow-pointing-to-right" transform="translate(36.000000, 24.000000) scale(-1, -1) translate(-36.000000, -24.000000) "></path>
+            </g>
+        </g>
+    </g>
+</svg>

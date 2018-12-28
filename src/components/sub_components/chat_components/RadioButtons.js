@@ -93,11 +93,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap'
   },
   buttonContainer: {
-    borderColor: colors.primary,
+    borderColor: colors.radioColor,
     marginTop: 4
   },
   fillContainer: {
-    backgroundColor: colors.primary
+    backgroundColor: colors.radioColor
   }
 })
 

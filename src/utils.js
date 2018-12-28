@@ -5,10 +5,13 @@ export const genericColors = {
   red: '#FF0000',
   orange: '#ff9100',
   green: '#00C853',
+  grey: '#f2f3f3',
   grey100: '#F5F5F5',
-  blue: '#2962FF',
-  lightGrey: '#9E9E9E',
-  darkGrey: '#4F5D64'
+  blue: '#2979ff',
+  lightGrey: '#9b9b9b',
+  darkGrey: '#4a4a4a',
+  blue500: '#2196f3'
+
 }
 
 export const colors = {
@@ -17,14 +20,17 @@ export const colors = {
   headerSubTitleColor: genericColors.white,
   errorIconColor: genericColors.red,
   cancelEditColor: genericColors.orange,
-  background: genericColors.white,
+  background: genericColors.grey,
   headerIconColor: genericColors.white,
   onlineIconColor: genericColors.green,
+  radioColor: genericColors.blue500,
 
-  receiverBubbleBackground: genericColors.grey100,
+  receiverBubbleBackground: genericColors.white,
   receiverBubbleText: genericColors.darkGrey,
+  receiverTimeText: genericColors.lightGrey,
   senderBubbleBackground: genericColors.blue,
-  senderBubbleText: genericColors.white
+  senderBubbleText: genericColors.white,
+  senderTimeText: genericColors.white
 }
 
 const numbersComparisionOperators = [

@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     color: colors.primary
   },
   timeStyle: {
-    color: colors.receiverBubbleText,
+    color: colors.receiverTimeText,
     fontSize: 8
   },
   fontColor: {

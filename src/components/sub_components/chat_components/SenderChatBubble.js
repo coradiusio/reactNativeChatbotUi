@@ -7,6 +7,8 @@ import {
   TouchableOpacity
 } from 'react-native'
 
+import Image from 'react-native-remote-svg'
+
 import {
   Icon
 } from 'reactNativeBasicComponents'
@@ -18,6 +20,9 @@ import {
   colors,
   formatAMPM
 } from '../../../utils'
+
+const editIcon = require('../../../../public/images/chatbotEdit.svg')
+const cancelEditIcon = require('../../../../public/images/chatbotEditcancel.svg')
 
 class SenderChatBubble extends React.PureComponent {
   render () {
@@ -46,21 +51,17 @@ class SenderChatBubble extends React.PureComponent {
               ? <TouchableOpacity
                 onPress={() => this.props.handleEditPress(this.props.messageId)}
               >
-                <Icon
-                  color={colors.primary}
-                  name={'circle-edit-outline'}
-                  type={'material-community'}
-                  size={24}
+                <Image
+                  source={editIcon}
+                  style={styles.image}
                 />
               </TouchableOpacity>
               : <TouchableOpacity
                 onPress={() => this.props.handleFinishedEdit()}
               >
-                <Icon
-                  color={colors.cancelEditColor}
-                  name={'circle-with-cross'}
-                  type={'entypo'}
-                  size={24}
+                <Image
+                  source={cancelEditIcon}
+                  style={styles.image}
                 />
               </TouchableOpacity>
           }
@@ -97,11 +98,15 @@ const styles = StyleSheet.create({
     color: colors.senderBubbleText
   },
   timeStyle: {
-    color: colors.senderBubbleText,
+    color: colors.senderTimeText,
     fontSize: 8
   },
   editTimeContainer: {
     alignItems: 'flex-end'
+  },
+  image: {
+    width: 24,
+    height: 24
   }
 })
 

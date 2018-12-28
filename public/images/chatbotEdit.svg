@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="72px" height="72px" viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 50.2 (55047) - http://www.bohemiancoding.com/sketch -->
+    <title>EditIcon</title>
+    <desc>Created with Sketch.</desc>
+    <defs>
+        <circle id="path-1" cx="36" cy="36" r="36"></circle>
+    </defs>
+    <g id="ChatBot" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Artboard" transform="translate(-123.000000, -75.000000)">
+            <g id="EditIcon" transform="translate(123.000000, 75.000000)">
+                <mask id="mask-2" fill="white">
+                    <use xlink:href="#path-1"></use>
+                </mask>
+                <use id="Mask" fill="#2979FF" fill-rule="evenodd" xlink:href="#path-1"></use>
+                <path d="M18.0371037,44.9994956 L18,52.405058 C18,52.8223062 18.1522204,53.2395545 18.4571368,53.5438276 C18.7620533,53.8481008 19.1407014,54 19.5607345,54 L26.9434228,53.9629746 C27.3615531,53.9629746 27.7421041,53.8106006 28.0470205,53.5068022 L53.5429821,28.062731 C54.1523393,27.4565581 54.1523393,26.4682637 53.5429821,25.8226919 L46.2364041,18.4560537 C45.6270469,17.8479821 44.6385658,17.8479821 43.9921049,18.4560537 L38.893198,23.5831276 L18.4942405,43.8982262 C18.2283306,44.2020247 18.0371037,44.5822474 18.0371037,44.9994956 Z M45.1328063,21.7973622 L50.2707197,26.9244361 L47.3794839,29.8095722 L42.2415706,24.6824983 L45.1328063,21.7973622 Z M21.1961522,45.6835169 L39.994893,26.9244361 L45.1328063,32.0515099 L26.3340656,50.7716666 L21.1590485,50.8105908 L21.1961522,45.6835169 Z" id="Fill-2-Copy-2" fill="#FFFFFF" fill-rule="evenodd" mask="url(#mask-2)"></path>
+            </g>
+        </g>
+    </g>
+</svg>

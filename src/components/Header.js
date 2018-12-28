@@ -2,8 +2,11 @@ import React from 'react'
 
 import {
   StyleSheet,
-  View
+  View,
+  TouchableOpacity
 } from 'react-native'
+
+import Image from 'react-native-remote-svg'
 
 import {
   Icon,
@@ -15,13 +18,16 @@ import {
   colors
 } from '../utils'
 
+const backArrowIcon = require('../../public/images/chatbotBackarrow.svg')
+const searchIcon = require('../../public/images/chatbotSearch.svg')
+const agentIcon = require('../../public/images/chatbotRM.svg')
+
 class Header extends React.PureComponent {
   render () {
     const {
       title,
       subtitle,
-      icon,
-      subtitleIcon
+      icon
     } = this.props
 
     return (
@@ -31,17 +37,28 @@ class Header extends React.PureComponent {
       >
         {
           typeof icon === 'object'
-            ? <View style={styles.leftIconWrapper}>
+            ? <TouchableOpacity
+              onPress={() => {}}
+              style={[styles.iconWrapper, styles.leftIconWrapper]}
+            >
               <Icon
                 color={icon.color}
                 name={icon.name}
                 type={icon.type}
                 size={icon.size}
               />
-            </View>
-            : null
+            </TouchableOpacity>
+            : <TouchableOpacity
+              onPress={() => {}}
+              style={[styles.iconWrapper, styles.leftIconWrapper]}
+            >
+              <Image
+                source={backArrowIcon}
+                style={styles.image}
+              />
+            </TouchableOpacity>
         }
-        <View style={styles.rightWrapper}>
+        <View style={styles.middleWrapper}>
           <Title
             text={title}
             style={styles.title}
@@ -49,19 +66,31 @@ class Header extends React.PureComponent {
           <View
             style={styles.iconSubtitleWrapper}
           >
-            <View style={styles.subtitleIconWrapper}>
-              <Icon
-                color={subtitleIcon.color}
-                name={subtitleIcon.name}
-                type={subtitleIcon.type}
-                size={subtitleIcon.size}
-              />
-            </View>
             <SubTitle
               text={this.props.isReceiverTyping ? 'Bot is typing...' : subtitle}
               style={styles.subtitle}
             />
           </View>
+        </View>
+        <View style={styles.rightWrapper}>
+          <TouchableOpacity
+            onPress={() => {}}
+            style={[styles.iconWrapper, styles.rightIconWrapper]}
+          >
+            <Image
+              source={searchIcon}
+              style={styles.image}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {}}
+            style={[styles.iconWrapper, styles.rightIconWrapper, { marginRight: 0 }]}
+          >
+            <Image
+              source={agentIcon}
+              style={styles.image}
+            />
+          </TouchableOpacity>
         </View>
       </View>
     )
@@ -70,19 +99,7 @@ class Header extends React.PureComponent {
 
 Header.defaultProps = {
   title: 'Chatbot Assistant',
-  subtitle: 'online',
-  icon: {
-    name: 'robot',
-    type: 'material-community',
-    color: '#000000',
-    size: 20
-  },
-  subtitleIcon: {
-    name: 'circle',
-    type: 'material-community',
-    color: 'green',
-    size: 12
-  }
+  subtitle: 'online'
 }
 
 const styles = StyleSheet.create({
@@ -90,15 +107,25 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     height: 64,
     flexDirection: 'row',
-    padding: 12
+    padding: 12,
+    paddingLeft: 24,
+    paddingRight: 24
   },
-  leftIconWrapper: {
-    marginRight: 16,
+  iconWrapper: {
     justifyContent: 'center',
     alignItems: 'center'
   },
-  rightWrapper: {
+  leftIconWrapper: {
+    marginRight: 32
+  },
+  rightIconWrapper: {
+    marginRight: 24
+  },
+  middleWrapper: {
     flex: 1
+  },
+  rightWrapper: {
+    flexDirection: 'row'
   },
   title: {
     margin: 0,
@@ -106,15 +133,15 @@ const styles = StyleSheet.create({
   },
   iconSubtitleWrapper: {
     flex: 1,
-    alignItems: 'center',
-    flexDirection: 'row'
-  },
-  subtitleIconWrapper: {
-    marginRight: 8
+    justifyContent: 'center'
   },
   subtitle: {
     margin: 0,
     color: colors.headerSubTitleColor
+  },
+  image: {
+    width: 24,
+    height: 24
   }
 })
 
