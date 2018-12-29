@@ -492,16 +492,18 @@ export default class ChatBotApp extends React.PureComponent {
     } = currentQuestion.input || {}
 
     let fullFileName = ''
-    if (source === 'camera') {
+    if (source === 'camera' && answerInput.indexOf('.') > -1) {
       fullFileName = answerInput.split('/').slice(-1)[0]
       fileName = fullFileName.split('.')[0]
-      fileExtension = fullFileName.split('.')[1]
+      fileExtension = fullFileName.split('.')[1] || ''
     }
 
     let inputValidatedObject
     if (source !== 'file' && source !== 'camera') {
       inputValidatedObject = validateInput(currentQuestion, answerInputModified, source)
     } else {
+      console.log('fileName :- ', fileName)
+      console.log('fileExtension :- ', fileExtension)
       inputValidatedObject = validateFile(currentQuestion, answerInputModified, fileName, fileExtension)
     }
 
@@ -585,8 +587,12 @@ export default class ChatBotApp extends React.PureComponent {
       }
     } else {
       if (inputValidatedObject.foundError) {
+        const {
+          errorMessage
+        } = inputValidatedObject
+
         if (this.state.isEditingMode) {
-          Alert('Error', inputValidatedObject.errorMessage)
+          Alert('Error', isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage)
         } else {
           let newMessages = []
           if (widget !== 'file' && widget !== 'camera') {
@@ -618,7 +624,7 @@ export default class ChatBotApp extends React.PureComponent {
           newMessages.push({
             source: 'text',
             message: {
-              text: inputValidatedObject.errorMessage
+              text: isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage
             },
             sender: botRole,
             isError: true

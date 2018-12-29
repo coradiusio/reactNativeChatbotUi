@@ -1,4 +1,4 @@
-import { get, isEmpty } from 'lodash'
+import { get, isUndefined, isEmpty } from 'lodash'
 
 export const genericColors = {
   white: '#FFFFFF',
@@ -244,7 +244,7 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
     errorMessage: ''
   }
 
-  if (fileName && fileExtension) {
+  if (!(isUndefined(fileExtension) || isEmpty(fileExtension))) {
     const {
       fileExtensions
     } = currentQuestion.input
@@ -255,6 +255,13 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
       result.foundError = true
       result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type'
     }
+  } else {
+    result.foundError = true
+  }
+
+  if (answerInputModified.indexOf('content://') > -1 && answerInputModified.indexOf('.') > -1) {
+    result.success = true
+    result.foundError = false
   }
   result.answerInputModified = answerInputModified
   return result

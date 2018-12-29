@@ -53,6 +53,7 @@ class Camera extends React.PureComponent {
   }
 
   handlePictureTaken = (data) => {
+    console.log('picture data :- ', data)
     this.setState({ isPictureCaptured: true, pictureData: data })
   }
 
@@ -134,9 +135,10 @@ class Camera extends React.PureComponent {
               <Image
                 source={{ uri: this.state.pictureData.uri }}
                 style={styles.imagePreview}
+                resizeMode='contain'
               />
               <View style={styles.correctIncorrectContainer}>
-                <View style={styles.iconsContainer}>
+                <View style={styles.iconsContainer} elevation={1}>
                   <TouchableOpacity
                     onPress={() => {
                       this.resetPicture()
