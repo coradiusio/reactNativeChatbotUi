@@ -3,18 +3,20 @@ import React from 'react'
 import {
   View,
   StyleSheet,
-  TouchableOpacity
+  TouchableOpacity,
+  Image
 } from 'react-native'
 
 import { RNCamera } from 'react-native-camera'
-import { DocumentPicker,DocumentPickerUtil } from 'react-native-document-picker'
+import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
 
 import {
   Icon
 } from 'reactNativeBasicComponents'
 
 import {
-  colors
+  colors,
+  genericColors
 } from '../../utils'
 
 const defaultCameraProps = {
@@ -28,7 +30,9 @@ class Camera extends React.PureComponent {
   constructor (props) {
     super(props)
     this.state = {
-      flashMode: 'off'
+      flashMode: 'off',
+      isPictureCaptured: false,
+      pictureData: {}
     }
 
     this.toggleFlash = this.toggleFlash.bind(this)
@@ -39,14 +43,21 @@ class Camera extends React.PureComponent {
       this.props.handleStateValue('showProgress', true)
       this.camera.takePictureAsync()
         .then(data => {
-          this.props.handleStateValue('openCameraView', false)
-          this.props.onCapture(data.uri, '', 'camera')
+          this.handlePictureTaken(data)
           this.props.handleStateValue('showProgress', false)
         })
         .catch(err => {
           console.log('error in taking picture :- ', err)
         })
     }
+  }
+
+  handlePictureTaken = (data) => {
+    this.setState({ isPictureCaptured: true, pictureData: data })
+  }
+
+  resetPicture = () => {
+    this.setState({ isPictureCaptured: false, pictureData: {} })
   }
 
   toggleFlash () {
@@ -58,70 +69,105 @@ class Camera extends React.PureComponent {
   render () {
     return (
       <View style={styles.cameraContainer}>
-        <RNCamera
-          ref={ref => {
-            this.camera = ref
-          }}
-          style={styles.camera}
-          type={this.props.cameraType}
-          autoFocus
-          flashMode={RNCamera.Constants.FlashMode[this.state.flashMode]}
-          {...Object.assign({}, defaultCameraProps, this.props.cameraProps)}
-        >
-          <View style={styles.cameraIconsContainer}>
-            <TouchableOpacity
-              onPress={() => this.toggleFlash()}
-            >
-              <View style={styles.iconContainer} elevation={2}>
-                <Icon
-                  color={colors.primary}
-                  name={this.state.flashMode === 'torch' ? 'flash' : 'flash-off'}
-                  type='material-community'
-                  size={24}
-                />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => this.takePicture()}
-            >
-              <View style={[styles.iconContainer, styles.bigIconContainer]} elevation={2}>
-                <Icon
-                  color={colors.primary}
-                  name={'gesture-double-tap'}
-                  type='material-community'
-                  size={48}
-                />
-              </View>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                DocumentPicker.show({
-                  filetype: [DocumentPickerUtil.allFiles()]
-                }, (error, res) => {
-                  if (error) {
-                    console.log('error :- ', error)
-                  } else {
-                    console.log(
-                      res.uri,
-                      res.type, // mime type
-                      res.fileName,
-                      res.fileSize
-                    )
-                  }
-                })
+        {
+          !this.state.isPictureCaptured
+            ? <RNCamera
+              ref={ref => {
+                this.camera = ref
               }}
+              style={styles.camera}
+              type={this.props.cameraType}
+              autoFocus
+              flashMode={RNCamera.Constants.FlashMode[this.state.flashMode]}
+              {...Object.assign({}, defaultCameraProps, this.props.cameraProps)}
             >
-              <View style={styles.iconContainer} elevation={2}>
-                <Icon
-                  color={colors.primary}
-                  name={'file-image'}
-                  type='material-community'
-                  size={24}
-                />
+              <View style={styles.cameraIconsContainer}>
+                <TouchableOpacity
+                  onPress={() => this.toggleFlash()}
+                >
+                  <View style={styles.iconContainer} elevation={2}>
+                    <Icon
+                      color={colors.primary}
+                      name={this.state.flashMode === 'torch' ? 'flash' : 'flash-off'}
+                      type='material-community'
+                      size={24}
+                    />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => this.takePicture()}
+                >
+                  <View style={[styles.iconContainer, styles.bigIconContainer]} elevation={2}>
+                    <Icon
+                      color={colors.primary}
+                      name={'gesture-double-tap'}
+                      type='material-community'
+                      size={48}
+                    />
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    DocumentPicker.show({
+                      filetype: [DocumentPickerUtil.allFiles()]
+                    }, (error, res) => {
+                      if (error) {
+                        console.log('error :- ', error)
+                      } else {
+                        this.handlePictureTaken(res)
+                      }
+                    })
+                  }}
+                >
+                  <View style={styles.iconContainer} elevation={2}>
+                    <Icon
+                      color={colors.primary}
+                      name={'file-image'}
+                      type='material-community'
+                      size={24}
+                    />
+                  </View>
+                </TouchableOpacity>
               </View>
-            </TouchableOpacity>
-          </View>
-        </RNCamera>
+            </RNCamera>
+            : <View style={styles.cameraContainer}>
+              <Image
+                source={{ uri: this.state.pictureData.uri }}
+                style={styles.imagePreview}
+              />
+              <View style={styles.correctIncorrectContainer}>
+                <View style={styles.iconsContainer}>
+                  <TouchableOpacity
+                    onPress={() => {
+                      this.resetPicture()
+                    }}
+                    style={styles.oneIconContainer}
+                  >
+                    <Icon
+                      color={colors.errorIconColor}
+                      name={'md-close'}
+                      type='ion'
+                      size={24}
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      this.props.onCapture(this.state.pictureData.uri, '', 'camera')
+                      this.props.handleStateValue('openCameraView', false)
+                    }}
+                    style={[styles.oneIconContainer, { borderRightWidth: 0 }]}
+                  >
+                    <Icon
+                      color={colors.primary}
+                      name={'md-checkmark'}
+                      type='ion'
+                      size={24}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+        }
       </View>
     )
   }
@@ -161,6 +207,34 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center'
+  },
+  imagePreview: {
+    flex: 1,
+    width: null,
+    height: null
+  },
+  correctIncorrectContainer: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    alignItems: 'center'
+  },
+  iconsContainer: {
+    flexDirection: 'row',
+    width: 200,
+    backgroundColor: genericColors.white,
+    borderRadius: 40
+  },
+  oneIconContainer: {
+    padding: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderColor: genericColors.grey100
   }
 })
 

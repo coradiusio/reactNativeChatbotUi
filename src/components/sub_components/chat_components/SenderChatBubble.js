@@ -9,10 +9,6 @@ import {
 
 import Image from 'react-native-remote-svg'
 
-import {
-  Icon
-} from 'reactNativeBasicComponents'
-
 import ChatBubble from './ChatBubble'
 import Time from './Time'
 
