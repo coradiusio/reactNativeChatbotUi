@@ -68,8 +68,8 @@ class RadioButtons extends React.PureComponent {
             }}
             value={this.state.value}
             buttonsContainerStyle={styles.buttonsContainer}
-            containerStyle={styles.buttonContainer}
-            fillContainerStyle={styles.fillContainer}
+            containerStyle={[styles.buttonContainer, this.state.pointerEvents === 'none' ? styles.dimBorder : null]}
+            fillContainerStyle={[styles.fillContainer, this.state.pointerEvents === 'none' ? styles.dimBackground : null]}
             pointerEvents={this.state.pointerEvents}
           />
         </View>
@@ -98,6 +98,12 @@ const styles = StyleSheet.create({
   },
   fillContainer: {
     backgroundColor: colors.radioColor
+  },
+  dimBorder: {
+    borderColor: 'rgba(33,150,243,0.5)'
+  },
+  dimBackground: {
+    backgroundColor: 'rgba(33,150,243,0.5)'
   }
 })
 

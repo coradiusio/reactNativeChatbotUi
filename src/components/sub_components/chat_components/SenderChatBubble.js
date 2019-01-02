@@ -41,7 +41,7 @@ class SenderChatBubble extends React.PureComponent {
             />
           </View>
         </View>
-        <View style={[styles.iconContainer, isEditingThisMessage ? styles.bottomAlign : null]}>
+        <View style={styles.iconContainer}>
           {
             !isEditingThisMessage
               ? <TouchableOpacity
@@ -74,9 +74,6 @@ const styles = StyleSheet.create({
   },
   iconContainer: {
     marginLeft: 4
-  },
-  bottomAlign: {
-    justifyContent: 'flex-end'
   },
   innerContainer: {
     maxWidth: '85%',
