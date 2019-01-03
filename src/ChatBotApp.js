@@ -7,7 +7,12 @@ import feathers from '@feathersjs/feathers'
 import socketio from '@feathersjs/socketio-client'
 
 import axios from 'axios'
-import { isUndefined, isEmpty } from 'lodash'
+import {
+  isUndefined,
+  isEmpty
+} from 'lodash'
+
+import Main from './components/Main'
 
 import {
   Alert,
@@ -20,8 +25,6 @@ import {
   stringCasing,
   validateFile
 } from './utils'
-
-import Main from './components/Main'
 
 const uuidv4 = require('uuid/v4')
 
@@ -212,7 +215,6 @@ export default class ChatBotApp extends React.PureComponent {
           this.setState({
             currentQuestion: response.data[0]
           }, () => {
-            console.log('is receiver typing :- ', this.state.isReceiverTyping)
             this.handleNextQuestion()
           })
         } else {
@@ -406,7 +408,7 @@ export default class ChatBotApp extends React.PureComponent {
       currentEditingAnswerOptionsMessageId: '',
       currentEditingQuestion: {}
     }, () => {
-      if (isEmpty(this.state.currentQuestion)) {
+      if (this.state.botMode === 'question' && isEmpty(this.state.currentQuestion)) {
         this.setState({ isUserAllowedToAnswer: false })
       }
     })
@@ -470,11 +472,170 @@ export default class ChatBotApp extends React.PureComponent {
     return message
   }
 
+  uploadFile (url, base64) {
+    const config = {
+      timeout: 300000,
+      onUploadProgress: function (progressEvent) {
+        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+        console.log('percentCompleted :- ', percentCompleted)
+      }
+    }
+    let formData = new FormData()
+    formData.append('file', base64)
+    axios.post(url, formData, config)
+      .then(response => {
+        console.log('file uploaded :- ', response)
+      })
+      .catch(err => {
+        console.log('error in file uploading :- ', err)
+      })
+  }
+
+  handleNewMessage (currentQuestion, answerInput, formValue, source, fileName, fileExtension, state) {
+    const {
+      widget
+    } = currentQuestion.input || {}
+
+    let newMessage
+    if (widget !== 'file' && widget !== 'camera') {
+      newMessage = {
+        source,
+        message: {
+          text: answerInput
+        },
+        isAnswer: true,
+        answerOfNode: currentQuestion.node,
+        isRightAnswer: true,
+        sender: this.state.role,
+        showTime: true,
+        messageId: uuidv4()
+      }
+      if (widget === 'radio') {
+        newMessage.state = { ...state }
+        newMessage.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
+      }
+    } else {
+      newMessage = {
+        message: this.attachmentSetter(answerInput, fileExtension),
+        source,
+        fileName,
+        fileExtension,
+        answerOfNode: currentQuestion.node,
+        isAnswer: true,
+        isRightAnswer: true,
+        sender: this.state.role,
+        showTime: true,
+        messageId: uuidv4()
+      }
+    }
+
+    this.createNewMessage(newMessage)
+      .then(() => {
+        // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
+        if (this.state.inputText !== '') {
+          this.handleStateValue('inputText', '')
+        }
+
+        this.fetchNextQuestion()
+      })
+      .catch(err => {
+        console.log('usr msg not sent :- ', err)
+      })
+  }
+
+  handleEditedMessage (currentQuestion, answerInput, formValue, fileName, fileExtension, state) {
+    const {
+      widget
+    } = currentQuestion.input || {}
+
+    this.setState({ showProgress: true }, () => {
+      const messageItem = JSON.parse(JSON.stringify((this.state.messages.filter(item => item.messageId === this.state.currentEditingMessageId))[0] || {}))
+      console.log('messageItem :- ', messageItem)
+      if (!isEmpty(messageItem)) {
+        if (widget === 'text') {
+          messageItem.message.text = this.state.inputText
+        } else if (widget === 'radio') {
+          messageItem.state = { ...state }
+          messageItem.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
+        } else if (['calendar', 'qrscanner'].indexOf(widget) > -1) {
+          messageItem.message.text = answerInput
+        } else if (['camera', 'file'].indexOf(widget) > -1) {
+          messageItem.message = this.attachmentSetter(answerInput, fileExtension)
+        }
+        this.patchExistingMessage(null, messageItem, { query: { messageId: messageItem.messageId } })
+          .then(() => {
+            timer = setTimeout(() => {
+              this.handleFinishedEdit()
+            }, 1000)
+          })
+          .catch(err => {
+            Toast('Something Went Wrong, Coudn\'t update message')
+            console.log('Something Went Wrong, Coudn\'t update message :- ', err)
+            this.handleFinishedEdit()
+          })
+      }
+    })
+  }
+
+  handleErrorMessage (currentQuestion, inputValidatedObject, answerInput, source, fileName, fileExtension) {
+    const {
+      widget
+    } = currentQuestion.input || {}
+
+    if (inputValidatedObject.foundError) {
+      const {
+        errorMessage
+      } = inputValidatedObject
+
+      if (this.state.isEditingMode) {
+        Alert('Error', isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage)
+      } else {
+        let newMessages = []
+        if (widget !== 'file' && widget !== 'camera') {
+          newMessages.push({
+            source,
+            message: {
+              text: answerInput
+            },
+            answerOfNode: currentQuestion.node,
+            isAnswer: true,
+            isRightAnswer: false,
+            showTime: true,
+            sender: this.state.role
+          })
+        } else {
+          newMessages.push({
+            message: this.attachmentSetter(answerInput, fileExtension),
+            source: source,
+            answerOfNode: currentQuestion.node,
+            isAnswer: true,
+            isRightAnswer: false,
+            fileName,
+            fileExtension,
+            showTime: true,
+            sender: this.state.role
+          })
+        }
+
+        newMessages.push({
+          source: 'text',
+          message: {
+            text: isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage
+          },
+          sender: botRole,
+          isError: true
+        })
+
+        this.createNewMessage(newMessages)
+      }
+    }
+  }
+
   submitInputValue (answerInput, formValue = '', source = 'text', state, fileName = '', fileExtension = '') {
     // first replace all spaces by single for safety
     answerInput = answerInput.replace(/\s\s+/g, ' ').trim()
 
-    const currentQuestion = this.state.isEditingMode ? { ...this.state.currentEditingQuestion } : { ...this.state.currentQuestion }
+    const currentQuestion = JSON.parse(JSON.stringify(this.state.isEditingMode ? this.state.currentEditingQuestion : this.state.currentQuestion))
 
     if (currentQuestion.validateInput && currentQuestion.validateInput.casing) {
       answerInput = stringCasing(answerInput, currentQuestion.validateInput.casing.trim().toLowerCase())
@@ -486,10 +647,6 @@ export default class ChatBotApp extends React.PureComponent {
     } else {
       answerInputModified = answerInput.replace(/\s\s+/g, ' ').trim()
     }
-
-    const {
-      widget
-    } = currentQuestion.input || {}
 
     let fullFileName = ''
     if (source === 'camera' && answerInput.indexOf('.') > -1) {
@@ -511,148 +668,13 @@ export default class ChatBotApp extends React.PureComponent {
 
     if (inputValidatedObject.success) {
       if (this.state.isEditingMode) {
-        this.setState({ showProgress: true }, () => {
-          const messageItem = JSON.parse(JSON.stringify((this.state.messages.filter(item => item.messageId === this.state.currentEditingMessageId))[0] || {}))
-          console.log('messageItem :- ', messageItem)
-          if (!isEmpty(messageItem)) {
-            if (widget === 'text') {
-              messageItem.message.text = this.state.inputText
-            } else if (widget === 'radio') {
-              messageItem.state = { ...state }
-              messageItem.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
-            } else if (['calendar', 'qrscanner'].indexOf(widget) > -1) {
-              messageItem.message.text = answerInput
-            } else if (['camera', 'file'].indexOf(widget) > -1) {
-              messageItem.message = this.attachmentSetter(answerInput, fileExtension)
-            }
-            this.patchExistingMessage(null, messageItem, { query: { messageId: messageItem.messageId } })
-              .then(() => {
-                timer = setTimeout(() => {
-                  this.handleFinishedEdit()
-                }, 1000)
-              })
-              .catch(err => {
-                Toast('Something Went Wrong, Coudn\'t update message')
-                console.log('Something Went Wrong, Coudn\'t update message :- ', err)
-                this.handleFinishedEdit()
-              })
-          }
-        })
+        this.handleEditedMessage(currentQuestion, answerInput, formValue, fileName, fileExtension, state)
       } else {
-        let newMessage
-        if (widget !== 'file' && widget !== 'camera') {
-          newMessage = {
-            source,
-            message: {
-              text: answerInput
-            },
-            isAnswer: true,
-            answerOfNode: currentQuestion.node,
-            isRightAnswer: true,
-            sender: this.state.role,
-            showTime: true,
-            messageId: uuidv4()
-          }
-          if (widget === 'radio') {
-            newMessage.state = { ...state }
-            newMessage.rawValue = this.computeRawValueForRadioOptions(currentQuestion, answerInput, formValue)
-          }
-        } else {
-          newMessage = {
-            message: this.attachmentSetter(answerInput, fileExtension),
-            source,
-            fileName,
-            fileExtension,
-            answerOfNode: currentQuestion.node,
-            isAnswer: true,
-            isRightAnswer: true,
-            sender: this.state.role,
-            showTime: true,
-            messageId: uuidv4()
-          }
-        }
-
-        this.createNewMessage(newMessage)
-          .then(() => {
-            // here we need to fetch answer validation if any thing wrong bcz of additional validation , if success then call fetchNextQuestion
-            if (this.state.inputText !== '') {
-              this.handleStateValue('inputText', '')
-            }
-
-            this.fetchNextQuestion()
-          })
-          .catch(err => {
-            console.log('usr msg not sent :- ', err)
-          })
+        this.handleNewMessage(currentQuestion, answerInput, formValue, source, fileName, fileExtension, state)
       }
     } else {
-      if (inputValidatedObject.foundError) {
-        const {
-          errorMessage
-        } = inputValidatedObject
-
-        if (this.state.isEditingMode) {
-          Alert('Error', isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage)
-        } else {
-          let newMessages = []
-          if (widget !== 'file' && widget !== 'camera') {
-            newMessages.push({
-              source,
-              message: {
-                text: answerInput
-              },
-              answerOfNode: currentQuestion.node,
-              isAnswer: true,
-              isRightAnswer: false,
-              showTime: true,
-              sender: this.state.role
-            })
-          } else {
-            newMessages.push({
-              message: this.attachmentSetter(answerInput, fileExtension),
-              source: source,
-              answerOfNode: currentQuestion.node,
-              isAnswer: true,
-              isRightAnswer: false,
-              fileName,
-              fileExtension,
-              showTime: true,
-              sender: this.state.role
-            })
-          }
-
-          newMessages.push({
-            source: 'text',
-            message: {
-              text: isEmpty(errorMessage) ? 'Something Went Wrong !' : errorMessage
-            },
-            sender: botRole,
-            isError: true
-          })
-
-          this.createNewMessage(newMessages)
-        }
-      }
+      this.handleErrorMessage(currentQuestion, inputValidatedObject, answerInput, source, fileName, fileExtension)
     }
-  }
-
-  uploadFile (url, base64) {
-    const config = {
-      timeout: 300000,
-      onUploadProgress: function (progressEvent) {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-        console.log('percentCompleted :- ', percentCompleted)
-      }
-    }
-    let formData = new FormData()
-    formData.append('file', base64)
-    axios.post(url, formData, config)
-      .then(response => {
-        console.log('file uploaded :- ', response)
-      })
-      .catch(err => {
-        console.log('error in file uploading :- ', err)
-      })
   }
 
   render () {
