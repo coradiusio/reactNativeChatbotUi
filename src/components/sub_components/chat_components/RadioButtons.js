@@ -94,7 +94,9 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     borderColor: colors.radioColor,
-    marginTop: 4
+    marginTop: 4,
+    paddingTop: 0,
+    paddingBottom: 0
   },
   fillContainer: {
     backgroundColor: colors.radioColor
