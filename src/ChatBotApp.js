@@ -84,7 +84,6 @@ export default class ChatBotApp extends React.PureComponent {
     this.questionsService = this.app.service('questions')
 
     this.submitInputValue = this.submitInputValue.bind(this)
-    this.handleNextQuestion = this.handleNextQuestion.bind(this)
     this.handleStateValue = this.handleStateValue.bind(this)
     this.handleSenderTyping = this.handleSenderTyping.bind(this)
     this.fetchMessagesHistory = this.fetchMessagesHistory.bind(this)
