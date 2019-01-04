@@ -631,9 +631,6 @@ export default class ChatBotApp extends React.PureComponent {
   }
 
   submitInputValue (answerInput, formValue = '', source = 'text', state, fileName = '', fileExtension = '') {
-    // first replace all spaces by single for safety
-    answerInput = answerInput.replace(/\s\s+/g, ' ').trim()
-
     const currentQuestion = JSON.parse(JSON.stringify(this.state.isEditingMode ? this.state.currentEditingQuestion : this.state.currentQuestion))
 
     if (currentQuestion.validateInput && currentQuestion.validateInput.casing) {
