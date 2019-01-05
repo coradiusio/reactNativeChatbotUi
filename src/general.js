@@ -1,7 +1,10 @@
 import {
   Alert as _Alert,
-  ToastAndroid
+  ToastAndroid,
+  Platform
 } from 'react-native'
+
+export const platform = Platform.OS
 
 export const Toast = (text) => {
   ToastAndroid.showWithGravityAndOffset(

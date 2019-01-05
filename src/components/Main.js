@@ -15,6 +15,10 @@ import Progress from './sub_components/Progress'
 import Camera from './sub_components/Camera'
 import QRCodeScanner from './sub_components/QRCodeScanner'
 
+import {
+  platform
+} from '../general'
+
 export default class Main extends React.PureComponent {
   componentDidMount () {
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress)
@@ -65,13 +69,15 @@ export default class Main extends React.PureComponent {
 
     const noMessageAvailable = messages.length === 0
 
+    console.log('platform :- ', platform)
+
     return (
       <View style={styles.flexView}>
         {
           openCameraView
             ? <View style={styles.flexView}>
               {
-                widget === 'qrscanner'
+                widget === 'qrscanner' && platform !== 'web'
                   ? <QRCodeScanner
                     onRead={(e) => {
                       handleStateValue('openCameraView', false)
@@ -82,7 +88,7 @@ export default class Main extends React.PureComponent {
                   />
                   : <View style={styles.flexView}>
                     {
-                      widget === 'camera' || widget === 'file'
+                      (widget === 'camera' || widget === 'file') && platform !== 'web'
                         ? <Camera
                           handleStateValue={handleStateValue}
                           onCapture={submitInputValue}
