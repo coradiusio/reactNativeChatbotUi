@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node node_modules/react-native/local-cli/cli.js start",
+    "eject": "node node_modules/react-native/local-cli/cli.js eject",
     "test": "jest",
     "start-web": "react-scripts start",
     "build-web": "react-scripts build",
