@@ -92,7 +92,6 @@ export default class Main extends React.PureComponent {
                         ? <Camera
                           handleStateValue={handleStateValue}
                           onCapture={submitInputValue}
-
                         />
                         : null
                     }

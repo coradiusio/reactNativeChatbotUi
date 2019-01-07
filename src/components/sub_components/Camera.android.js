@@ -8,7 +8,7 @@ import {
 } from 'react-native'
 
 import { RNCamera } from 'react-native-camera'
-// import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
+import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
 
 import {
   Icon
@@ -109,15 +109,15 @@ class Camera extends React.PureComponent {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => {
-                    // DocumentPicker.show({
-                    //   filetype: [DocumentPickerUtil.allFiles()]
-                    // }, (error, res) => {
-                    //   if (error) {
-                    //     console.log('error :- ', error)
-                    //   } else {
-                    //     this.handlePictureTaken(res)
-                    //   }
-                    // })
+                    DocumentPicker.show({
+                      filetype: [DocumentPickerUtil.allFiles()]
+                    }, (error, res) => {
+                      if (error) {
+                        console.log('error :- ', error)
+                      } else {
+                        this.handlePictureTaken(res)
+                      }
+                    })
                   }}
                 >
                   <View style={styles.iconContainer} elevation={2}>

@@ -4,7 +4,6 @@ import PropTypes from 'prop-types'
 import {
   StyleSheet,
   Vibration,
-  Easing,
   View,
   Text,
   Dimensions,
