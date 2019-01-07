@@ -35,5 +35,5 @@ const styles = StyleSheet.create({
   }
 })
 
-AppRegistry.registerComponent('App', () => App);
-AppRegistry.runApplication('App', { rootTag: document.getElementById('root') });
+AppRegistry.registerComponent('App', () => App)
+AppRegistry.runApplication('App', { rootTag: document.getElementById('root') })

@@ -106,6 +106,7 @@
     "@babel/preset-env": "^7.2.3",
     "@babel/preset-react": "^7.0.0",
     "babel-jest": "23.6.0",
+    "babel-preset-react-native": "^4.0.1",
     "jest": "23.6.0",
     "metro-react-native-babel-preset": "0.48.5",
     "react-scripts": "^2.1.3",

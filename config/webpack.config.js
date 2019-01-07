@@ -264,7 +264,7 @@ module.exports = function(webpackEnv) {
       alias: {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-        'react-native': 'react-native-web',
+        'react-native': 'react-native-web'
       },
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -287,7 +287,7 @@ module.exports = function(webpackEnv) {
     },
     module: {
       strictExportPresence: true,
-      noParse: /react-native-camera/,
+      noParse: /react-native-camera|react-native-material-kit|react-native-modal|react-native-dash|react-native-swiper|react-native-permissions|react-native-remote-svg|react-native-vector-icons|react-native-typography|react-native-material-ui|react-native-modal-datetime-picker|react-native-progressive-input|react-native-simple-radio-button|react-native-material-color/,
       rules: [
         // Disable require.ensure as it's not a standard language feature.
         { parser: { requireEnsure: false } },
@@ -347,7 +347,7 @@ module.exports = function(webpackEnv) {
                         },
                       },
                     },
-                  ],
+                  ]
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
@@ -363,7 +363,11 @@ module.exports = function(webpackEnv) {
               test: /\.(js|mjs)$/,
               exclude: /@babel(?:\/|\\{1,2})runtime/,
               loader: require.resolve('babel-loader'),
-              options: { babelrcRoots: ['.', '../'] },
+              options: { 
+                presets: [
+                  'react-app'
+                ]
+              },
               /*options: {
                 babelrc: false,
                 configFile: false,
