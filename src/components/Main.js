@@ -71,33 +71,89 @@ export default class Main extends React.PureComponent {
 
     console.log('platform :- ', platform)
 
+    // return (
+    //   <View style={styles.flexView}>
+    //     {
+    //       openCameraView
+    //         ? <View style={styles.flexView}>
+    //           {
+    //             widget === 'qrscanner' && platform !== 'web'
+    //               ? <QRCodeScanner
+    //                 onRead={(e) => {
+    //                   handleStateValue('openCameraView', false)
+    //                   submitInputValue(e.data)
+    //                 }}
+    //                 cameraProps={currentQuestion.input.cameraProps}
+    //                 showMarker
+    //               />
+    //               : <View style={styles.flexView}>
+    //                 {
+    //                   (widget === 'camera' || widget === 'file') && platform !== 'web'
+    //                     ? <Camera
+    //                       handleStateValue={handleStateValue}
+    //                       onCapture={submitInputValue}
+    //                     />
+    //                     : null
+    //                 }
+    //               </View>
+    //           }
+    //         </View>
+    //         : <View style={styles.flexView}>
+    //           <Header
+    //             title={uiData.header.title}
+    //             subtitle={uiData.header.subtitle}
+    //             icon={uiData.header.icon}
+    //             subtitleIcon={uiData.header.subtitleIcon}
+    //             isReceiverTyping={isReceiverTyping}
+    //           />
+    //           <KeyboardAvoidingView style={styles.flexView} behavior='padding' keyboardVerticalOffset={-500}>
+    //             <Body
+    //               loader={uiData.loader}
+    //               messages={messages}
+    //               currentQuestion={currentQuestion}
+    //               handleNextQuestion={handleNextQuestion}
+    //               handleStateValue={handleStateValue}
+    //               noMessageAvailable={noMessageAvailable}
+    //               role={role}
+    //               botMode={botMode}
+    //               fetchMessagesHistory={fetchMessagesHistory}
+    //               handleEditPress={handleEditPress}
+    //               handleRadioButton={handleRadioButton}
+    //               isEditingMode={isEditingMode}
+    //               currentEditingMessageId={currentEditingMessageId}
+    //               currentEditingAnswerOptionsMessageId={currentEditingAnswerOptionsMessageId}
+    //               handleFinishedEdit={handleFinishedEdit}
+    //             />
+    //             {
+    //               !noMessageAvailable && isUserAllowedToAnswer && (isEditingMode ? widget !== 'radio' : true)
+    //                 ? <Footer
+    //                   icon={uiData.footer.icon}
+    //                   submitInputValue={submitInputValue}
+    //                   handleStateValue={handleStateValue}
+    //                   isUserAllowedToAnswer={isUserAllowedToAnswer}
+    //                   currentQuestion={currentQuestion}
+    //                   handleSenderTyping={handleSenderTyping}
+    //                   inputText={inputText}
+    //                   isEditingMode={isEditingMode}
+    //                 />
+    //                 : null
+    //             }
+    //           </KeyboardAvoidingView>
+    //         </View>
+    //     }
+    //     {
+    //       showProgress
+    //         ? <Progress />
+    //         : null
+    //     }
+    //   </View>
+    // )
+
     return (
       <View style={styles.flexView}>
         {
           openCameraView
-            ? <View style={styles.flexView}>
-              {
-                widget === 'qrscanner' && platform !== 'web'
-                  ? <QRCodeScanner
-                    onRead={(e) => {
-                      handleStateValue('openCameraView', false)
-                      submitInputValue(e.data)
-                    }}
-                    cameraProps={currentQuestion.input.cameraProps}
-                    showMarker
-                  />
-                  : <View style={styles.flexView}>
-                    {
-                      (widget === 'camera' || widget === 'file') && platform !== 'web'
-                        ? <Camera
-                          handleStateValue={handleStateValue}
-                          onCapture={submitInputValue}
-                        />
-                        : null
-                    }
-                  </View>
-              }
-            </View>
+            ? null
             : <View style={styles.flexView}>
               <Header
                 title={uiData.header.title}
@@ -106,39 +162,6 @@ export default class Main extends React.PureComponent {
                 subtitleIcon={uiData.header.subtitleIcon}
                 isReceiverTyping={isReceiverTyping}
               />
-              <KeyboardAvoidingView style={styles.flexView} behavior='padding' keyboardVerticalOffset={-500}>
-                <Body
-                  loader={uiData.loader}
-                  messages={messages}
-                  currentQuestion={currentQuestion}
-                  handleNextQuestion={handleNextQuestion}
-                  handleStateValue={handleStateValue}
-                  noMessageAvailable={noMessageAvailable}
-                  role={role}
-                  botMode={botMode}
-                  fetchMessagesHistory={fetchMessagesHistory}
-                  handleEditPress={handleEditPress}
-                  handleRadioButton={handleRadioButton}
-                  isEditingMode={isEditingMode}
-                  currentEditingMessageId={currentEditingMessageId}
-                  currentEditingAnswerOptionsMessageId={currentEditingAnswerOptionsMessageId}
-                  handleFinishedEdit={handleFinishedEdit}
-                />
-                {
-                  !noMessageAvailable && isUserAllowedToAnswer && (isEditingMode ? widget !== 'radio' : true)
-                    ? <Footer
-                      icon={uiData.footer.icon}
-                      submitInputValue={submitInputValue}
-                      handleStateValue={handleStateValue}
-                      isUserAllowedToAnswer={isUserAllowedToAnswer}
-                      currentQuestion={currentQuestion}
-                      handleSenderTyping={handleSenderTyping}
-                      inputText={inputText}
-                      isEditingMode={isEditingMode}
-                    />
-                    : null
-                }
-              </KeyboardAvoidingView>
             </View>
         }
         {

@@ -8,7 +8,9 @@
     "start": "node node_modules/react-native/local-cli/cli.js start",
     "eject": "node node_modules/react-native/local-cli/cli.js eject",
     "test": "jest",
-    "start-web": "node scripts/start.js"
+    "start-web": "node scripts/start.js",
+    "build-web": "node scripts/build.js",
+    "test-web": "node scripts/test.js"
   },
   "repository": {
     "type": "git",
@@ -89,7 +91,7 @@
     "react-native-web": "^0.9.13",
     "resolve": "1.8.1",
     "sass-loader": "7.1.0",
-    "reactNativeBasicComponents": "git://github.com/coradiusio/reactNativeBasicComponents#feature/upgrade_to_rn0.57.5",
+    "reactNativeBasicComponents": "git://github.com/coradiusio/reactNativeBasicComponents#feature/robin_primary",
     "socket.io-client": "2.1.1",
     "style-loader": "0.23.0",
     "terser-webpack-plugin": "1.1.0",

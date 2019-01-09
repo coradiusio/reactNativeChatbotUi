@@ -7,9 +7,6 @@ import {
   Image
 } from 'react-native'
 
-import { RNCamera } from 'react-native-camera'
-import { DocumentPicker, DocumentPickerUtil } from 'react-native-document-picker'
-
 import {
   Icon
 } from 'reactNativeBasicComponents'
@@ -72,65 +69,7 @@ class Camera extends React.PureComponent {
       <View style={styles.cameraContainer}>
         {
           !this.state.isPictureCaptured
-            ? <RNCamera
-              ref={ref => {
-                this.camera = ref
-              }}
-              style={styles.camera}
-              type={this.props.cameraType}
-              autoFocus
-              flashMode={RNCamera.Constants.FlashMode[this.state.flashMode]}
-              {...Object.assign({}, defaultCameraProps, this.props.cameraProps)}
-            >
-              <View style={styles.cameraIconsContainer}>
-                <TouchableOpacity
-                  onPress={() => this.toggleFlash()}
-                >
-                  <View style={styles.iconContainer} elevation={2}>
-                    <Icon
-                      color={colors.primary}
-                      name={this.state.flashMode === 'torch' ? 'flash' : 'flash-off'}
-                      type='material-community'
-                      size={24}
-                    />
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => this.takePicture()}
-                >
-                  <View style={[styles.iconContainer, styles.bigIconContainer]} elevation={2}>
-                    <Icon
-                      color={colors.primary}
-                      name={'gesture-double-tap'}
-                      type='material-community'
-                      size={48}
-                    />
-                  </View>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => {
-                    DocumentPicker.show({
-                      filetype: [DocumentPickerUtil.allFiles()]
-                    }, (error, res) => {
-                      if (error) {
-                        console.log('error :- ', error)
-                      } else {
-                        this.handlePictureTaken(res)
-                      }
-                    })
-                  }}
-                >
-                  <View style={styles.iconContainer} elevation={2}>
-                    <Icon
-                      color={colors.primary}
-                      name={'file-image'}
-                      type='material-community'
-                      size={24}
-                    />
-                  </View>
-                </TouchableOpacity>
-              </View>
-            </RNCamera>
+            ? null
             : <View style={styles.cameraContainer}>
               <Image
                 source={{ uri: this.state.pictureData.uri }}

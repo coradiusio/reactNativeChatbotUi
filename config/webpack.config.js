@@ -24,7 +24,6 @@ const ModuleNotFoundPlugin = require('react-dev-utils/ModuleNotFoundPlugin');
 const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin-alt');
 const typescriptFormatter = require('react-dev-utils/typescriptFormatter');
 
-
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
 // Some apps do not need the benefits of saving a web request, so not inlining the chunk
@@ -264,7 +263,7 @@ module.exports = function(webpackEnv) {
       alias: {
         // Support React Native Web
         // https://www.smashingmagazine.com/2016/08/a-glimpse-into-the-future-with-react-native-for-web/
-        'react-native': 'react-native-web'
+        'react-native': 'react-native-web',
       },
       plugins: [
         // Adds support for installing with Plug'n'Play, leading to faster installs and adding
@@ -275,7 +274,7 @@ module.exports = function(webpackEnv) {
         // To fix this, we prevent you from importing files out of src/ -- if you'd like to,
         // please link the files into your node_modules/ and let module-resolution kick in.
         // Make sure your source files are compiled, as they will not be processed in any way.
-        new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
+        //new ModuleScopePlugin(paths.appSrc, [paths.appPackageJson]),
       ],
     },
     resolveLoader: {
@@ -286,8 +285,8 @@ module.exports = function(webpackEnv) {
       ],
     },
     module: {
+      //noParse: /react-native-camera|react-native-permissions|react-native-modal|react-native-dash|react-native-material-kit|react-native-remote-svg|react-native-swiper/,
       strictExportPresence: true,
-      noParse: /react-native-camera|react-native-material-kit|react-native-modal|react-native-dash|react-native-swiper|react-native-permissions|react-native-remote-svg|react-native-vector-icons|react-native-typography|react-native-material-ui|react-native-modal-datetime-picker|react-native-progressive-input|react-native-simple-radio-button|react-native-material-color/,
       rules: [
         // Disable require.ensure as it's not a standard language feature.
         { parser: { requireEnsure: false } },
@@ -307,7 +306,7 @@ module.exports = function(webpackEnv) {
               loader: require.resolve('eslint-loader'),
             },
           ],
-          include: paths.appSrc,
+          include: paths.appSrc
         },
         {
           // "oneOf" will traverse all following loaders until one will
@@ -329,12 +328,16 @@ module.exports = function(webpackEnv) {
             // The preset includes JSX, Flow, TypeScript, and some ESnext features.
             {
               test: /\.(js|mjs|jsx|ts|tsx)$/,
+              exclude: /react-native-modal|react-native-camera/,
               include: paths.appSrc,
               loader: require.resolve('babel-loader'),
               options: {
                 customize: require.resolve(
                   'babel-preset-react-app/webpack-overrides'
                 ),
+                presets: [
+                  'react-app'
+                ],
                 
                 plugins: [
                   [
@@ -347,7 +350,7 @@ module.exports = function(webpackEnv) {
                         },
                       },
                     },
-                  ]
+                  ],
                 ],
                 // This is a feature of `babel-loader` for webpack (not Babel itself).
                 // It enables caching results in ./node_modules/.cache/babel-loader/
@@ -363,12 +366,7 @@ module.exports = function(webpackEnv) {
               test: /\.(js|mjs)$/,
               exclude: /@babel(?:\/|\\{1,2})runtime/,
               loader: require.resolve('babel-loader'),
-              options: { 
-                presets: [
-                  'react-app'
-                ]
-              },
-              /*options: {
+              options: {
                 babelrc: false,
                 configFile: false,
                 compact: false,
@@ -377,6 +375,12 @@ module.exports = function(webpackEnv) {
                     require.resolve('babel-preset-react-app/dependencies'),
                     { helpers: true },
                   ],
+                  [
+                    'react-app'
+                  ]
+                ],
+                plugins: [
+                  
                 ],
                 cacheDirectory: true,
                 cacheCompression: isEnvProduction,
@@ -386,7 +390,21 @@ module.exports = function(webpackEnv) {
                 // debugger to show the original code. Instead, the code
                 // being evaluated would be much more helpful.
                 sourceMaps: false,
-              },*/
+              },
+            },
+            {
+              test: /\.ttf$/,
+              use: [
+                {
+                  loader: require.resolve('file-loader'),
+                  options: {
+                    name: './fonts/[hash].[ext]',
+                  },
+                },
+              ],
+              include: [
+                path.resolve(__dirname, './../node_modules/react-native-vector-icons'),
+              ],
             },
             // "postcss" loader applies autoprefixer to our CSS.
             // "css" loader resolves paths in CSS and adds assets as dependencies.

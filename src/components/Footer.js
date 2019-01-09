@@ -120,9 +120,10 @@ class Footer extends React.PureComponent {
         return (
           <View style={styles.flexView}>
             <Button
-              style={buttonStyles}
+              backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
               text={placeholder || 'Click To Scan'}
+              textStyle={styles.buttonText}
               onPress={this.showDateTimePicker}
             />
             <DateTimePicker
@@ -138,9 +139,10 @@ class Footer extends React.PureComponent {
         return (
           <View style={styles.flexView}>
             <Button
-              style={buttonStyles}
+              backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
               text={placeholder || 'Click Here'}
+              textStyle={styles.buttonText}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
             />
           </View>
@@ -213,15 +215,8 @@ const styles = StyleSheet.create({
   },
   buttonContainerStyle: {
     padding: 0
-  }
-})
-
-const buttonStyles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.primary,
-    height: 48
   },
-  text: {
+  buttonText: {
     color: genericColors.white
   }
 })
