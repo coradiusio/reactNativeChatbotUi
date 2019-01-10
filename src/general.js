@@ -7,13 +7,17 @@ import {
 export const platform = Platform.OS
 
 export const Toast = (text) => {
-  ToastAndroid.showWithGravityAndOffset(
-    text,
-    ToastAndroid.LONG,
-    ToastAndroid.BOTTOM,
-    25,
-    50
-  )
+  if (platform === 'android') {
+    ToastAndroid.showWithGravityAndOffset(
+      text,
+      ToastAndroid.LONG,
+      ToastAndroid.BOTTOM,
+      25,
+      50
+    )
+  } else {
+    alert(text)
+  }
 }
 
 export const Alert = (title, text, okPressCallback) => {

@@ -13,8 +13,8 @@ import * as Animatable from 'react-native-animatable'
 import dayjs from 'dayjs'
 
 import {
-  DateTimePicker,
-  Button,
+  //DateTimePicker,
+  //Button,
   ChatInput
 } from 'reactNativeBasicComponents'
 
@@ -119,18 +119,18 @@ class Footer extends React.PureComponent {
       case 'calendar':
         return (
           <View style={styles.flexView}>
-            <Button
+            {/* <Button
               backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
               text={placeholder || 'Click To Scan'}
               textStyle={styles.buttonText}
               onPress={this.showDateTimePicker}
-            />
-            <DateTimePicker
+            /> */}
+            {/* <DateTimePicker
               isVisible={this.state.isDatePickerVisible}
               onConfirm={this.handleDatePicked}
               onCancel={this.hideDateTimePicker}
-            />
+            /> */}
           </View>
         )
       case 'file':
@@ -138,13 +138,13 @@ class Footer extends React.PureComponent {
       case 'camera':
         return (
           <View style={styles.flexView}>
-            <Button
+            {/* <Button
               backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
               text={placeholder || 'Click Here'}
               textStyle={styles.buttonText}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
-            />
+            /> */}
           </View>
         )
       case 'searchselect':

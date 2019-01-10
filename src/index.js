@@ -3,6 +3,7 @@ import React from 'react'
 import {
   View,
   StyleSheet,
+  Platform,
   AppRegistry
 } from 'react-native'
 
@@ -17,7 +18,7 @@ export default class App extends React.PureComponent {
     return (
       <View style={styles.container}>
         <ChatBotApp
-          host={'http://192.168.42.63:7664'}
+          host={'http://localhost:7664'}
           role={{
             type: 'user',
             displayName: 'Robin'
@@ -36,4 +37,6 @@ const styles = StyleSheet.create({
 })
 
 AppRegistry.registerComponent('App', () => App)
-AppRegistry.runApplication('App', { rootTag: document.getElementById('root') })
+if (Platform.OS === 'web') {
+  AppRegistry.runApplication('App', { rootTag: document.getElementById('root') })
+}

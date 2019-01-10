@@ -56,7 +56,13 @@ export default class ChatBotApp extends React.PureComponent {
       uiData: this.props.uiData ? { ...this.props.uiData } : {
         header: {
           title: 'Chatbot Assistant',
-          subtitle: 'online'
+          subtitle: 'online',
+          icon: {
+            color: colors.headerIconColor,
+            name: 'arrow-left',
+            type: 'material-community',
+            size: 24
+          }
         },
         loader: {
           color: colors.primary

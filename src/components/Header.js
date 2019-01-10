@@ -3,10 +3,9 @@ import React from 'react'
 import {
   StyleSheet,
   View,
+  Platform,
   TouchableOpacity
 } from 'react-native'
-
-import Image from 'react-native-remote-svg'
 
 import {
   Icon,
@@ -18,10 +17,6 @@ import {
   colors
 } from '../utils'
 
-const backArrowIcon = require('../../public/images/chatbotBackarrow.svg')
-const searchIcon = require('../../public/images/chatbotSearch.svg')
-const agentIcon = require('../../public/images/chatbotRM.svg')
-
 class Header extends React.PureComponent {
   render () {
     const {
@@ -30,34 +25,23 @@ class Header extends React.PureComponent {
       icon
     } = this.props
 
+    console.log('icon :- ', icon)
+
     return (
       <View
         style={styles.container}
-        elevation={4}
       >
-        {
-          typeof icon === 'object'
-            ? <TouchableOpacity
-              onPress={() => {}}
-              style={[styles.iconWrapper, styles.leftIconWrapper]}
-            >
-              <Icon
-                color={icon.color}
-                name={icon.name}
-                type={icon.type}
-                size={icon.size}
-              />
-            </TouchableOpacity>
-            : <TouchableOpacity
-              onPress={() => {}}
-              style={[styles.iconWrapper, styles.leftIconWrapper]}
-            >
-              <Image
-                source={backArrowIcon}
-                style={styles.image}
-              />
-            </TouchableOpacity>
-        }
+        <TouchableOpacity
+          onPress={() => {}}
+          style={[styles.iconWrapper, styles.leftIconWrapper]}
+        >
+          <Icon
+            color={icon.color}
+            name={icon.name}
+            type={icon.type}
+            size={icon.size}
+          />
+        </TouchableOpacity>
         <View style={styles.middleWrapper}>
           <Title
             text={title}
@@ -77,18 +61,22 @@ class Header extends React.PureComponent {
             onPress={() => {}}
             style={[styles.iconWrapper, styles.rightIconWrapper]}
           >
-            <Image
-              source={searchIcon}
-              style={styles.image}
+            <Icon
+              color={colors.headerIconColor}
+              name={'search1'}
+              type={'ant-design'}
+              size={24}
             />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {}}
             style={[styles.iconWrapper, styles.rightIconWrapper, { marginRight: 0 }]}
           >
-            <Image
-              source={agentIcon}
-              style={styles.image}
+            <Icon
+              color={colors.headerIconColor}
+              name={'customerservice'}
+              type={'ant-design'}
+              size={24}
             />
           </TouchableOpacity>
         </View>
@@ -109,7 +97,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 12,
     paddingLeft: 24,
-    paddingRight: 24
+    paddingRight: 24,
+    ...Platform.select({
+      android: {
+        elevation: 4
+      },
+      web: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2
+      }
+    })
   },
   iconWrapper: {
     justifyContent: 'center',
@@ -138,10 +137,6 @@ const styles = StyleSheet.create({
   subtitle: {
     margin: 0,
     color: colors.headerSubTitleColor
-  },
-  image: {
-    width: 24,
-    height: 24
   }
 })
 
