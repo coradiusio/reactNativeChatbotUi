@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 
 import {
   //DateTimePicker,
-  //Button,
+  Button,
   ChatInput
 } from 'reactNativeBasicComponents'
 
@@ -119,13 +119,14 @@ class Footer extends React.PureComponent {
       case 'calendar':
         return (
           <View style={styles.flexView}>
-            {/* <Button
+            <Button
               backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
+              buttonStyle={styles.buttonStyle}
               text={placeholder || 'Click To Scan'}
               textStyle={styles.buttonText}
               onPress={this.showDateTimePicker}
-            /> */}
+            />
             {/* <DateTimePicker
               isVisible={this.state.isDatePickerVisible}
               onConfirm={this.handleDatePicked}
@@ -138,13 +139,14 @@ class Footer extends React.PureComponent {
       case 'camera':
         return (
           <View style={styles.flexView}>
-            {/* <Button
+            <Button
               backgroundColor={colors.primary}
               buttonContainerStyle={styles.buttonContainerStyle}
+              buttonStyle={styles.buttonStyle}
               text={placeholder || 'Click Here'}
               textStyle={styles.buttonText}
               onPress={() => this.props.handleStateValue('openCameraView', true)}
-            /> */}
+            />
           </View>
         )
       case 'searchselect':
@@ -212,6 +214,9 @@ const styles = StyleSheet.create({
     minWidth: 40,
     alignItems: 'flex-end',
     justifyContent: 'center'
+  },
+  buttonStyle: {
+    backgroundColor: colors.primary
   },
   buttonContainerStyle: {
     padding: 0

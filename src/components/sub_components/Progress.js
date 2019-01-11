@@ -2,28 +2,47 @@ import React from 'react'
 
 import {
   View,
-  Modal,
+  Modal as RNModal,
   Text,
   ActivityIndicator,
   StyleSheet
 } from 'react-native'
 
+import Modal from 'modal-react-native-web'
+
 import {
   colors
 } from '../../utils'
 
+import {
+  platform
+} from '../../general'
+
 class Progress extends React.PureComponent {
-  render () {
+  wrapper (component) {
+    if (platform === 'web') {
+      return (
+        <Modal onDismiss={() => null} visible={this.props.visible} transparent>
+          {component}
+        </Modal>
+      )
+    }
     return (
-      <Modal onRequestClose={() => null} visible={this.props.visible} transparent>
-        <View style={styles.container}>
-          <View style={styles.innerContainer}>
-            <ActivityIndicator size='large' color={colors.primary} />
-            <Text style={styles.text}>Please Wait</Text>
-          </View>
-        </View>
-      </Modal>
+      <RNModal onRequestClose={() => null} visible={this.props.visible} transparent>
+        {component}
+      </RNModal>
     )
+  }
+  render () {
+    const element = (
+      <View style={styles.container}>
+        <View style={styles.innerContainer}>
+          <ActivityIndicator size='large' color={colors.primary} />
+          <Text style={styles.text}>{this.props.text || 'Please Wait'}</Text>
+        </View>
+      </View>
+    )
+    return this.wrapper(element)
   }
 }
 
