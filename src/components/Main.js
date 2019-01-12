@@ -12,12 +12,8 @@ import Body from './Body'
 import Footer from './Footer'
 
 import Progress from './sub_components/Progress'
-import Camera from './sub_components/Camera'
 import QRCodeScanner from './sub_components/QRCodeScanner'
-
-import {
-  platform
-} from '../general'
+import DocumentHandler from './sub_components/DocumentHandler'
 
 export default class Main extends React.PureComponent {
   componentDidMount () {
@@ -31,6 +27,9 @@ export default class Main extends React.PureComponent {
   handleBackPress = () => {
     if (this.props.openCameraView) {
       this.props.handleStateValue('openCameraView', false)
+      if (this.props.isEditingMode) {
+        this.props.handleFinishedEdit()
+      }
       return true
     } else {
       return false
@@ -75,19 +74,18 @@ export default class Main extends React.PureComponent {
           openCameraView
             ? <View style={styles.flexView}>
               {
-                widget === 'qrscanner' && platform !== 'web'
+                widget === 'qrscanner'
                   ? <QRCodeScanner
                     onRead={(e) => {
                       handleStateValue('openCameraView', false)
                       submitInputValue(e.data)
                     }}
                     cameraProps={currentQuestion.input.cameraProps}
-                    showMarker
                   />
                   : <View style={styles.flexView}>
                     {
-                      (widget === 'camera' || widget === 'file') && platform !== 'web'
-                        ? <Camera
+                      (widget === 'camera' || widget === 'file')
+                        ? <DocumentHandler
                           handleStateValue={handleStateValue}
                           onCapture={submitInputValue}
                         />

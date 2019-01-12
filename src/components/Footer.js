@@ -13,7 +13,7 @@ import * as Animatable from 'react-native-animatable'
 import dayjs from 'dayjs'
 
 import {
-  //DateTimePicker,
+  DateTimePicker,
   Button,
   ChatInput
 } from 'reactNativeBasicComponents'
@@ -127,11 +127,11 @@ class Footer extends React.PureComponent {
               textStyle={styles.buttonText}
               onPress={this.showDateTimePicker}
             />
-            {/* <DateTimePicker
+            <DateTimePicker
               isVisible={this.state.isDatePickerVisible}
               onConfirm={this.handleDatePicked}
               onCancel={this.hideDateTimePicker}
-            /> */}
+            />
           </View>
         )
       case 'file':
