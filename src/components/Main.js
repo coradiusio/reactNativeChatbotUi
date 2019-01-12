@@ -15,6 +15,8 @@ import Progress from './sub_components/Progress'
 import QRCodeScanner from './sub_components/QRCodeScanner'
 import DocumentHandler from './sub_components/DocumentHandler'
 
+import { platform } from '../general'
+
 export default class Main extends React.PureComponent {
   componentDidMount () {
     BackHandler.addEventListener('hardwareBackPress', this.handleBackPress)
@@ -84,7 +86,7 @@ export default class Main extends React.PureComponent {
                   />
                   : <View style={styles.flexView}>
                     {
-                      (widget === 'camera' || widget === 'file')
+                      (widget === 'camera' || widget === 'file') && platform !== 'web'
                         ? <DocumentHandler
                           handleStateValue={handleStateValue}
                           onCapture={submitInputValue}
