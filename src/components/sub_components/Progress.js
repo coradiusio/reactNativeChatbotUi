@@ -33,6 +33,7 @@ class Progress extends React.PureComponent {
       </RNModal>
     )
   }
+
   render () {
     const element = (
       <View style={styles.container}>

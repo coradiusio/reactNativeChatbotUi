@@ -12,8 +12,9 @@ import * as Animatable from 'react-native-animatable'
 
 import dayjs from 'dayjs'
 
+import DateTimePicker from './sub_components/DatePicker'
+
 import {
-  DateTimePicker,
   Button,
   ChatInput
 } from 'reactNativeBasicComponents'
@@ -28,6 +29,10 @@ import {
   colors,
   genericColors
 } from '../utils'
+
+import {
+  platform
+} from '../general'
 
 class Footer extends React.PureComponent {
   constructor (props) {
@@ -72,7 +77,12 @@ class Footer extends React.PureComponent {
     this.props.submitInputValue(value)
   }
 
-  showDateTimePicker = () => this.setState({ isDatePickerVisible: true })
+  showDateTimePicker = () => {
+    if (platform === 'web' && document.getElementById('input-date')) {
+      document.getElementById('input-date').click()
+    }
+    this.setState({ isDatePickerVisible: true })
+  }
 
   hideDateTimePicker = () => this.setState({ isDatePickerVisible: false })
 

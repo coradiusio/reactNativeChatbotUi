@@ -18,6 +18,7 @@ import {
 
 export default class ImagePreview extends React.PureComponent {
   render () {
+    console.log('rendering image preview')
     return (
       <View style={styles.container}>
         <Image

@@ -2,113 +2,115 @@ import React from 'react'
 
 import {
   View,
-  StyleSheet,
-  TouchableOpacity,
-  Image
+  StyleSheet
 } from 'react-native'
 
 import {
-  Icon
-} from 'reactNativeBasicComponents'
-
-import {
-  colors,
+  hasGetUserMedia,
   genericColors
 } from '../../utils'
 
-const defaultCameraProps = {
-  type: 'back',
-  autoFocus: true,
-  permissionDialogTitle: 'Permission to use camera',
-  permissionDialogMessage: 'We need your permission to use your camera phone'
-}
-
 class Camera extends React.PureComponent {
-  constructor (props) {
-    super(props)
-    this.state = {
-      flashMode: 'off',
-      isPictureCaptured: false,
-      pictureData: {}
-    }
+  componentDidMount () {
+    this.renderCamera()
+  }
 
-    this.toggleFlash = this.toggleFlash.bind(this)
+  componentWillReceiveProps (nextProps) {
+    if (nextProps.isPictureCapturingStart) {
+      this.takePicture()
+    }
   }
 
   takePicture = async function () {
-    if (this.camera) {
+    const mediaStreamTrack = window.stream.getVideoTracks()[0]
+    const imageCapture = new ImageCapture(mediaStreamTrack)
+    if (imageCapture) {
       this.props.handleStateValue('showProgress', true)
-      this.camera.takePictureAsync()
-        .then(data => {
-          this.handlePictureTaken(data)
+      imageCapture.takePhoto()
+        .then(blob => {
+          this.props.handlePictureTaken(URL.createObjectURL(blob))
           this.props.handleStateValue('showProgress', false)
         })
-        .catch(err => {
-          console.log('error in taking picture :- ', err)
-        })
+        .catch(error => console.error('takePhoto() error:', error))
     }
   }
 
-  handlePictureTaken = (data) => {
-    console.log('picture data :- ', data)
-    this.setState({ isPictureCaptured: true, pictureData: data })
-  }
+  renderCamera () {
+    console.log('rendering camera')
+    if (hasGetUserMedia()) {
+      const videoElement = document.getElementById('camera-stream')
 
-  resetPicture = () => {
-    this.setState({ isPictureCaptured: false, pictureData: {} })
-  }
+      const constraints = { audio: false }
 
-  toggleFlash () {
-    this.setState(prevState => ({
-      flashMode: prevState.flashMode === 'torch' ? 'off' : 'torch'
-    }))
+      navigator.mediaDevices.enumerateDevices()
+        .then(devices => {
+          const videoOutputs = devices.filter(device => device.kind === 'videoinput')
+
+          // we didn't find any video input
+          if (videoOutputs.length === 0) {
+            throw new Error('no video input')
+          }
+
+          if (videoOutputs.length > 1) {
+            constraints.video = { facingMode: { exact: 'environment' } }
+          } else {
+            constraints.video = { deviceid: undefined }
+          }
+
+          // constraints.video.width = { min: 1280, ideal: 1920 }
+          // constraints.video.height = { min: 720, ideal: 1080 }
+          constraints.video.frameRate = { min: 30, ideal: 60 }
+        }).then(() => {
+          if (window.stream) {
+            window.stream.getTracks().forEach(function (track) {
+              track.stop()
+            })
+          }
+
+          navigator.mediaDevices.getUserMedia(constraints)
+            .then(mediaStream => {
+              window.stream = mediaStream // make stream available to console
+              videoElement.srcObject = mediaStream
+
+              const track = mediaStream.getVideoTracks()[0]
+
+              const onCapabilitiesReady = (capabilities) => {
+                console.log(track.getSettings())
+
+                /* if (capabilities.torch) {
+                  track.applyConstraints({
+                    advanced: [{torch: true}]
+                  })
+                  .catch(e => console.log(e));
+                } */
+                if (capabilities.focusMode) {
+                  track.applyConstraints({
+                    advanced: [{ focusMode: 'auto' }]
+                  })
+                    .catch(e => console.log(e))
+                }
+              }
+
+              videoElement.addEventListener('loadedmetadata', (e) => {
+                window.setTimeout(() => (
+                  onCapabilitiesReady(track.getCapabilities())
+                ), 500)
+              })
+            }).catch(err => {
+              console.log('Error: ', err)
+            })
+        }).catch(err => {
+          console.log('Error: ', err)
+        })
+    } else {
+      alert('Your browser does not support getUserMedia')
+    }
   }
 
   render () {
     return (
       <View style={styles.cameraContainer}>
-        {
-          !this.state.isPictureCaptured
-            ? null
-            : <View style={styles.cameraContainer}>
-              <Image
-                source={{ uri: this.state.pictureData.uri }}
-                style={styles.imagePreview}
-                resizeMode='contain'
-              />
-              <View style={styles.correctIncorrectContainer}>
-                <View style={styles.iconsContainer} elevation={1}>
-                  <TouchableOpacity
-                    onPress={() => {
-                      this.resetPicture()
-                    }}
-                    style={styles.oneIconContainer}
-                  >
-                    <Icon
-                      color={colors.errorIconColor}
-                      name={'md-close'}
-                      type='ion'
-                      size={24}
-                    />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => {
-                      this.props.onCapture(this.state.pictureData.uri, '', 'camera')
-                      this.props.handleStateValue('openCameraView', false)
-                    }}
-                    style={[styles.oneIconContainer, { borderRightWidth: 0 }]}
-                  >
-                    <Icon
-                      color={colors.primary}
-                      name={'md-checkmark'}
-                      type='ion'
-                      size={24}
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-        }
+        <video id='camera-stream' autoPlay muted />
       </View>
     )
   }
