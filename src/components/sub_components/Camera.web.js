@@ -57,8 +57,8 @@ class Camera extends React.PureComponent {
             constraints.video = { deviceid: undefined }
           }
 
-          // constraints.video.width = { min: 1280, ideal: 1920 }
-          // constraints.video.height = { min: 720, ideal: 1080 }
+          constraints.video.width = { min: 640, ideal: 1920 }
+          constraints.video.height = { min: 480, ideal: 1080 }
           constraints.video.frameRate = { min: 30, ideal: 60 }
         }).then(() => {
           if (window.stream) {
@@ -69,6 +69,10 @@ class Camera extends React.PureComponent {
 
           navigator.mediaDevices.getUserMedia(constraints)
             .then(mediaStream => {
+              console.log('mediaStream :- ', mediaStream)
+              if (this.props.handleDeviceId) {
+                this.props.handleDeviceId(mediaStream.id)
+              }
               window.stream = mediaStream // make stream available to console
               videoElement.srcObject = mediaStream
 

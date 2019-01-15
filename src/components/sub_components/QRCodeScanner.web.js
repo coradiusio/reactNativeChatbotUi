@@ -1,4 +1,4 @@
-import React, { Component } from 'react'
+import React from 'react'
 
 import {
   StyleSheet,
@@ -6,45 +6,65 @@ import {
 } from 'react-native'
 
 import { BrowserQRCodeReader } from '@zxing/library'
+import { isUndefined, isEmpty } from 'lodash'
 
 import {
   colors
 } from '../../utils'
 
 import Camera from './Camera'
-import CameraControl from './CameraControl'
 
 import QRCodeRenderMarker from './QRCodeRenderMarker'
 
 const codeReader = new BrowserQRCodeReader()
 
-export default class QRCodeScanner extends Component {
+export default class QRCodeScanner extends React.PureComponent {
   constructor (props) {
     super(props)
     this.state = {
       scanning: false,
-      flashMode: 'off'
+      flashMode: 'off',
+      deviceId: ''
     }
 
     this._handleBarCodeRead = this._handleBarCodeRead.bind(this)
     this.toggleFlash = this.toggleFlash.bind(this)
+    this.handleDeviceId = this.handleDeviceId.bind(this)
   }
 
-  componentDidMount () {
-    this._handleBarCodeRead()
+  handleDeviceId (value) {
+    if (value) {
+      this.setState({ deviceId: value }, () => this._handleBarCodeRead())
+    }
   }
 
   _setScanning (value) {
     this.setState({ scanning: value })
   }
 
-  _handleBarCodeRead (e) {
-    if (document.getElementById('camera-stream')) {
-      codeReader.decodeFromInputVideoDevice(undefined, 'camera-stream')
-        .then(result => alert(result.text))
-        .catch(err => {
-          console.log('could not scan :- ', err)
-        })
+  _handleBarCodeRead () {
+    const videoElement = document.getElementById('camera-stream')
+    if (videoElement) {
+      const {
+        deviceId
+      } = this.state
+      if (!isUndefined(deviceId) && !isEmpty(deviceId)) {
+        this.timer = setInterval(() => {
+          codeReader.decodeFromImage(this.getScreenshot(videoElement, deviceId))
+            .then(result => {
+              alert(result.text)
+            })
+            .catch(err => {
+              console.log('could not scan :- ', err)
+            })
+        }, 1000)
+      }
+    }
+  }
+
+  componentWillUnmount () {
+    if (this.timer) {
+      clearInterval(this.timer)
     }
   }
 
@@ -70,19 +90,33 @@ export default class QRCodeScanner extends Component {
     )
   }
 
+  getScreenshot (videoEl, deviceId) {
+    const scale = 1
+    const canvas = document.createElement('canvas')
+    canvas.width = videoEl.clientWidth * scale
+    canvas.height = videoEl.clientHeight * scale
+    canvas.getContext('2d').drawImage(videoEl, 0, 0, canvas.width, canvas.height)
+
+    var img = document.createElement('img')
+    img.src = canvas.toDataURL()
+    return img
+  }
+
   render () {
     return (
-      <View style={[styles.container, this.props.containerStyle]}>
+      <View style={[styles.cameraContainer, this.props.containerStyle]}>
         <Camera
           isPictureCapturingStart={this.state.isPictureCapturingStart}
           handleIsPictureCapturing={this.handleIsPictureCapturing}
           handleStateValue={this.props.handleStateValue}
           flashMode={this.state.flashMode}
           handlePictureTaken={this.handlePictureTaken}
+          handleDeviceId={this.handleDeviceId}
         />
         <View style={{ ...StyleSheet.absoluteFillObject }}>
           {this._renderCameraMarker()}
         </View>
+        <div id='captured-image-container' />
       </View>
     )
   }
@@ -94,57 +128,8 @@ QRCodeScanner.defaultProps = {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  cameraContainer: {
     flex: 1,
     position: 'relative'
-  },
-  camera: {
-    flex: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'transparent'
-  },
-  transparentBackground: {
-    backgroundColor: 'rgba(255, 255, 255, 0.7)'
-  },
-  qrcodeWrapper: {
-    flexDirection: 'row'
-  },
-  qrcodeContainer: {
-    width: 230,
-    height: 230,
-    backgroundColor: 'transparent'
-  },
-  topLeftEdge: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: 25,
-    height: 25
-  },
-  topRightEdge: {
-    position: 'absolute',
-    top: 0,
-    right: 0,
-    width: 25,
-    height: 25
-  },
-  bottomLeftEdge: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    width: 25,
-    height: 25
-  },
-  bottomRightEdge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 25,
-    height: 25
-  },
-  bottomContainer: {
-    justifyContent: 'center',
-    alignItems: 'center'
   }
 })

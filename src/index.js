@@ -18,7 +18,7 @@ export default class App extends React.PureComponent {
     return (
       <View style={styles.container}>
         <ChatBotApp
-          host={'http://192.168.42.63:7664'}
+          host={'http://localhost:7664'}
           role={{
             type: 'user',
             displayName: 'Robin'
