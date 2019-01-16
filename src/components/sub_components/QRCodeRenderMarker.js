@@ -69,7 +69,7 @@ export default class QRCodeRenderMarker extends React.PureComponent {
               ]}
             />
             <Animatable.View
-              animation='slideInDown'
+              animation='slideInUp'
               direction='alternate'
               iterationCount='infinite'
               duration={2000}
