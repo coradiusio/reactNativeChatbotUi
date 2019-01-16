@@ -69,16 +69,18 @@ export default class QRCodeRenderMarker extends React.PureComponent {
               ]}
             />
             <Animatable.View
-              animation='slideInUp'
+              animation='slideInDown'
               direction='alternate'
               iterationCount='infinite'
               duration={2000}
               easing='linear'
               useNativeDriver
             >
-              <View style={{ height: 1, marginBottom: 2, backgroundColor: primaryColor }} />
-              <View style={{ height: 2, marginBottom: 2, backgroundColor: primaryColor }} />
-              <View style={{ height: 3, backgroundColor: primaryColor }} />
+              <View>
+                <View style={{ height: 1, marginBottom: 2, backgroundColor: primaryColor }} />
+                <View style={{ height: 2, marginBottom: 2, backgroundColor: primaryColor }} />
+                <View style={{ height: 3, backgroundColor: primaryColor }} />
+              </View>
             </Animatable.View>
           </View>
           <View style={[styles.flex, styles.transparentBackground]} />

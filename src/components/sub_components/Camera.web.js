@@ -114,7 +114,7 @@ class Camera extends React.PureComponent {
   render () {
     return (
       <View style={styles.cameraContainer}>
-        <video id='camera-stream' autoPlay muted />
+        <video style={{ height: '100%' }} id='camera-stream' autoPlay muted />
       </View>
     )
   }

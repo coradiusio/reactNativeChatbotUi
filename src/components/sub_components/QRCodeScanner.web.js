@@ -49,15 +49,13 @@ export default class QRCodeScanner extends React.PureComponent {
         deviceId
       } = this.state
       if (!isUndefined(deviceId) && !isEmpty(deviceId)) {
-        this.timer = setInterval(() => {
-          codeReader.decodeFromImage(this.getScreenshot(videoElement, deviceId))
-            .then(result => {
-              alert(result.text)
-            })
-            .catch(err => {
-              console.log('could not scan :- ', err)
-            })
-        }, 1000)
+        codeReader.decodeFromInputVideoDevice(undefined, 'camera-stream')
+          .then(result => {
+            this.props.onRead(result.text)
+          })
+          .catch(err => {
+            console.log('could not scan :- ', err)
+          })
       }
     }
   }
