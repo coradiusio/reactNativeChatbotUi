@@ -244,25 +244,28 @@ export function validateFile (currentQuestion, answerInputModified, fileName, fi
     errorMessage: ''
   }
 
-  if (!(isUndefined(fileExtension) || isEmpty(fileExtension))) {
-    const {
-      fileExtensions
-    } = currentQuestion.input
+  // if (!(isUndefined(fileExtension) || isEmpty(fileExtension))) {
+  //   const {
+  //     fileExtensions
+  //   } = currentQuestion.input
 
-    if (fileExtensions && fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
-      result.success = true
-    } else {
-      result.foundError = true
-      result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type'
-    }
-  } else {
-    result.foundError = true
-  }
+  //   if (fileExtensions && fileExtensions.indexOf(fileExtension.toLowerCase()) > -1) {
+  //     result.success = true
+  //   } else {
+  //     result.foundError = true
+  //     result.errorMessage = currentQuestion.onWrongFileUploadMessage || 'Please upload valid file type'
+  //   }
+  // } else {
+  //   result.foundError = true
+  // }
 
-  if (answerInputModified.indexOf('content://') > -1 && answerInputModified.indexOf('.') > -1) {
-    result.success = true
-    result.foundError = false
-  }
+  // if (answerInputModified.indexOf('content://') > -1 && answerInputModified.indexOf('.') > -1) {
+  //   result.success = true
+  //   result.foundError = false
+  // }
+
+  result.success = true
+  result.foundError = false
   result.answerInputModified = answerInputModified
   return result
 }
