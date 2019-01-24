@@ -67,8 +67,9 @@ export function stringCasing (value, casing) {
     case 'title':
     case 'titlecase':
       return toTitleCase(value)
+    default:
+      return value
   }
-  return value
 }
 
 export function toTitleCase (str) {
@@ -98,8 +99,9 @@ function numberComparisionValidator (comparision, firstValue, secondValue) {
       return (firstValue < secondValue)
     case '<=':
       return (firstValue <= secondValue)
+    default:
+      return false
   }
-  return false
 }
 
 function stringComparisionValidator (comparision, firstValue, secondValue) {
@@ -108,8 +110,9 @@ function stringComparisionValidator (comparision, firstValue, secondValue) {
       return (firstValue === secondValue)
     case '!=':
       return (firstValue !== secondValue)
+    default:
+      return false
   }
-  return false
 }
 
 export function validateInput (currentQuestion, answerInputModified, source = 'text') {
